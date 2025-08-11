@@ -38,7 +38,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Email and password are required" });
       }
 
-      const user = await storage.getUserByEmail(email);
+      const user = await storage.getCrmUserByEmail(email);
       console.log("User found:", user ? { id: user.id, email: user.email, role: user.role, isActive: user.isActive } : "NOT FOUND");
       
       if (!user) {

@@ -8,7 +8,7 @@ import {
   type Referral, type WalletTransaction
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, gte, lte, desc, asc, count, avg, sum, like, ilike, or } from "drizzle-orm";
+import { eq, and, gte, lte, desc, asc, count, avg, sum, like, ilike, or, sql } from "drizzle-orm";
 
 export interface IStorage {
   // User methods
@@ -17,6 +17,9 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(insertUser: InsertUser & { referralCode?: string }): Promise<User>;
   updateUserRewardPoints(userId: string, points: number): Promise<void>;
+  
+  // CRM User methods
+  getCrmUserByEmail(email: string): Promise<any>;
   
   // Facility methods
   getFacilities(filters: any): Promise<{ facilities: any[]; total: number }>;
@@ -73,6 +76,13 @@ export class DatabaseStorage implements IStorage {
   async getUserByEmail(email: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.email, email));
     return user || undefined;
+  }
+
+  async getCrmUserByEmail(email: string) {
+    const result = await db.execute(sql`
+      SELECT * FROM crm_users WHERE email = ${email} LIMIT 1
+    `);
+    return result.rows[0] || null;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
