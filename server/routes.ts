@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { insertUserSchema, insertFacilitySchema, insertBookingSchema, insertReviewSchema } from "@shared/schema";
+import { insertUserSchema, insertFacilitySchema, insertBookingSchema, insertReviewSchema, insertCompanySchema } from "@shared/schema";
 import { z } from "zod";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this";
@@ -871,6 +871,114 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(sports);
     } catch (error) {
       console.error("Get sports error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Company routes
+  app.get("/api/companies", authenticateToken, async (req: any, res: Response) => {
+    try {
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const companies = await storage.getCompanies();
+      res.json(companies);
+    } catch (error) {
+      console.error("Get companies error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/companies/:id", authenticateToken, async (req: any, res: Response) => {
+    try {
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const company = await storage.getCompanyById(req.params.id);
+      if (!company) {
+        return res.status(404).json({ message: "Company not found" });
+      }
+
+      res.json(company);
+    } catch (error) {
+      console.error("Get company error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/companies", authenticateToken, async (req: any, res: Response) => {
+    try {
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const validatedData = insertCompanySchema.parse(req.body);
+      const company = await storage.createCompany(validatedData);
+      res.status(201).json(company);
+    } catch (error: any) {
+      console.error("Create company error:", error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: "Invalid company data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.put("/api/companies/:id", authenticateToken, async (req: any, res: Response) => {
+    try {
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const validatedData = insertCompanySchema.partial().parse(req.body);
+      const company = await storage.updateCompany(req.params.id, validatedData);
+      
+      if (!company) {
+        return res.status(404).json({ message: "Company not found" });
+      }
+
+      res.json(company);
+    } catch (error: any) {
+      console.error("Update company error:", error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: "Invalid company data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.delete("/api/companies/:id", authenticateToken, async (req: any, res: Response) => {
+    try {
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const success = await storage.deleteCompany(req.params.id);
+      if (!success) {
+        return res.status(404).json({ message: "Company not found" });
+      }
+
+      res.json({ message: "Company deleted successfully" });
+    } catch (error) {
+      console.error("Delete company error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // CRM Users route for company management
+  app.get("/api/crm/users", authenticateToken, async (req: any, res: Response) => {
+    try {
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      // Get all CRM users (admin and owners)
+      const users = await storage.getAllUsers('crm');
+      res.json(users);
+    } catch (error) {
+      console.error("Get CRM users error:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });

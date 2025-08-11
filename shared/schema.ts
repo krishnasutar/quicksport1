@@ -49,9 +49,29 @@ export const crmUsers = pgTable("crm_users", {
   updatedAt: timestamp("updated_at").defaultNow()
 });
 
+// Companies table for admin to manage multiple companies with owners
+export const companies = pgTable("companies", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  description: text("description"),
+  logo: text("logo"),
+  address: text("address"),
+  city: text("city"),
+  state: text("state"),
+  pincode: text("pincode"),
+  phoneNumber: text("phone_number"),
+  email: text("email"),
+  website: text("website"),
+  ownerId: uuid("owner_id").notNull().references(() => crmUsers.id),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
 // Facilities table
 export const facilities = pgTable("facilities", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  companyId: uuid("company_id").notNull().references(() => companies.id),
   ownerId: uuid("owner_id").notNull().references(() => crmUsers.id),
   name: text("name").notNull(),
   description: text("description"),
@@ -322,6 +342,13 @@ export const insertCrmUserSchema = createInsertSchema(crmUsers).omit({
   password_hash: true  // Don't require password_hash in the form input
 });
 
+export const insertCompanySchema = createInsertSchema(companies).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  isActive: true
+});
+
 export const insertFacilitySchema = createInsertSchema(facilities).omit({
   id: true,
   createdAt: true,
@@ -371,6 +398,8 @@ export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertCrmUser = z.infer<typeof insertCrmUserSchema>;
 export type CrmUser = typeof crmUsers.$inferSelect;
+export type InsertCompany = z.infer<typeof insertCompanySchema>;
+export type Company = typeof companies.$inferSelect;
 export type InsertFacility = z.infer<typeof insertFacilitySchema>;
 export type Facility = typeof facilities.$inferSelect;
 export type InsertCourt = z.infer<typeof insertCourtSchema>;

@@ -1,11 +1,11 @@
 import { 
   users, facilities, courts, bookings, reviews, coupons, subscriptions, 
-  splitPayments, referrals, walletTransactions, crmUsers,
+  splitPayments, referrals, walletTransactions, crmUsers, companies,
   type User, type InsertUser, type Facility, type InsertFacility,
   type Court, type InsertCourt, type Booking, type InsertBooking,
   type Review, type InsertReview, type Coupon, type InsertCoupon,
   type Subscription, type InsertSubscription, type SplitPayment,
-  type Referral, type WalletTransaction
+  type Referral, type WalletTransaction, type Company, type InsertCompany
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, lte, desc, asc, count, avg, sum, like, ilike, or, sql } from "drizzle-orm";
@@ -73,6 +73,13 @@ export interface IStorage {
   getRevenueAnalytics(): Promise<any>;
   getFacilityAnalytics(): Promise<any>;
   getBookingAnalytics(): Promise<any>;
+  
+  // Company methods
+  getCompanies(): Promise<Company[]>;
+  getCompanyById(id: string): Promise<Company | undefined>;
+  createCompany(insertCompany: InsertCompany): Promise<Company>;
+  updateCompany(id: string, updateData: Partial<Company>): Promise<Company | undefined>;
+  deleteCompany(id: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -914,6 +921,75 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Booking analytics error:', error);
       return { weeklyBookings: [], peakTimes: [] };
+    }
+  }
+
+  // Company methods implementation
+  async getCompanies(): Promise<Company[]> {
+    try {
+      const result = await db.execute(sql`
+        SELECT 
+          c.*,
+          cu.first_name || ' ' || cu.last_name as owner_name,
+          (SELECT COUNT(*) FROM facilities f WHERE f.company_id = c.id) as facilities_count
+        FROM companies c
+        LEFT JOIN crm_users cu ON c.owner_id = cu.id
+        WHERE c.is_active = true
+        ORDER BY c.name ASC
+      `);
+      
+      return result.rows.map(row => ({
+        ...row,
+        ownerName: row.owner_name,
+        facilitiesCount: Number(row.facilities_count)
+      }));
+    } catch (error) {
+      console.error('Error fetching companies:', error);
+      return [];
+    }
+  }
+
+  async getCompanyById(id: string): Promise<Company | undefined> {
+    try {
+      const [company] = await db.select().from(companies).where(eq(companies.id, id));
+      return company || undefined;
+    } catch (error) {
+      console.error('Error fetching company by id:', error);
+      return undefined;
+    }
+  }
+
+  async createCompany(insertCompany: InsertCompany): Promise<Company> {
+    const [company] = await db
+      .insert(companies)
+      .values(insertCompany)
+      .returning();
+    return company;
+  }
+
+  async updateCompany(id: string, updateData: Partial<Company>): Promise<Company | undefined> {
+    try {
+      const [company] = await db
+        .update(companies)
+        .set({ ...updateData, updatedAt: new Date() })
+        .where(eq(companies.id, id))
+        .returning();
+      return company || undefined;
+    } catch (error) {
+      console.error('Error updating company:', error);
+      return undefined;
+    }
+  }
+
+  async deleteCompany(id: string): Promise<boolean> {
+    try {
+      const result = await db
+        .delete(companies)
+        .where(eq(companies.id, id));
+      return true;
+    } catch (error) {
+      console.error('Error deleting company:', error);
+      return false;
     }
   }
 }

@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { 
   Building, 
+  Building2, 
   Users, 
   Calendar, 
   DollarSign, 
@@ -49,6 +50,7 @@ import {
 
 import { UsersManagement } from "@/components/crm/UsersManagement";
 import { FacilityManagement } from "@/components/crm/FacilityManagement";
+import { CompanyManagement } from "@/components/crm/CompanyManagement";
 import { OtherManagement } from "@/components/crm/OtherManagement";
 
 interface CRMUser {
@@ -155,6 +157,12 @@ export default function CRMDashboard() {
       action: () => setActiveSection('dashboard')
     },
     {
+      id: 'companies',
+      label: 'Companies',
+      icon: Building,
+      action: () => setActiveSection('companies')
+    },
+    {
       id: 'users',
       label: 'Users',
       icon: Users,
@@ -167,7 +175,7 @@ export default function CRMDashboard() {
     {
       id: 'facilities',
       label: 'Facilities',
-      icon: Building,
+      icon: Building2,
       dropdown: [
         { label: 'All Facilities', action: () => setActiveSection('all-facilities') },
         { label: 'Add Facility', action: () => setActiveSection('add-facility') }
@@ -606,6 +614,9 @@ export default function CRMDashboard() {
               </div>
             </div>
           )}
+
+          {/* Company Management Section */}
+          {activeSection === 'companies' && <CompanyManagement />}
 
           {/* Users Management Sections */}
           {(activeSection === 'all-users' || activeSection === 'owners' || activeSection === 'regular-users') && (
