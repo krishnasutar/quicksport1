@@ -634,11 +634,11 @@ export default function CRMDashboard() {
           )}
 
           {/* Other sections using OtherManagement component */}
-          {activeSection === 'bookings' && <OtherManagement section="bookings" />}
-          {activeSection === 'analytics' && <OtherManagement section="analytics" />}
-          {activeSection === 'equipment' && <OtherManagement section="equipment" />}
-          {activeSection === 'maintenance' && <OtherManagement section="maintenance" />}
-          {activeSection === 'settings' && <OtherManagement section="settings" />}
+          {activeSection === 'bookings' && <OtherManagement section="bookings" dashboardStats={dashboardStats} userRole={user?.role} />}
+          {activeSection === 'analytics' && <OtherManagement section="analytics" dashboardStats={dashboardStats} userRole={user?.role} />}
+          {activeSection === 'equipment' && <OtherManagement section="equipment" dashboardStats={dashboardStats} userRole={user?.role} />}
+          {activeSection === 'maintenance' && <OtherManagement section="maintenance" dashboardStats={dashboardStats} userRole={user?.role} />}
+          {activeSection === 'settings' && <OtherManagement section="settings" dashboardStats={dashboardStats} userRole={user?.role} />}
         </div>
       </div>
 
