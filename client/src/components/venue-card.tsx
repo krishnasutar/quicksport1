@@ -5,9 +5,25 @@ import { Link } from "wouter";
 import { Facility } from "@shared/schema";
 
 interface VenueCardProps {
-  facility: Facility & {
-    courts?: any[];
-    minPrice?: number;
+  facility: {
+    id: string;
+    name: string;
+    city: string;
+    address: string;
+    images: string[];
+    rating: string;
+    status: "approved" | "pending" | "rejected";
+    category: string;
+    sports: string[];
+    priceRange: { min: number; max: number };
+    timeSlots: string[];
+    amenities: string[];
+    courts: Array<{
+      id: string;
+      sportType: string;
+      pricePerHour: number;
+    }>;
+    minPrice: number;
   };
 }
 
@@ -24,7 +40,7 @@ const sportIcons: Record<string, { icon: string; color: string }> = {
 
 export default function VenueCard({ facility }: VenueCardProps) {
   const mainImage = facility.images?.[0] || 'https://images.unsplash.com/photo-1546519638-68e109498ffc?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600';
-  const uniqueSports = [...new Set(facility.courts?.map(court => court.sportType) || [])];
+  const uniqueSports = Array.from(new Set(facility.courts?.map(court => court.sportType) || []));
   const displaySports = uniqueSports.slice(0, 3);
   const remainingSports = uniqueSports.length - displaySports.length;
 
