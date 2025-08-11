@@ -56,7 +56,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       console.log("Testing password...");
-      const isValidPassword = await bcrypt.compare(password, user.password as string);
+      const isValidPassword = await bcrypt.compare(password, user.password_hash as string);
       console.log("Password valid:", isValidPassword);
       
       if (!isValidPassword) {
@@ -107,13 +107,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const user = await storage.createUser({
         ...userData,
-        password: hashedPassword,
+        password: userData.password, // Keep original password for visibility
+        password_hash: hashedPassword, // Store hashed password for authentication
         referralCode
       });
 
       // Generate JWT token
       const token = jwt.sign(
-        { id: user.id, username: user.username, role: user.role },
+        { id: user.id, username: user.username },
         JWT_SECRET,
         { expiresIn: '7d' }
       );
@@ -148,13 +149,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
-      const isValidPassword = await bcrypt.compare(password, user.password);
+      const isValidPassword = await bcrypt.compare(password, user.password_hash);
       if (!isValidPassword) {
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
       const token = jwt.sign(
-        { id: user.id, username: user.username, role: user.role },
+        { id: user.id, username: user.username },
         JWT_SECRET,
         { expiresIn: '7d' }
       );
