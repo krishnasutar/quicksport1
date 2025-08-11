@@ -411,7 +411,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Admin access required" });
       }
 
-      const userData = insertUserSchema.parse(req.body);
+      const userData = req.body;
+      console.log('Creating new user:', userData);
       
       // Check if user already exists
       const existingUser = await storage.getUserByEmail(userData.email);
@@ -427,16 +428,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Hash password
       const hashedPassword = await bcrypt.hash(userData.password, 10);
       
-      // Generate referral code
-      const referralCode = `QC${Math.random().toString(36).substr(2, 8).toUpperCase()}`;
+      let user;
+      
+      // Create user based on role
+      if (userData.role === 'regular') {
+        // Create in users table for regular users
+        const referralCode = `QC${Math.random().toString(36).substr(2, 8).toUpperCase()}`;
+        user = await storage.createUser({
+          ...userData,
+          password: hashedPassword,
+          referralCode
+        });
+      } else {
+        // Create in crm_users table for admin/owner roles
+        const crmUserData = {
+          ...userData,
+          password: userData.password, // Keep original password visible
+          password_hash: hashedPassword // Store hashed version for auth
+        };
+        
+        const [newCrmUser] = await db.insert(crmUsers).values(crmUserData).returning();
+        user = newCrmUser;
+      }
 
-      const user = await storage.createUser({
-        ...userData,
-        password: hashedPassword,
-        referralCode
-      });
-
-      const { password: _, ...userWithoutPassword } = user;
+      const { password: _, password_hash, ...userWithoutPassword } = user;
       res.status(201).json(userWithoutPassword);
     } catch (error) {
       console.error("Create user error:", error);

@@ -142,7 +142,7 @@ export function UserEditModal({ user, children }: UserEditModalProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const updateData = { ...formData };
+    const updateData: any = { ...formData };
     if (!updateData.password) {
       delete updateData.password;
     }

@@ -567,55 +567,128 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(facilities).where(eq(facilities.ownerId, ownerId)).orderBy(desc(facilities.createdAt));
   }
 
-  async getUserById(id: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user;
+  async getUserById(id: string): Promise<any | undefined> {
+    try {
+      // First try regular users table
+      const [regularUser] = await db.select().from(users).where(eq(users.id, id));
+      if (regularUser) {
+        return { ...regularUser, role: 'regular' };
+      }
+      
+      // Then try CRM users table
+      const [crmUser] = await db.select().from(crmUsers).where(eq(crmUsers.id, id));
+      if (crmUser) {
+        return {
+          ...crmUser,
+          firstName: crmUser.firstName,
+          lastName: crmUser.lastName,
+          isActive: crmUser.isActive
+        };
+      }
+      
+      return undefined;
+    } catch (error) {
+      console.error('Error in getUserById:', error);
+      throw error;
+    }
   }
 
-  async updateUser(id: string, updateData: Partial<User>): Promise<User | undefined> {
-    const [user] = await db.update(users).set(updateData).where(eq(users.id, id)).returning();
-    return user;
+  async updateUser(id: string, updateData: any): Promise<any | undefined> {
+    try {
+      // First try updating regular users table
+      const regularUserExists = await db.select({ id: users.id }).from(users).where(eq(users.id, id));
+      if (regularUserExists.length > 0) {
+        const [updatedUser] = await db.update(users).set(updateData).where(eq(users.id, id)).returning();
+        return { ...updatedUser, role: 'regular' };
+      }
+      
+      // Then try updating CRM users table
+      const crmUserExists = await db.select({ id: crmUsers.id }).from(crmUsers).where(eq(crmUsers.id, id));
+      if (crmUserExists.length > 0) {
+        // Map field names for CRM users table - Drizzle handles the column mapping
+        const crmUpdateData = { ...updateData };
+        
+        const [updatedUser] = await db.update(crmUsers).set(crmUpdateData).where(eq(crmUsers.id, id)).returning();
+        return updatedUser;
+      }
+      
+      return undefined;
+    } catch (error) {
+      console.error('Error in updateUser:', error);
+      throw error;
+    }
   }
 
   async deleteUser(id: string): Promise<boolean> {
-    const result = await db.delete(users).where(eq(users.id, id));
-    return result.rowCount > 0;
+    try {
+      // First try deleting from regular users table
+      const regularResult = await db.delete(users).where(eq(users.id, id));
+      if (regularResult.rowCount > 0) {
+        return true;
+      }
+      
+      // Then try deleting from CRM users table
+      const crmResult = await db.delete(crmUsers).where(eq(crmUsers.id, id));
+      return crmResult.rowCount > 0;
+    } catch (error) {
+      console.error('Error in deleteUser:', error);
+      throw error;
+    }
   }
 
-  async getAllUsers(roleFilter?: string): Promise<User[]> {
-    // Get regular users from 'users' table
-    const regularUsers = await db.select({
-      id: users.id,
-      username: users.username,
-      email: users.email,
-      firstName: users.firstName,
-      lastName: users.lastName,
-      role: sql`'regular'`.as('role'),
-      isActive: users.isActive,
-      createdAt: users.createdAt
-    }).from(users).orderBy(desc(users.createdAt));
+  async getAllUsers(roleFilter?: string): Promise<any[]> {
+    try {
+      // Get regular users from 'users' table
+      const regularUsers = await db.select({
+        id: users.id,
+        username: users.username,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        role: sql<string>`'regular'`.as('role'),
+        isActive: users.isActive,
+        createdAt: users.createdAt
+      }).from(users).orderBy(desc(users.createdAt));
 
-    // Get CRM users (admin/owners) from 'crm_users' table  
-    const crmUsersQuery = await db.select({
-      id: crmUsers.id,
-      username: crmUsers.username,
-      email: crmUsers.email,
-      firstName: crmUsers.first_name,
-      lastName: crmUsers.last_name,
-      role: crmUsers.role,
-      isActive: crmUsers.is_active,
-      createdAt: crmUsers.createdAt
-    }).from(crmUsers).orderBy(desc(crmUsers.createdAt));
+      console.log('Regular users fetched:', regularUsers.length);
 
-    // Combine both arrays
-    const allUsers = [...regularUsers, ...crmUsersQuery];
-    
-    // Filter by role if specified
-    if (roleFilter) {
-      return allUsers.filter(user => user.role === roleFilter);
+      // Get CRM users (admin/owners) from 'crm_users' table  
+      const crmUsersData = await db.select({
+        id: crmUsers.id,
+        username: crmUsers.username,
+        email: crmUsers.email,
+        firstName: crmUsers.firstName,
+        lastName: crmUsers.lastName,
+        role: crmUsers.role,
+        isActive: crmUsers.isActive,
+        createdAt: crmUsers.createdAt
+      }).from(crmUsers).orderBy(desc(crmUsers.createdAt));
+
+      console.log('CRM users fetched:', crmUsersData.length);
+
+      // Combine both arrays with proper type handling
+      const allUsers = [
+        ...regularUsers.map(user => ({
+          ...user,
+          role: 'regular'
+        })),
+        ...crmUsersData
+      ];
+      
+      console.log('Total combined users:', allUsers.length);
+      
+      // Filter by role if specified
+      if (roleFilter && roleFilter !== 'all') {
+        const filtered = allUsers.filter(user => user.role === roleFilter);
+        console.log(`Filtered by role '${roleFilter}':`, filtered.length);
+        return filtered;
+      }
+      
+      return allUsers;
+    } catch (error) {
+      console.error('Error in getAllUsers:', error);
+      throw error;
     }
-    
-    return allUsers;
   }
 }
 
