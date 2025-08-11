@@ -2,9 +2,15 @@
 
 ## Overview
 
-QuickCourt is a full-stack, mobile-first web application designed for Gen-Z athletes to book sports facilities, join matches, manage subscriptions, split payments, earn rewards, and receive instant confirmations. The platform serves as a comprehensive sports booking and community platform that bridges the gap between sports facility owners and players.
+QuickCourt is a comprehensive sports booking platform with a hierarchical CRM/control panel system designed to manage multiple companies, facilities, and services under a unified administrative structure.
 
-The application supports three main user roles: regular users who book courts and join matches, facility owners who list and manage their venues, and administrators who oversee platform operations and facility approvals.
+**Platform Architecture:**
+- **Admin Level**: Platform controller and supervisor with full system access
+- **Company Level**: Multiple companies managed under admin oversight
+- **Owner Level**: Company controllers with owner role managing their assigned company's facilities
+- **User Level**: Regular customers booking sports facilities
+
+The CRM serves as the central control panel for this multi-tenant system, where admins manage companies, assign owners to companies, and owners manage their company's facilities and operations. All data flows through this hierarchical structure ensuring proper access control and data isolation.
 
 ## User Preferences
 
@@ -12,7 +18,7 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-### August 11, 2025 - Complete User Management System Implementation
+### August 11, 2025 - Complete Hierarchical CRM Control Panel Implementation
 - **Successfully migrated to user's personal Neon database**: Full database ownership and control with connection string: `ep-twilight-truth-a1qwp2nr-pooler.ap-southeast-1.aws.neon.tech`
 - **Fixed authentication system completely**: Resolved all login issues and "welcome back undefined" errors
 - **Clean database structure**: Truncated old data and created fresh test accounts with proper dual password system
@@ -40,15 +46,18 @@ Preferred communication style: Simple, everyday language.
   - **Rich form fields**: All demo data fields including description, location, contact details, amenities, image gallery
   - **API integration**: Complete backend support for facility creation with courts, proper authentication, role-based access
   - **Fixed navigation**: Separate "All Facilities" view from "Add Facility" form - no more dropdown confusion
-- **Current priority**: Complete facility management operational with full CRUD operations and company hierarchy
+- **Current priority**: Complete hierarchical CRM system where admin manages companies → owners manage assigned company facilities → users book from available facilities
+- **Architecture confirmed**: Multi-tenant control panel with proper data isolation and company-owner relationships established
 
 ### Previous - Application Restructuring
 - **Separated user interfaces**: Created distinct CRM/admin panel at `/crm` for facility owners and administrators
 - **Removed mobile app focus**: Updated user interface to focus on web-based booking, removed app download sections
 - **Role-based authentication**: Implemented separate login systems for regular users vs admin/owner users
-- **Role-based permissions**: 
-  - **Admin role**: Full access to all facilities, bookings, analytics, and platform management
-  - **Owner role**: Access only to their own facilities, bookings, and analytics
+- **Hierarchical Role-based System**: 
+  - **Admin role**: Platform supervisor with full access to all companies, facilities, bookings, analytics, and user management
+  - **Company-Owner relationship**: Owners are assigned to specific companies and can only access/manage their assigned company's data
+  - **Data isolation**: Each owner sees only their company's facilities, bookings, and analytics
+  - **Multi-tenant architecture**: Complete separation of company data while maintaining unified platform management
 - **CRM dashboard features**: Built comprehensive management interface with facilities, bookings, analytics, inventory, and settings tabs
 - **Test credentials working**: 
   - Admin: admin@quickcourt.com / admin123 (super user with full platform access)
