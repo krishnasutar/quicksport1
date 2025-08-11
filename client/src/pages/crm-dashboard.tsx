@@ -122,6 +122,11 @@ export default function CRMDashboard() {
   }
 
   const isAdmin = user.role === 'admin';
+  
+  // Debug: Log user role for troubleshooting
+  console.log('Current user:', user);
+  console.log('Is admin:', isAdmin);
+  console.log('User role:', user.role);
 
   const menuItems = [
     {
