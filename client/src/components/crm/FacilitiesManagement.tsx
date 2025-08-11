@@ -48,7 +48,13 @@ export function FacilitiesManagement() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-900">Facilities Management</h2>
-        <Button data-testid="button-add-facility">
+        <Button 
+          data-testid="button-add-facility"
+          onClick={() => {
+            // TODO: Implement add facility modal or redirect to add facility page
+            alert('Add Facility functionality will be implemented');
+          }}
+        >
           <Plus className="mr-2 h-4 w-4" />
           Add Facility
         </Button>

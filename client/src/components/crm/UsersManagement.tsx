@@ -42,7 +42,13 @@ export function UsersManagement() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-900">Users Management</h2>
-        <Button data-testid="button-add-user">
+        <Button 
+          data-testid="button-add-user"
+          onClick={() => {
+            // TODO: Implement add user modal or redirect to add user page
+            alert('Add User functionality will be implemented');
+          }}
+        >
           <UserPlus className="mr-2 h-4 w-4" />
           Add User
         </Button>

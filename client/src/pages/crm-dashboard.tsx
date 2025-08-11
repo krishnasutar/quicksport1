@@ -143,10 +143,7 @@ export default function CRMDashboard() {
       id: 'facilities',
       label: 'Facilities',
       icon: Building,
-      dropdown: [
-        { label: 'All Facilities', action: () => setActiveSection('all-facilities') },
-        { label: 'Add Facility', action: () => setActiveSection('add-facility') }
-      ]
+      action: () => setActiveSection('facilities')
     },
     {
       id: 'bookings',
@@ -625,8 +622,8 @@ export default function CRMDashboard() {
             <UsersManagement />
           )}
 
-          {/* Facilities Management Sections */}
-          {(activeSection === 'all-facilities' || activeSection === 'add-facility') && (
+          {/* Facilities Management Section */}
+          {activeSection === 'facilities' && (
             <FacilitiesManagement />
           )}
 
