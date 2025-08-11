@@ -182,8 +182,32 @@ export class DatabaseStorage implements IStorage {
       .from(facilities)
       .where(eq(facilities.status, "approved"));
 
+    // Enhance facilities with courts data
+    const facilitiesWithCourts = await Promise.all(
+      result.map(async (facility) => {
+        const courts = await db
+          .select({
+            id: courts.id,
+            name: courts.name,
+            sportType: courts.sportType,
+            pricePerHour: courts.pricePerHour,
+            isAvailable: courts.isAvailable
+          })
+          .from(courts)
+          .where(eq(courts.facilityId, facility.id));
+        
+        return {
+          ...facility,
+          courts,
+          status: 'approved', // since we only select approved facilities
+          amenities: facility.amenities || [],
+          ownerId: 'system' // placeholder for now
+        };
+      })
+    );
+
     return {
-      facilities: result,
+      facilities: facilitiesWithCourts,
       total: totalResult.count
     };
   }

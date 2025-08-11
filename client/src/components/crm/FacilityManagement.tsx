@@ -58,10 +58,12 @@ export function FacilityManagement() {
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [activeTab, setActiveTab] = useState("overview");
 
-  // Fetch facilities
-  const { data: facilities = [], isLoading: facilitiesLoading } = useQuery<FacilityWithCourts[]>({
+  // Fetch facilities 
+  const { data: facilitiesResponse, isLoading: facilitiesLoading } = useQuery<{facilities: FacilityWithCourts[], pagination: any}>({
     queryKey: ['/api/facilities'],
   });
+  
+  const facilities = facilitiesResponse?.facilities || [];
 
   // Fetch sports for categories
   const { data: sportsCategories = [] } = useQuery<{sport: string, count: number}[]>({
