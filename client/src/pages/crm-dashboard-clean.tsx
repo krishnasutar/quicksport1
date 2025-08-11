@@ -30,8 +30,8 @@ import { OtherManagement } from "@/components/crm/OtherManagement";
 
 interface CRMUser {
   id: string;
-  firstName: string;
-  lastName: string;
+  first_name: string;
+  last_name: string;
   email: string;
   role: 'admin' | 'owner';
 }
@@ -202,12 +202,12 @@ export default function CRMDashboard() {
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
                 <span className="text-white text-sm font-medium">
-                  {user.firstName[0]}{user.lastName[0]}
+                  {user.first_name[0]}{user.last_name[0]}
                 </span>
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-700 truncate">
-                  {user.firstName} {user.lastName}
+                  {user.first_name} {user.last_name}
                 </p>
                 <Badge variant={isAdmin ? "default" : "secondary"} className="text-xs">
                   {isAdmin ? 'Admin' : 'Owner'}
