@@ -489,30 +489,122 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getOwnerDashboardStats(ownerId: string): Promise<any> {
-    const [totalRevenue] = await db
-      .select({ total: sum(bookings.finalAmount) })
-      .from(bookings)
-      .innerJoin(courts, eq(bookings.courtId, courts.id))
-      .innerJoin(facilities, eq(courts.facilityId, facilities.id))
-      .where(eq(facilities.ownerId, ownerId));
+    try {
+      // Basic stats for the owner's facilities
+      const [totalRevenue] = await db
+        .select({ total: sum(bookings.finalAmount) })
+        .from(bookings)
+        .innerJoin(courts, eq(bookings.courtId, courts.id))
+        .innerJoin(facilities, eq(courts.facilityId, facilities.id))
+        .where(and(
+          eq(facilities.ownerId, ownerId),
+          eq(bookings.status, 'confirmed')
+        ));
 
-    const [totalBookings] = await db
-      .select({ count: count() })
-      .from(bookings)
-      .innerJoin(courts, eq(bookings.courtId, courts.id))
-      .innerJoin(facilities, eq(courts.facilityId, facilities.id))
-      .where(eq(facilities.ownerId, ownerId));
+      const [totalBookings] = await db
+        .select({ count: count() })
+        .from(bookings)
+        .innerJoin(courts, eq(bookings.courtId, courts.id))
+        .innerJoin(facilities, eq(courts.facilityId, facilities.id))
+        .where(and(
+          eq(facilities.ownerId, ownerId),
+          eq(bookings.status, 'confirmed')
+        ));
 
-    const [totalFacilities] = await db
-      .select({ count: count() })
-      .from(facilities)
-      .where(eq(facilities.ownerId, ownerId));
+      const [totalFacilities] = await db
+        .select({ count: count() })
+        .from(facilities)
+        .where(eq(facilities.ownerId, ownerId));
 
-    return {
-      totalRevenue: totalRevenue.total || 0,
-      totalBookings: totalBookings.count || 0,
-      totalFacilities: totalFacilities.count || 0
-    };
+      // Monthly revenue trend for owner's facilities
+      const monthlyRevenue = await db
+        .select({
+          month: sql<string>`TO_CHAR(${bookings.createdAt}, 'Mon')`,
+          revenue: sum(bookings.finalAmount),
+          bookingCount: count(bookings.id)
+        })
+        .from(bookings)
+        .innerJoin(courts, eq(bookings.courtId, courts.id))
+        .innerJoin(facilities, eq(courts.facilityId, facilities.id))
+        .where(and(
+          eq(facilities.ownerId, ownerId),
+          eq(bookings.status, 'confirmed'),
+          gte(bookings.createdAt, sql`NOW() - INTERVAL '6 months'`)
+        ))
+        .groupBy(sql`TO_CHAR(${bookings.createdAt}, 'Mon'), DATE_TRUNC('month', ${bookings.createdAt})`)
+        .orderBy(sql`DATE_TRUNC('month', ${bookings.createdAt})`);
+
+      // Top performing facilities for this owner
+      const facilityPerformance = await db
+        .select({
+          facilityId: facilities.id,
+          facilityName: facilities.name,
+          location: sql<string>`${facilities.address} || ', ' || ${facilities.city}`,
+          totalRevenue: sum(bookings.finalAmount),
+          totalBookings: count(bookings.id),
+          avgRating: facilities.rating
+        })
+        .from(facilities)
+        .leftJoin(courts, eq(courts.facilityId, facilities.id))
+        .leftJoin(bookings, and(
+          eq(bookings.courtId, courts.id),
+          eq(bookings.status, 'confirmed')
+        ))
+        .where(eq(facilities.ownerId, ownerId))
+        .groupBy(facilities.id, facilities.name, facilities.address, facilities.city, facilities.rating)
+        .orderBy(desc(sum(bookings.finalAmount)));
+
+      // Sports breakdown for owner's facilities
+      const sportsBreakdown = await db
+        .select({
+          sport: courts.sportType,
+          revenue: sum(bookings.finalAmount),
+          bookings: count(bookings.id)
+        })
+        .from(courts)
+        .innerJoin(facilities, eq(courts.facilityId, facilities.id))
+        .leftJoin(bookings, and(
+          eq(bookings.courtId, courts.id),
+          eq(bookings.status, 'confirmed')
+        ))
+        .where(eq(facilities.ownerId, ownerId))
+        .groupBy(courts.sportType)
+        .orderBy(desc(sum(bookings.finalAmount)));
+
+      return {
+        totalRevenue: parseFloat(totalRevenue.total || '0'),
+        totalBookings: totalBookings.count || 0,
+        totalFacilities: totalFacilities.count || 0,
+        monthlyRevenue: monthlyRevenue.map(m => ({
+          month: m.month,
+          revenue: parseFloat(m.revenue || '0'),
+          bookingCount: m.bookingCount || 0
+        })),
+        facilityPerformance: facilityPerformance.map(f => ({
+          facilityId: f.facilityId,
+          facilityName: f.facilityName,
+          location: f.location,
+          totalRevenue: parseFloat(f.totalRevenue || '0'),
+          totalBookings: f.totalBookings || 0,
+          avgRating: parseFloat(f.avgRating || '0')
+        })),
+        sportsBreakdown: sportsBreakdown.map(s => ({
+          sport: s.sport,
+          revenue: parseFloat(s.revenue || '0'),
+          bookings: s.bookings || 0
+        }))
+      };
+    } catch (error) {
+      console.error('Owner dashboard stats error:', error);
+      return {
+        totalRevenue: 0,
+        totalBookings: 0,
+        totalFacilities: 0,
+        monthlyRevenue: [],
+        facilityPerformance: [],
+        sportsBreakdown: []
+      };
+    }
   }
 
   async getAdminDashboardStats(): Promise<any> {

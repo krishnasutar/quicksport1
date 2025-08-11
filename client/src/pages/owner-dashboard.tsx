@@ -31,32 +31,34 @@ export default function OwnerDashboard() {
     queryKey: ['/api/facilities', { ownerId: user.id }],
   });
 
-  const stats = dashboardStats || {};
+  const stats = dashboardStats || {
+    totalRevenue: 0,
+    totalBookings: 0,
+    totalFacilities: 0,
+    monthlyRevenue: [],
+    facilityPerformance: [],
+    sportsBreakdown: []
+  };
   const bookings = bookingsData?.bookings || [];
   const facilities = facilitiesData?.facilities || [];
 
-  // Mock data for charts
-  const bookingTrends = [
-    { name: 'Mon', bookings: 12, revenue: 2400 },
-    { name: 'Tue', bookings: 19, revenue: 3800 },
-    { name: 'Wed', bookings: 3, revenue: 600 },
-    { name: 'Thu', bookings: 5, revenue: 1000 },
-    { name: 'Fri', bookings: 25, revenue: 5000 },
-    { name: 'Sat', bookings: 32, revenue: 6400 },
-    { name: 'Sun', bookings: 28, revenue: 5600 },
-  ];
+  // Use real data from backend analytics
+  const bookingTrends = stats.monthlyRevenue || [];
+  
+  // Transform sports breakdown for charts
+  const sportsChartData = (stats.sportsBreakdown || []).map(item => ({
+    sport: item.sport.charAt(0).toUpperCase() + item.sport.slice(1),
+    revenue: item.revenue,
+    bookings: item.bookings
+  }));
 
-  const peakHours = [
-    { hour: '6AM', bookings: 5 },
-    { hour: '8AM', bookings: 12 },
-    { hour: '10AM', bookings: 8 },
-    { hour: '12PM', bookings: 15 },
-    { hour: '2PM', bookings: 3 },
-    { hour: '4PM', bookings: 18 },
-    { hour: '6PM', bookings: 25 },
-    { hour: '8PM', bookings: 20 },
-    { hour: '10PM', bookings: 8 },
-  ];
+  // Create facility performance data
+  const facilityChartData = (stats.facilityPerformance || []).map(facility => ({
+    name: facility.facilityName.split(' ').slice(0, 2).join(' '), // Shorten names for charts
+    revenue: facility.totalRevenue,
+    bookings: facility.totalBookings,
+    rating: facility.avgRating
+  }));
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -137,8 +139,8 @@ export default function OwnerDashboard() {
                   <DollarSign className="h-6 w-6 text-brand-purple" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Monthly Revenue</p>
-                  <p className="text-2xl font-bold text-gray-900">₹{stats.monthlyRevenue || '25,400'}</p>
+                  <p className="text-sm text-gray-600">Total Revenue</p>
+                  <p className="text-2xl font-bold text-gray-900">₹{stats.totalRevenue?.toLocaleString() || '0'}</p>
                 </div>
               </div>
             </CardContent>
@@ -151,8 +153,8 @@ export default function OwnerDashboard() {
                   <TrendingUp className="h-6 w-6 text-brand-orange" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Active Courts</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.activeCourts || '12'}</p>
+                  <p className="text-sm text-gray-600">Sports Offered</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.sportsBreakdown?.length || '0'}</p>
                 </div>
               </div>
             </CardContent>
@@ -170,58 +172,90 @@ export default function OwnerDashboard() {
 
           <TabsContent value="analytics" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Booking Trends */}
+              {/* Monthly Revenue Trends */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Booking Trends</CardTitle>
+                  <CardTitle>Monthly Revenue Trends</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={bookingTrends}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip />
-                      <Line type="monotone" dataKey="bookings" stroke="hsl(var(--brand-indigo))" strokeWidth={2} />
-                    </LineChart>
-                  </ResponsiveContainer>
+                  {bookingTrends.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={300}>
+                      <LineChart data={bookingTrends}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="month" />
+                        <YAxis />
+                        <Tooltip formatter={(value) => [`₹${value}`, 'Revenue']} />
+                        <Line type="monotone" dataKey="revenue" stroke="hsl(var(--brand-indigo))" strokeWidth={2} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="flex items-center justify-center h-[300px] text-gray-500">
+                      No revenue data available yet
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
-              {/* Revenue Chart */}
+              {/* Sports Breakdown */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Revenue Overview</CardTitle>
+                  <CardTitle>Sports Revenue Breakdown</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={bookingTrends}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip />
-                      <Bar dataKey="revenue" fill="hsl(var(--brand-emerald))" />
-                    </BarChart>
-                  </ResponsiveContainer>
+                  {sportsChartData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={sportsChartData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="sport" />
+                        <YAxis />
+                        <Tooltip formatter={(value) => [`₹${value}`, 'Revenue']} />
+                        <Bar dataKey="revenue" fill="hsl(var(--brand-emerald))" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="flex items-center justify-center h-[300px] text-gray-500">
+                      No sports data available yet
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
 
-            {/* Peak Hours */}
+            {/* Facility Performance */}
             <Card>
               <CardHeader>
-                <CardTitle>Peak Hours Analysis</CardTitle>
+                <CardTitle>Facility Performance</CardTitle>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={peakHours}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="hour" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="bookings" fill="hsl(var(--brand-purple))" />
-                  </BarChart>
-                </ResponsiveContainer>
+                {facilityChartData.length > 0 ? (
+                  <div className="space-y-4">
+                    {stats.facilityPerformance.map((facility, index) => (
+                      <div key={facility.facilityId} className="border border-gray-200 rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="font-semibold text-gray-900">{facility.facilityName}</h3>
+                          <div className="flex items-center space-x-4">
+                            <span className="text-sm text-gray-600">Rating: {facility.avgRating.toFixed(1)}/5</span>
+                          </div>
+                        </div>
+                        <div className="text-sm text-gray-600 mb-2">{facility.location}</div>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <span className="text-lg font-bold text-gray-900">₹{facility.totalRevenue.toLocaleString()}</span>
+                            <span className="text-sm text-gray-600 ml-2">Revenue</span>
+                          </div>
+                          <div>
+                            <span className="text-lg font-bold text-gray-900">{facility.totalBookings}</span>
+                            <span className="text-sm text-gray-600 ml-2">Bookings</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-[300px] text-gray-500">
+                    No facility performance data available yet
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
