@@ -29,14 +29,19 @@ const authenticateToken = (req: any, res: Response, next: any) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
+  console.log('Auth header:', authHeader);
+  console.log('Extracted token:', token ? `${token.substring(0, 20)}...` : 'NO TOKEN');
+
   if (!token) {
     return res.status(401).json({ message: "Access token required" });
   }
 
   jwt.verify(token, JWT_SECRET, (err: any, user: any) => {
     if (err) {
+      console.log('JWT verification error:', err.message);
       return res.status(403).json({ message: "Invalid or expired token" });
     }
+    console.log('JWT verified successfully for user:', user.id);
     req.user = user;
     next();
   });
