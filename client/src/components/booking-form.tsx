@@ -19,8 +19,10 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/auth-context";
 import StripeCheckout from "./StripeCheckout";
 
-// Initialize Stripe
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY!);
+// Initialize Stripe (only if key is available)
+const stripePromise = import.meta.env.VITE_STRIPE_PUBLIC_KEY 
+  ? loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY) 
+  : null;
 
 interface BookingFormProps {
   court: any;
@@ -98,6 +100,11 @@ export default function BookingForm({ court, onSubmit, isLoading }: BookingFormP
 
     // If Stripe payment is selected, create payment intent and show checkout
     if (paymentMethod === 'stripe') {
+      if (!stripePromise) {
+        alert('Stripe is not configured. Please use wallet payment or contact support.');
+        return;
+      }
+
       try {
         const token = localStorage.getItem('token');
         const response = await fetch('/api/create-payment-intent', {
@@ -517,7 +524,7 @@ export default function BookingForm({ court, onSubmit, isLoading }: BookingFormP
       </Button>
     
       {/* Stripe Checkout Modal */}
-      {showStripeCheckout && clientSecret && (
+      {showStripeCheckout && clientSecret && stripePromise && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-1 max-w-md w-full mx-4">
             <Elements stripe={stripePromise} options={{ clientSecret }}>
