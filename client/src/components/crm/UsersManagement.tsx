@@ -101,9 +101,9 @@ export function UsersManagement({ section, isAdmin }: UsersManagementProps) {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Roles</SelectItem>
-                <SelectItem value="admin">Admins</SelectItem>
-                <SelectItem value="owner">Owners</SelectItem>
-                <SelectItem value="regular">Regular</SelectItem>
+                <SelectItem value="admin">Administrators</SelectItem>
+                <SelectItem value="owner">Facility Owners</SelectItem>
+                <SelectItem value="regular">Regular Users</SelectItem>
               </SelectContent>
             </Select>
           </div>
