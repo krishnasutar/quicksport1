@@ -48,7 +48,7 @@ import {
 } from "recharts";
 
 import { UsersManagement } from "@/components/crm/UsersManagement";
-import { FacilitiesManagement } from "@/components/crm/FacilitiesManagement";
+import { FacilityManagement } from "@/components/crm/FacilityManagement";
 import { OtherManagement } from "@/components/crm/OtherManagement";
 
 interface CRMUser {
@@ -614,7 +614,7 @@ export default function CRMDashboard() {
 
           {/* Facilities Management Sections */}
           {(activeSection === 'all-facilities' || activeSection === 'add-facility') && (
-            <FacilitiesManagement section={activeSection} isAdmin={isAdmin} />
+            <FacilityManagement />
           )}
 
           {/* Other sections */}
