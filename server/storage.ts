@@ -146,77 +146,32 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getFacilities(filters: any): Promise<{ facilities: any[]; total: number }> {
-    const { sport, city, minPrice, maxPrice, rating, page = 1, limit = 9 } = filters;
-    
-    let query = db.select({
-      id: facilities.id,
-      name: facilities.name,
-      description: facilities.description,
-      address: facilities.address,
-      city: facilities.city,
-      state: facilities.state,
-      images: facilities.images,
-      rating: facilities.rating,
-      totalReviews: facilities.totalReviews,
-    }).from(facilities)
-      .where(eq(facilities.status, "approved"));
+    try {
+      const result = await db.select().from(facilities).where(eq(facilities.status, "approved"));
+      
+      const facilitiesWithCourts = await Promise.all(
+        result.map(async (facility) => {
+          const facilityCourts = await db
+            .select()
+            .from(courts)
+            .where(eq(courts.facilityId, facility.id));
+          
+          return {
+            ...facility,
+            courts: facilityCourts,
+            amenities: facility.amenities || [],
+          };
+        })
+      );
 
-    // Add filters
-    const conditions = [];
-    if (city) conditions.push(ilike(facilities.city, `%${city}%`));
-    if (rating) conditions.push(gte(facilities.rating, rating.toString()));
-
-    if (conditions.length > 0) {
-      query = db.select({
-        id: facilities.id,
-        name: facilities.name,
-        description: facilities.description,
-        address: facilities.address,
-        city: facilities.city,
-        state: facilities.state,
-        images: facilities.images,
-        rating: facilities.rating,
-        totalReviews: facilities.totalReviews,
-      }).from(facilities).where(and(eq(facilities.status, "approved"), ...conditions));
+      return {
+        facilities: facilitiesWithCourts,
+        total: facilitiesWithCourts.length
+      };
+    } catch (error) {
+      console.error('Get facilities error:', error);
+      return { facilities: [], total: 0 };
     }
-
-    const result = await query
-      .limit(limit)
-      .offset((page - 1) * limit);
-
-    const [totalResult] = await db
-      .select({ count: count() })
-      .from(facilities)
-      .where(eq(facilities.status, "approved"));
-
-    // Enhance facilities with courts data
-    const facilitiesWithCourts = await Promise.all(
-      result.map(async (facility) => {
-        const facilityCourts = await db
-          .select({
-            id: courts.id,
-            name: courts.name,
-            sportType: courts.sportType,
-            pricePerHour: courts.pricePerHour,
-            isAvailable: courts.isAvailable
-          })
-          .from(courts)
-          .where(eq(courts.facilityId, facility.id));
-        
-        return {
-          ...facility,
-          courts: facilityCourts,
-          status: 'approved', // since we only select approved facilities
-          amenities: facility.amenities || [],
-          ownerId: 'system' // placeholder for now
-        };
-      })
-    );
-
-    return {
-      facilities: facilitiesWithCourts,
-      total: totalResult.count
-    };
   }
 
   async getFacilityById(id: string): Promise<Facility | undefined> {

@@ -76,6 +76,17 @@ export default function CRMDashboard() {
       setActiveSection(sectionParam);
     }
 
+    // Listen for URL changes to update section
+    const handlePopState = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const sectionParam = urlParams.get('section');
+      if (sectionParam) {
+        setActiveSection(sectionParam);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
     const crmToken = localStorage.getItem('crm_token');
     const crmUser = localStorage.getItem('crm_user');
     

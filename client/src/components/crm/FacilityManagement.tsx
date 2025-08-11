@@ -132,11 +132,8 @@ export function FacilityManagement() {
         <Button 
           className="gap-2"
           onClick={() => {
-            // Navigate to add facility page by updating the URL
-            const currentUrl = new URL(window.location.href);
-            currentUrl.searchParams.set('section', 'add-facility');
-            window.history.pushState({}, '', currentUrl.toString());
-            window.dispatchEvent(new PopStateEvent('popstate'));
+            // Navigate to add facility by calling the parent navigation function
+            window.location.href = '/crm?section=add-facility';
           }}
         >
           <Plus className="h-4 w-4" />
