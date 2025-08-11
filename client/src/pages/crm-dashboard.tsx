@@ -109,11 +109,16 @@ export default function CRMDashboard() {
   };
 
   const toggleExpandedMenu = (menuId: string) => {
-    setExpandedMenus(prev => 
-      prev.includes(menuId) 
+    setExpandedMenus(prev => {
+      const isExpanded = prev.includes(menuId);
+      // Optional: Only allow one menu expanded at a time
+      // return isExpanded ? [] : [menuId];
+      
+      // Allow multiple menus expanded
+      return isExpanded 
         ? prev.filter(id => id !== menuId)
-        : [...prev, menuId]
-    );
+        : [...prev, menuId];
+    });
   };
 
   if (!user) {
@@ -137,7 +142,8 @@ export default function CRMDashboard() {
         { label: 'All Users', action: () => setActiveSection('all-users') },
         { label: 'Owners', action: () => setActiveSection('owners') },
         { label: 'Regular Users', action: () => setActiveSection('regular-users') }
-      ]
+      ],
+      showForRoles: ['admin']
     },
     {
       id: 'facilities',
@@ -164,13 +170,15 @@ export default function CRMDashboard() {
       dropdown: [
         { label: 'Equipment', action: () => setActiveSection('equipment') },
         { label: 'Maintenance', action: () => setActiveSection('maintenance') }
-      ]
+      ],
+      showForRoles: ['admin', 'owner']
     },
     {
       id: 'settings',
       label: 'Settings',
       icon: Settings,
-      action: () => setActiveSection('settings')
+      action: () => setActiveSection('settings'),
+      showForRoles: ['admin', 'owner']
     }
   ];
 
@@ -199,46 +207,53 @@ export default function CRMDashboard() {
 
         {/* Navigation */}
         <nav className="mt-8 px-4 flex-1 overflow-y-auto">
-          <div className="space-y-1">
-            {menuItems.map((item) => (
-              <div key={item.id}>
+          <div className="space-y-2">
+            {menuItems.filter(item => !item.showForRoles || item.showForRoles.includes(user.role)).map((item) => (
+              <div key={item.id} className="w-full">
                 {item.dropdown ? (
-                  <div>
+                  <div className="w-full">
+                    {/* Main accordion item */}
                     <Button 
                       variant="ghost" 
-                      className={`w-full justify-between text-gray-700 hover:bg-purple-50 hover:text-purple-600 ${
-                        expandedMenus.includes(item.id) ? 'bg-purple-50 text-purple-600' : ''
+                      className={`w-full justify-between text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors duration-200 ${
+                        expandedMenus.includes(item.id) ? 'bg-purple-100 text-purple-700 font-medium' : ''
                       }`}
                       onClick={() => toggleExpandedMenu(item.id)}
-                      data-testid={`button-${item.id}`}
+                      data-testid={`button-${item.id}-toggle`}
                     >
                       <div className="flex items-center">
-                        <item.icon className="mr-3 h-5 w-5" />
+                        <item.icon className={`mr-3 h-5 w-5 transition-colors duration-200 ${
+                          expandedMenus.includes(item.id) ? 'text-purple-600' : ''
+                        }`} />
                         {item.label}
                       </div>
-                      {expandedMenus.includes(item.id) ? (
-                        <ChevronDown className="h-4 w-4 transition-all duration-200" />
-                      ) : (
-                        <ChevronRight className="h-4 w-4 transition-all duration-200" />
-                      )}
+                      <ChevronRight className={`h-4 w-4 transition-transform duration-300 ease-in-out ${
+                        expandedMenus.includes(item.id) ? 'rotate-90' : ''
+                      }`} />
                     </Button>
                     
-                    {/* Smooth accordion dropdown */}
-                    <div className={`overflow-hidden transition-all duration-300 ease-out ${
-                      expandedMenus.includes(item.id) 
-                        ? 'max-h-40 opacity-100' 
-                        : 'max-h-0 opacity-0'
-                    }`}>
-                      <div className="ml-8 mt-1 space-y-1 pb-2">
+                    {/* Accordion sub-items with smooth height animation */}
+                    <div 
+                      className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                        expandedMenus.includes(item.id) 
+                          ? 'max-h-96 opacity-100 mt-1' 
+                          : 'max-h-0 opacity-0'
+                      }`}
+                    >
+                      <div className="ml-6 border-l-2 border-purple-200 pl-4 space-y-1">
                         {item.dropdown.map((subItem, index) => (
                           <Button 
                             key={index}
                             variant="ghost" 
                             size="sm"
-                            className="w-full justify-start text-sm text-gray-600 hover:bg-purple-50 hover:text-purple-600 pl-2 py-1.5"
+                            className={`w-full justify-start text-sm text-gray-600 hover:bg-purple-50 hover:text-purple-600 transition-colors duration-150 relative ${
+                              // Check if this sub-item is active based on activeSection
+                              activeSection === subItem.action.toString().match(/'([^']+)'/)?.[1] ? 'bg-purple-100 text-purple-700 font-medium' : ''
+                            }`}
                             onClick={subItem.action}
                             data-testid={`button-${item.id}-${subItem.label.toLowerCase().replace(/\s+/g, '-')}`}
                           >
+                            <div className="w-2 h-2 rounded-full bg-gray-400 mr-3 flex-shrink-0"></div>
                             {subItem.label}
                           </Button>
                         ))}
@@ -248,13 +263,15 @@ export default function CRMDashboard() {
                 ) : (
                   <Button 
                     variant="ghost" 
-                    className={`w-full justify-start text-gray-700 hover:bg-purple-50 hover:text-purple-600 ${
-                      activeSection === item.id ? 'bg-purple-50 text-purple-600' : ''
+                    className={`w-full justify-start text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-colors duration-200 ${
+                      activeSection === item.id ? 'bg-purple-100 text-purple-700 font-medium' : ''
                     }`}
                     onClick={item.action}
                     data-testid={`button-${item.id}`}
                   >
-                    <item.icon className="mr-3 h-5 w-5" />
+                    <item.icon className={`mr-3 h-5 w-5 transition-colors duration-200 ${
+                      activeSection === item.id ? 'text-purple-600' : ''
+                    }`} />
                     {item.label}
                   </Button>
                 )}
