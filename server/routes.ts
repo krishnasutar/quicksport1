@@ -3,8 +3,15 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { insertUserSchema, insertFacilitySchema, insertBookingSchema, insertReviewSchema, insertCompanySchema } from "@shared/schema";
+import { insertUserSchema, insertFacilitySchema, insertBookingSchema, insertReviewSchema, insertCompanySchema, courts, facilities } from "@shared/schema";
 import { z } from "zod";
+import { drizzle } from "drizzle-orm/neon-http";
+import { neon } from "@neondatabase/serverless";
+import { eq } from "drizzle-orm";
+
+// Database connection
+const sql = neon(process.env.DATABASE_URL!);
+const db = drizzle(sql);
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this";
 
