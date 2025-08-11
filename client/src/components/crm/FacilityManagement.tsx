@@ -156,21 +156,22 @@ export function FacilityManagement({ onNavigateToAddFacility }: FacilityManageme
       return response.json();
     },
     onSuccess: () => {
-      console.log('Status updated successfully, clearing filter and invalidating cache');
+      console.log('Status updated successfully, refreshing data');
       
-      // FIRST: Clear the status filter to "all" 
-      setSelectedStatus("all");
-      
-      // THEN: Force a complete cache refresh 
-      queryClient.removeQueries({ queryKey: ['/api/facilities'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/facilities'] });
+      // Invalidate and refetch the admin facilities data
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/facilities'] });
       
       // Also invalidate sports data as it might affect counts
       queryClient.invalidateQueries({ queryKey: ['/api/sports'] });
       
+      // Simple reload to show immediate effect
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
+      
       toast({
         title: "Success",
-        description: "Facility status updated successfully. Showing all facilities.",
+        description: "Facility status updated successfully. Page will refresh to show changes.",
       });
     },
     onError: (error: any) => {
