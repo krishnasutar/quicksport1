@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Elements } from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +17,10 @@ import { CalendarIcon, Plus, Minus, Gift, CreditCard, Wallet, Users } from "luci
 import { format, addDays, isBefore, startOfDay } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/auth-context";
+import StripeCheckout from "./StripeCheckout";
+
+// Initialize Stripe
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY!);
 
 interface BookingFormProps {
   court: any;
@@ -34,6 +40,8 @@ export default function BookingForm({ court, onSubmit, isLoading }: BookingFormP
   const [couponCode, setCouponCode] = useState("");
   const [splitPayment, setSplitPayment] = useState(false);
   const [splitUsers, setSplitUsers] = useState([{ name: "", upiId: "" }]);
+  const [showStripeCheckout, setShowStripeCheckout] = useState(false);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
 
   // Fetch user's wallet balance
   const { data: walletData } = useQuery({
@@ -73,7 +81,7 @@ export default function BookingForm({ court, onSubmit, isLoading }: BookingFormP
   const couponDiscount = 0; // TODO: Implement coupon validation
   const finalAmount = basePrice - rewardPointsDiscount - couponDiscount;
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!bookingDate || !startTime) {
@@ -85,8 +93,43 @@ export default function BookingForm({ court, onSubmit, isLoading }: BookingFormP
       alert(`Insufficient wallet balance! Your balance: ₹${walletBalance.toFixed(2)}, Required: ₹${finalAmount.toFixed(2)}`);
       return;
     }
-    
+
     const endTime = calculateEndTime(startTime, duration);
+
+    // If Stripe payment is selected, create payment intent and show checkout
+    if (paymentMethod === 'stripe') {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/create-payment-intent', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            amount: finalAmount,
+            courtId: court.id,
+            bookingDate: format(bookingDate, 'yyyy-MM-dd'),
+            startTime,
+            endTime
+          })
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          alert(error.message || 'Failed to create payment');
+          return;
+        }
+
+        const { clientSecret } = await response.json();
+        setClientSecret(clientSecret);
+        setShowStripeCheckout(true);
+        return;
+      } catch (error) {
+        alert('Failed to initialize payment. Please try again.');
+        return;
+      }
+    }
     
     const bookingData = {
       courtId: court.id,
@@ -103,6 +146,30 @@ export default function BookingForm({ court, onSubmit, isLoading }: BookingFormP
       couponCode: couponCode || null,
     };
     
+    onSubmit(bookingData);
+  };
+
+  const handleStripePaymentSuccess = (paymentIntentId: string) => {
+    const endTime = calculateEndTime(startTime, duration);
+    
+    const bookingData = {
+      courtId: court.id,
+      bookingDate: bookingDate!.toISOString(),
+      startTime,
+      endTime,
+      totalAmount: basePrice.toFixed(2),
+      discountAmount: (rewardPointsDiscount + couponDiscount).toFixed(2),
+      finalAmount: finalAmount.toFixed(2),
+      paymentMethod: 'stripe',
+      paymentIntentId,
+      notes: notes || null,
+      splitPayments: splitPayment ? splitUsers.filter(u => u.name && u.upiId) : [],
+      useRewardPoints,
+      couponCode: couponCode || null,
+    };
+    
+    setShowStripeCheckout(false);
+    setClientSecret(null);
     onSubmit(bookingData);
   };
 
@@ -267,17 +334,17 @@ export default function BookingForm({ court, onSubmit, isLoading }: BookingFormP
           
           <div
             className={`border-2 rounded-lg p-3 cursor-pointer transition-all ${
-              paymentMethod === 'card'
+              paymentMethod === 'stripe'
                 ? 'border-brand-indigo bg-brand-indigo/5'
                 : 'border-gray-200 hover:border-gray-300'
             }`}
-            onClick={() => setPaymentMethod('card')}
+            onClick={() => setPaymentMethod('stripe')}
           >
             <div className="flex items-center space-x-2">
               <CreditCard className="h-5 w-5 text-brand-cyan" />
               <div>
-                <h4 className="font-medium">Card</h4>
-                <p className="text-sm text-gray-500">Credit/Debit</p>
+                <h4 className="font-medium">Card Payment</h4>
+                <p className="text-sm text-gray-500">Secure via Stripe</p>
               </div>
             </div>
           </div>
@@ -448,6 +515,28 @@ export default function BookingForm({ court, onSubmit, isLoading }: BookingFormP
           : `Book Court for ₹${finalAmount.toFixed(0)}`
         }
       </Button>
+    
+      {/* Stripe Checkout Modal */}
+      {showStripeCheckout && clientSecret && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-1 max-w-md w-full mx-4">
+            <Elements stripe={stripePromise} options={{ clientSecret }}>
+              <StripeCheckout
+                amount={finalAmount}
+                onPaymentSuccess={handleStripePaymentSuccess}
+                onCancel={() => {
+                  setShowStripeCheckout(false);
+                  setClientSecret(null);
+                }}
+                courtName={court.name}
+                facilityName={court.facilityName || 'Facility'}
+                bookingDate={bookingDate ? format(bookingDate, 'MMM dd, yyyy') : ''}
+                timeSlot={startTime ? `${startTime} - ${calculateEndTime(startTime, duration)}` : ''}
+              />
+            </Elements>
+          </div>
+        </div>
+      )}
     </form>
   );
 }

@@ -8,12 +8,21 @@ import { z } from "zod";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import { eq } from "drizzle-orm";
+import Stripe from "stripe";
 
 // Database connection
 const sql = neon(process.env.DATABASE_URL!);
 const db = drizzle(sql);
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this";
+
+// Initialize Stripe (only if key is provided)
+let stripe: Stripe | null = null;
+if (process.env.STRIPE_SECRET_KEY) {
+  stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: "2024-11-20.acacia",
+  });
+}
 
 // Middleware to verify JWT token
 const authenticateToken = (req: any, res: Response, next: any) => {
@@ -393,6 +402,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create Stripe Payment Intent
+  app.post("/api/create-payment-intent", authenticateToken, async (req: any, res: Response) => {
+    try {
+      if (!stripe) {
+        return res.status(500).json({ 
+          message: "Stripe is not configured. Please set STRIPE_SECRET_KEY environment variable." 
+        });
+      }
+
+      const { amount, courtId, bookingDate, startTime, endTime } = req.body;
+      
+      if (!amount || amount <= 0) {
+        return res.status(400).json({ message: "Valid amount is required" });
+      }
+
+      // Check court availability before creating payment intent
+      const isAvailable = await storage.checkCourtAvailability(
+        courtId,
+        new Date(bookingDate),
+        startTime,
+        endTime
+      );
+
+      if (!isAvailable) {
+        return res.status(409).json({ 
+          message: "Court is not available for the selected time slot",
+          error: "COURT_UNAVAILABLE"
+        });
+      }
+
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(amount * 100), // Convert to cents
+        currency: "inr",
+        metadata: {
+          userId: req.user.id,
+          courtId,
+          bookingDate,
+          startTime,
+          endTime
+        }
+      });
+
+      res.json({ clientSecret: paymentIntent.client_secret });
+    } catch (error: any) {
+      console.error("Create payment intent error:", error);
+      res.status(500).json({ 
+        message: "Error creating payment intent: " + error.message 
+      });
+    }
+  });
+
   // Bookings routes
   app.post("/api/bookings", authenticateToken, async (req: any, res: Response) => {
     try {
@@ -402,8 +462,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         bookingDate: new Date(req.body.bookingDate)
       });
 
-      // Wallet balance validation for wallet payments
+      // Handle different payment methods
       if (bookingData.paymentMethod === 'wallet') {
+        // Wallet balance validation for wallet payments
         const userWallet = await storage.getUserWallet(req.user.id);
         const walletBalance = parseFloat(userWallet.balance || '0');
         const requiredAmount = parseFloat(bookingData.finalAmount.toString());
@@ -417,6 +478,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
               requiredAmount: requiredAmount.toFixed(2),
               shortfall: (requiredAmount - walletBalance).toFixed(2)
             }
+          });
+        }
+      } else if (bookingData.paymentMethod === 'stripe') {
+        // Verify payment intent if Stripe payment
+        if (!bookingData.paymentIntentId) {
+          return res.status(400).json({ 
+            message: "Payment intent ID is required for Stripe payments" 
+          });
+        }
+
+        if (!stripe) {
+          return res.status(500).json({ 
+            message: "Stripe is not configured for payment verification" 
+          });
+        }
+
+        try {
+          const paymentIntent = await stripe.paymentIntents.retrieve(bookingData.paymentIntentId);
+          
+          if (paymentIntent.status !== 'succeeded') {
+            return res.status(400).json({ 
+              message: "Payment has not been completed successfully" 
+            });
+          }
+
+          // Verify amount matches
+          const expectedAmount = Math.round(parseFloat(bookingData.finalAmount.toString()) * 100);
+          if (paymentIntent.amount !== expectedAmount) {
+            return res.status(400).json({ 
+              message: "Payment amount mismatch" 
+            });
+          }
+        } catch (stripeError: any) {
+          console.error("Stripe verification error:", stripeError);
+          return res.status(400).json({ 
+            message: "Failed to verify payment: " + stripeError.message 
           });
         }
       }

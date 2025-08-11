@@ -121,7 +121,8 @@ export const bookings = pgTable("bookings", {
   discountAmount: decimal("discount_amount", { precision: 8, scale: 2 }).default("0"),
   finalAmount: decimal("final_amount", { precision: 8, scale: 2 }).notNull(),
   status: bookingStatusEnum("status").default("pending"),
-  paymentMethod: text("payment_method"),
+  paymentMethod: text("payment_method").notNull().default("wallet"), // wallet, stripe
+  paymentIntentId: text("payment_intent_id"), // Stripe payment intent ID
   transactionId: text("transaction_id"),
   notes: text("notes"),
   rewardPointsEarned: integer("reward_points_earned").default(0),
