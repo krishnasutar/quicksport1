@@ -636,6 +636,43 @@ export function CompanyManagement() {
                   onChange={(e) => setSelectedCompany({...selectedCompany, state: e.target.value})}
                 />
               </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="edit-pincode">Pincode</Label>
+                <Input
+                  id="edit-pincode"
+                  value={selectedCompany.pincode}
+                  onChange={(e) => setSelectedCompany({...selectedCompany, pincode: e.target.value})}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="edit-website">Website</Label>
+                <Input
+                  id="edit-website"
+                  value={selectedCompany.website}
+                  onChange={(e) => setSelectedCompany({...selectedCompany, website: e.target.value})}
+                />
+              </div>
+              
+              <div className="md:col-span-2 space-y-2">
+                <Label htmlFor="edit-owner">Assigned Owner</Label>
+                <Select 
+                  value={selectedCompany.ownerId} 
+                  onValueChange={(value) => setSelectedCompany({...selectedCompany, ownerId: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select owner" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {crmUsers.filter(user => user.role === 'owner').map(owner => (
+                      <SelectItem key={owner.id} value={owner.id}>
+                        {owner.firstName} {owner.lastName} - {owner.email}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           )}
           

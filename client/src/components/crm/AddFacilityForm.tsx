@@ -219,11 +219,21 @@ export function AddFacilityForm() {
       return;
     }
 
+    if (!facilityData.ownerId) {
+      toast({
+        title: "Error",
+        description: "Owner ID is missing. Please select a company first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const facilityPayload = {
       ...facilityData,
       courts: courts
     };
 
+    console.log('Creating facility with payload:', facilityPayload);
     createFacilityMutation.mutate(facilityPayload);
   };
 
