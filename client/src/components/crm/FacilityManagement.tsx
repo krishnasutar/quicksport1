@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { 
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
@@ -54,6 +55,25 @@ interface FacilityWithCourts extends Facility {
   totalBookings?: number;
 }
 
+interface PendingBooking {
+  id: string;
+  userId: string;
+  courtId: string;
+  bookingDate: string;
+  startTime: string;
+  endTime: string;
+  totalAmount: number;
+  finalAmount: number;
+  status: string;
+  paymentMethod: string;
+  createdAt: string;
+  courtName: string;
+  facilityName: string;
+  facilityCity: string;
+  userName: string;
+  userEmail: string;
+}
+
 interface FacilityManagementProps {
   onNavigateToAddFacility?: () => void;
 }
@@ -63,6 +83,7 @@ export function FacilityManagement({ onNavigateToAddFacility }: FacilityManageme
   const [selectedCity, setSelectedCity] = useState<string>("all");
   const [selectedSport, setSelectedSport] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
+  const [activeTab, setActiveTab] = useState("facilities");
   
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -97,6 +118,26 @@ export function FacilityManagement({ onNavigateToAddFacility }: FacilityManageme
   }, [facilitiesResponse, facilitiesError]);
   
   const facilities = facilitiesResponse?.facilities || [];
+
+  // Fetch pending bookings for approval
+  const { data: pendingBookingsData, isLoading: pendingBookingsLoading } = useQuery<{bookings: PendingBooking[], total: number}>({
+    queryKey: ['/api/admin/bookings/pending'],
+    queryFn: async () => {
+      const token = localStorage.getItem('crm_token');
+      const response = await fetch('/api/admin/bookings/pending', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) throw new Error('Failed to fetch pending bookings');
+      return response.json();
+    },
+    staleTime: 0,
+    refetchInterval: 5000, // Refresh every 5 seconds for real-time updates
+  });
+
+  const pendingBookings = pendingBookingsData?.bookings || [];
 
   // Fetch sports for categories
   const { data: sportsCategories = [] } = useQuery<{sport: string, count: number}[]>({
@@ -222,6 +263,60 @@ export function FacilityManagement({ onNavigateToAddFacility }: FacilityManageme
     }
   };
 
+  // Booking approval/rejection mutations
+  const updateBookingStatusMutation = useMutation({
+    mutationFn: async ({ bookingId, status }: { bookingId: string; status: 'confirmed' | 'rejected' }) => {
+      const token = localStorage.getItem('crm_token');
+      const response = await fetch(`/api/admin/bookings/${bookingId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status }),
+      });
+      if (!response.ok) throw new Error('Failed to update booking status');
+      return response.json();
+    },
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/bookings/pending'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/bookings'] }); // Refresh user's booking data
+      toast({
+        title: "Success",
+        description: `Booking ${variables.status === 'confirmed' ? 'approved' : 'rejected'} successfully.`,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update booking status",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleBookingAction = (bookingId: string, action: 'approve' | 'reject') => {
+    const status = action === 'approve' ? 'confirmed' : 'rejected';
+    updateBookingStatusMutation.mutate({ bookingId, status });
+  };
+
+  const formatBookingDate = (date: string) => {
+    return new Date(date).toLocaleDateString('en-IN', {
+      weekday: 'short',
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  const formatBookingTime = (time: string) => {
+    return new Date(`2000-01-01 ${time}`).toLocaleTimeString('en-IN', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'approved': 
@@ -256,9 +351,9 @@ export function FacilityManagement({ onNavigateToAddFacility }: FacilityManageme
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">All Facilities</h2>
+          <h2 className="text-3xl font-bold tracking-tight">Facility Management</h2>
           <p className="text-muted-foreground">
-            Manage all facilities with approval status controls
+            Manage facilities and approve pending bookings
           </p>
         </div>
         <Button onClick={onNavigateToAddFacility} size="sm">
@@ -266,6 +361,21 @@ export function FacilityManagement({ onNavigateToAddFacility }: FacilityManageme
           Add Facility
         </Button>
       </div>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="facilities">All Facilities</TabsTrigger>
+          <TabsTrigger value="pending-bookings" className="relative">
+            Pending Bookings 
+            {pendingBookings.length > 0 && (
+              <Badge className="ml-2 bg-red-500 text-white text-xs">
+                {pendingBookings.length}
+              </Badge>
+            )}
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="facilities" className="space-y-6">
 
       {/* Search and Filters */}
       <Card>
@@ -473,6 +583,120 @@ export function FacilityManagement({ onNavigateToAddFacility }: FacilityManageme
           )}
         </CardContent>
       </Card>
+        </TabsContent>
+
+        <TabsContent value="pending-bookings" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Pending Bookings Approval
+                <Badge className="bg-yellow-100 text-yellow-800">
+                  {pendingBookings.length} pending
+                </Badge>
+              </CardTitle>
+              <CardDescription>
+                Approve or reject booking requests from customers
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {pendingBookingsLoading ? (
+                <div className="flex items-center justify-center h-32">
+                  <div className="text-lg">Loading pending bookings...</div>
+                </div>
+              ) : pendingBookings.length === 0 ? (
+                <div className="py-12 text-center">
+                  <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No pending bookings</h3>
+                  <p className="text-muted-foreground">
+                    All booking requests have been processed. New bookings will appear here for approval.
+                  </p>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>User</TableHead>
+                      <TableHead>Facility & Court</TableHead>
+                      <TableHead>Date & Time</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Payment</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {pendingBookings.map((booking) => (
+                      <TableRow key={booking.id}>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{booking.userName}</div>
+                            <div className="text-sm text-muted-foreground">{booking.userEmail}</div>
+                          </div>
+                        </TableCell>
+                        
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{booking.facilityName}</div>
+                            <div className="text-sm text-muted-foreground">
+                              {booking.courtName} • {booking.facilityCity}
+                            </div>
+                          </div>
+                        </TableCell>
+                        
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{formatBookingDate(booking.bookingDate)}</div>
+                            <div className="text-sm text-muted-foreground">
+                              {formatBookingTime(booking.startTime)} - {formatBookingTime(booking.endTime)}
+                            </div>
+                          </div>
+                        </TableCell>
+                        
+                        <TableCell>
+                          <div className="font-medium">₹{booking.finalAmount}</div>
+                          {booking.totalAmount !== booking.finalAmount && (
+                            <div className="text-sm text-muted-foreground line-through">
+                              ₹{booking.totalAmount}
+                            </div>
+                          )}
+                        </TableCell>
+                        
+                        <TableCell>
+                          <Badge variant="outline">{booking.paymentMethod}</Badge>
+                        </TableCell>
+                        
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="default"
+                              className="bg-green-600 hover:bg-green-700"
+                              onClick={() => handleBookingAction(booking.id, 'approve')}
+                              disabled={updateBookingStatusMutation.isPending}
+                            >
+                              <CheckCircle className="h-4 w-4 mr-1" />
+                              Approve
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleBookingAction(booking.id, 'reject')}
+                              disabled={updateBookingStatusMutation.isPending}
+                            >
+                              <XCircle className="h-4 w-4 mr-1" />
+                              Reject
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

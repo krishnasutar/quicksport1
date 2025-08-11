@@ -1088,6 +1088,132 @@ export class DatabaseStorage implements IStorage {
       return [];
     }
   }
+
+  // Pending bookings for approval workflow
+  async getPendingBookings(userId: string, userRole: string): Promise<any[]> {
+    try {
+      let query = sql`
+        SELECT 
+          b.id,
+          b.user_id,
+          b.court_id,
+          b.booking_date,
+          b.start_time,
+          b.end_time,
+          b.total_amount,
+          b.final_amount,
+          b.status,
+          b.payment_method,
+          b.created_at,
+          c.name as court_name,
+          f.name as facility_name,
+          f.city as facility_city,
+          u.first_name || ' ' || u.last_name as user_name,
+          u.email as user_email
+        FROM bookings b
+        JOIN courts c ON b.court_id = c.id
+        JOIN facilities f ON c.facility_id = f.id
+        JOIN users u ON b.user_id = u.id
+        WHERE b.status = 'pending'
+      `;
+
+      // Role-based filtering
+      if (userRole === 'owner') {
+        // Owners only see bookings for their own facilities
+        query = sql`
+          SELECT 
+            b.id,
+            b.user_id,
+            b.court_id,
+            b.booking_date,
+            b.start_time,
+            b.end_time,
+            b.total_amount,
+            b.final_amount,
+            b.status,
+            b.payment_method,
+            b.created_at,
+            c.name as court_name,
+            f.name as facility_name,
+            f.city as facility_city,
+            u.first_name || ' ' || u.last_name as user_name,
+            u.email as user_email
+          FROM bookings b
+          JOIN courts c ON b.court_id = c.id
+          JOIN facilities f ON c.facility_id = f.id
+          JOIN users u ON b.user_id = u.id
+          WHERE b.status = 'pending' 
+          AND f.owner_id = ${userId}
+        `;
+      }
+
+      query = sql`${query} ORDER BY b.created_at DESC`;
+
+      const result = await db.execute(query);
+      
+      return result.rows.map(row => ({
+        id: row.id,
+        userId: row.user_id,
+        courtId: row.court_id,
+        bookingDate: row.booking_date,
+        startTime: row.start_time,
+        endTime: row.end_time,
+        totalAmount: Number(row.total_amount),
+        finalAmount: Number(row.final_amount),
+        status: row.status,
+        paymentMethod: row.payment_method,
+        createdAt: row.created_at,
+        courtName: row.court_name,
+        facilityName: row.facility_name,
+        facilityCity: row.facility_city,
+        userName: row.user_name,
+        userEmail: row.user_email
+      }));
+    } catch (error) {
+      console.error('Error fetching pending bookings:', error);
+      return [];
+    }
+  }
+
+  async updateBookingStatus(bookingId: string, status: string, adminId: string, adminRole: string): Promise<any> {
+    try {
+      // First verify the booking exists and check permissions
+      let permissionQuery = sql`
+        SELECT b.*, f.owner_id
+        FROM bookings b
+        JOIN courts c ON b.court_id = c.id
+        JOIN facilities f ON c.facility_id = f.id
+        WHERE b.id = ${bookingId}
+      `;
+
+      const bookingResult = await db.execute(permissionQuery);
+      if (bookingResult.rows.length === 0) {
+        return null; // Booking not found
+      }
+
+      const booking = bookingResult.rows[0];
+
+      // Check permissions: Admin can update any booking, Owner can only update their facility's bookings
+      if (adminRole === 'owner' && booking.owner_id !== adminId) {
+        return null; // Unauthorized
+      }
+
+      // Update the booking status
+      const result = await db
+        .update(bookings)
+        .set({ 
+          status: status as 'pending' | 'confirmed' | 'cancelled' | 'completed',
+          updatedAt: new Date()
+        })
+        .where(eq(bookings.id, bookingId))
+        .returning();
+
+      return result[0] || null;
+    } catch (error) {
+      console.error('Error updating booking status:', error);
+      return null;
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();

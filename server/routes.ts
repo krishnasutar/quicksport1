@@ -1157,6 +1157,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Pending bookings approval API for admin/owner
+  app.get("/api/admin/bookings/pending", authenticateToken, async (req: any, res: Response) => {
+    try {
+      if (!['admin', 'owner'].includes(req.user.role)) {
+        return res.status(403).json({ message: "Admin or owner access required" });
+      }
+
+      const pendingBookings = await storage.getPendingBookings(req.user.id, req.user.role);
+      res.json({ bookings: pendingBookings, total: pendingBookings.length });
+    } catch (error) {
+      console.error("Get pending bookings error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Update booking status (approve/reject)
+  app.patch("/api/admin/bookings/:bookingId/status", authenticateToken, async (req: any, res: Response) => {
+    try {
+      if (!['admin', 'owner'].includes(req.user.role)) {
+        return res.status(403).json({ message: "Admin or owner access required" });
+      }
+
+      const { status } = req.body;
+      if (!['confirmed', 'rejected'].includes(status)) {
+        return res.status(400).json({ message: "Invalid status. Must be 'confirmed' or 'rejected'" });
+      }
+
+      const updatedBooking = await storage.updateBookingStatus(req.params.bookingId, status, req.user.id, req.user.role);
+      if (!updatedBooking) {
+        return res.status(404).json({ message: "Booking not found or unauthorized" });
+      }
+
+      res.json({ message: `Booking ${status} successfully`, booking: updatedBooking });
+    } catch (error) {
+      console.error("Update booking status error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
