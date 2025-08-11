@@ -24,9 +24,9 @@ import {
   X
 } from "lucide-react";
 
-import UsersManagement from "@/components/crm/UsersManagement";
-import FacilitiesManagement from "@/components/crm/FacilitiesManagement";
-import { BookingsManagement, AnalyticsPanel, SettingsPanel } from "@/components/crm/OtherManagement";
+import { UsersManagement } from "@/components/crm/UsersManagement";
+import { FacilitiesManagement } from "@/components/crm/FacilitiesManagement";
+import { OtherManagement } from "@/components/crm/OtherManagement";
 
 interface CRMUser {
   id: string;

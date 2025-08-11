@@ -4,12 +4,7 @@ import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Building, 
   Users, 
@@ -25,9 +20,13 @@ import {
   Trash2,
   Home,
   ChevronDown,
+  ChevronRight,
   Menu,
   X
 } from "lucide-react";
+import { UsersManagement } from "@/components/crm/UsersManagement";
+import { FacilitiesManagement } from "@/components/crm/FacilitiesManagement";
+import { OtherManagement } from "@/components/crm/OtherManagement";
 
 interface CRMUser {
   id: string;
@@ -42,6 +41,7 @@ export default function CRMDashboard() {
   const [user, setUser] = useState<CRMUser | null>(null);
   const [activeSection, setActiveSection] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
 
   useEffect(() => {
     const crmToken = localStorage.getItem('crm_token');
@@ -108,6 +108,14 @@ export default function CRMDashboard() {
     setLocation('/crm');
   };
 
+  const toggleExpandedMenu = (menuId: string) => {
+    setExpandedMenus(prev => 
+      prev.includes(menuId) 
+        ? prev.filter(id => id !== menuId)
+        : [...prev, menuId]
+    );
+  };
+
   if (!user) {
     return <div>Loading...</div>;
   }
@@ -153,6 +161,15 @@ export default function CRMDashboard() {
       action: () => setActiveSection('analytics')
     },
     {
+      id: 'inventory',
+      label: 'Inventory',
+      icon: Package,
+      dropdown: [
+        { label: 'Equipment', action: () => setActiveSection('equipment') },
+        { label: 'Maintenance', action: () => setActiveSection('maintenance') }
+      ]
+    },
+    {
       id: 'settings',
       label: 'Settings',
       icon: Settings,
@@ -184,30 +201,47 @@ export default function CRMDashboard() {
         </div>
 
         {/* Navigation */}
-        <nav className="mt-8 px-4">
-          <div className="space-y-2">
+        <nav className="mt-8 px-4 flex-1 overflow-y-auto">
+          <div className="space-y-1">
             {menuItems.map((item) => (
               <div key={item.id}>
                 {item.dropdown ? (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button 
-                        variant="ghost" 
-                        className="w-full justify-start text-gray-700 hover:bg-purple-50 hover:text-purple-600"
-                      >
-                        <item.icon className="mr-3 h-5 w-5" />
-                        {item.label}
+                  <div>
+                    <Button 
+                      variant="ghost" 
+                      className={`w-full justify-start text-gray-700 hover:bg-purple-50 hover:text-purple-600 ${
+                        expandedMenus.includes(item.id) ? 'bg-purple-50 text-purple-600' : ''
+                      }`}
+                      onClick={() => toggleExpandedMenu(item.id)}
+                      data-testid={`button-${item.id}`}
+                    >
+                      <item.icon className="mr-3 h-5 w-5" />
+                      {item.label}
+                      {expandedMenus.includes(item.id) ? (
                         <ChevronDown className="ml-auto h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-56" align="start">
-                      {item.dropdown.map((subItem, index) => (
-                        <DropdownMenuItem key={index} onClick={subItem.action}>
-                          {subItem.label}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                      ) : (
+                        <ChevronRight className="ml-auto h-4 w-4" />
+                      )}
+                    </Button>
+                    {expandedMenus.includes(item.id) && (
+                      <div className="ml-4 mt-1 space-y-1 border-l-2 border-purple-100 pl-4">
+                        {item.dropdown.map((subItem, index) => (
+                          <Button 
+                            key={index}
+                            variant="ghost" 
+                            size="sm"
+                            className={`w-full justify-start text-gray-600 hover:bg-purple-50 hover:text-purple-600 ${
+                              activeSection === subItem.action.toString().split("'")[1] ? 'bg-purple-50 text-purple-600' : ''
+                            }`}
+                            onClick={subItem.action}
+                            data-testid={`button-${item.id}-${subItem.label.toLowerCase().replace(' ', '-')}`}
+                          >
+                            {subItem.label}
+                          </Button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   <Button 
                     variant="ghost" 
@@ -215,6 +249,7 @@ export default function CRMDashboard() {
                       activeSection === item.id ? 'bg-purple-50 text-purple-600' : ''
                     }`}
                     onClick={item.action}
+                    data-testid={`button-${item.id}`}
                   >
                     <item.icon className="mr-3 h-5 w-5" />
                     {item.label}
@@ -581,24 +616,26 @@ export default function CRMDashboard() {
               </CardContent>
             </Card>
           </TabsContent>
-              </Card>
+        </Tabs>
             </div>
           )}
 
           {/* Users Management Sections */}
           {(activeSection === 'all-users' || activeSection === 'owners' || activeSection === 'regular-users') && (
-            <UsersManagement section={activeSection} isAdmin={isAdmin} />
+            <UsersManagement />
           )}
 
           {/* Facilities Management Sections */}
           {(activeSection === 'all-facilities' || activeSection === 'add-facility') && (
-            <FacilitiesManagement section={activeSection} isAdmin={isAdmin} />
+            <FacilitiesManagement />
           )}
 
-          {/* Other sections */}
-          {activeSection === 'bookings' && <BookingsManagement isAdmin={isAdmin} />}
-          {activeSection === 'analytics' && <AnalyticsPanel isAdmin={isAdmin} />}
-          {activeSection === 'settings' && <SettingsPanel isAdmin={isAdmin} />}
+          {/* Other sections using OtherManagement component */}
+          {activeSection === 'bookings' && <OtherManagement section="bookings" />}
+          {activeSection === 'analytics' && <OtherManagement section="analytics" />}
+          {activeSection === 'equipment' && <OtherManagement section="equipment" />}
+          {activeSection === 'maintenance' && <OtherManagement section="maintenance" />}
+          {activeSection === 'settings' && <OtherManagement section="settings" />}
         </div>
       </div>
 
