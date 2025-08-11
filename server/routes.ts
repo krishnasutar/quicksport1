@@ -414,20 +414,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Create Stripe Payment Intent
   app.post("/api/create-payment-intent", authenticateToken, async (req: any, res: Response) => {
+    console.log('Payment intent request received:', {
+      userId: req.user.id,
+      body: req.body
+    });
+    
     try {
       if (!stripe) {
+        console.log('Stripe not configured');
         return res.status(500).json({ 
           message: "Stripe is not configured. Please set STRIPE_SECRET_KEY environment variable." 
         });
       }
 
       const { amount, courtId, bookingDate, startTime, endTime } = req.body;
+      console.log('Parsed request data:', { amount, courtId, bookingDate, startTime, endTime });
       
       if (!amount || amount <= 0) {
         return res.status(400).json({ message: "Valid amount is required" });
       }
 
       // Check court availability before creating payment intent
+      console.log('Checking court availability...');
       const isAvailable = await storage.checkCourtAvailability(
         courtId,
         new Date(bookingDate),
@@ -435,13 +443,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         endTime
       );
 
+      console.log('Court availability result:', isAvailable);
       if (!isAvailable) {
+        console.log('Court not available, returning 409');
         return res.status(409).json({ 
           message: "Court is not available for the selected time slot",
           error: "COURT_UNAVAILABLE"
         });
       }
 
+      console.log('Creating Stripe payment intent...');
       const paymentIntent = await stripe.paymentIntents.create({
         amount: Math.round(amount * 100), // Convert to cents
         currency: "inr",
@@ -454,6 +465,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
 
+      console.log('Payment intent created successfully:', paymentIntent.id);
       res.json({ clientSecret: paymentIntent.client_secret });
     } catch (error: any) {
       console.error("Create payment intent error:", error);
