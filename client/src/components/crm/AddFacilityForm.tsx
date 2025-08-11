@@ -32,6 +32,8 @@ interface Court {
   name: string;
   sportType: string;
   pricePerHour: number;
+  operatingHoursStart: string;
+  operatingHoursEnd: string;
   isAvailable: boolean;
 }
 
@@ -70,10 +72,12 @@ export function AddFacilityForm({ onCancel }: AddFacilityFormProps = {}) {
   });
 
   const [courts, setCourts] = useState<Court[]>([]);
-  const [newCourt, setNewCourt] = useState({
+  const [newCourt, setNewCourt] = useState<Court>({
     name: "",
     sportType: "",
     pricePerHour: 0,
+    operatingHoursStart: "06:00",
+    operatingHoursEnd: "22:00",
     isAvailable: true
   });
 
@@ -179,6 +183,8 @@ export function AddFacilityForm({ onCancel }: AddFacilityFormProps = {}) {
       name: "",
       sportType: "",
       pricePerHour: 0,
+      operatingHoursStart: "06:00",
+      operatingHoursEnd: "22:00",
       isAvailable: true
     });
   };
@@ -462,18 +468,30 @@ export function AddFacilityForm({ onCancel }: AddFacilityFormProps = {}) {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <Input
                   type="number"
                   placeholder="Price per hour"
                   value={newCourt.pricePerHour || ""}
                   onChange={(e) => setNewCourt({...newCourt, pricePerHour: Number(e.target.value)})}
                 />
-                <Button onClick={handleAddCourt} size="sm">
-                  <Plus className="h-4 w-4 mr-1" />
-                  Add Court
-                </Button>
+                <Input
+                  type="time"
+                  placeholder="Start time"
+                  value={newCourt.operatingHoursStart}
+                  onChange={(e) => setNewCourt({...newCourt, operatingHoursStart: e.target.value})}
+                />
+                <Input
+                  type="time"
+                  placeholder="End time"
+                  value={newCourt.operatingHoursEnd}
+                  onChange={(e) => setNewCourt({...newCourt, operatingHoursEnd: e.target.value})}
+                />
               </div>
+              <Button onClick={handleAddCourt} size="sm" className="w-full">
+                <Plus className="h-4 w-4 mr-1" />
+                Add Court
+              </Button>
             </div>
 
             {/* Courts List */}
@@ -483,7 +501,7 @@ export function AddFacilityForm({ onCancel }: AddFacilityFormProps = {}) {
                   <div>
                     <div className="font-medium">{court.name}</div>
                     <div className="text-sm text-gray-500">
-                      {court.sportType} • ₹{court.pricePerHour}/hour
+                      {court.sportType} • ₹{court.pricePerHour}/hour • {court.operatingHoursStart}-{court.operatingHoursEnd}
                     </div>
                   </div>
                   <Button
