@@ -114,6 +114,13 @@ export default function BookingForm({ court, onSubmit, isLoading }: BookingFormP
 
       try {
         const token = localStorage.getItem('token');
+        console.log('Token from localStorage:', token ? `${token.substring(0, 20)}...` : 'NO TOKEN FOUND');
+        
+        if (!token) {
+          alert('Please login again to make payments');
+          return;
+        }
+        
         const response = await fetch('/api/create-payment-intent', {
           method: 'POST',
           headers: {

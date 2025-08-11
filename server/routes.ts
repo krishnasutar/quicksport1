@@ -31,6 +31,11 @@ const authenticateToken = (req: any, res: Response, next: any) => {
 
   console.log('Auth header:', authHeader);
   console.log('Extracted token:', token ? `${token.substring(0, 20)}...` : 'NO TOKEN');
+  
+  if (authHeader === 'Bearer null' || token === 'null') {
+    console.log('Received null token, treating as missing token');
+    return res.status(401).json({ message: "Access token required" });
+  }
 
   if (!token) {
     return res.status(401).json({ message: "Access token required" });
