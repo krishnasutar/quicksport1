@@ -30,22 +30,22 @@ export default function Footer() {
           <div>
             <h4 className="text-lg font-semibold mb-4">Quick Links</h4>
             <ul className="space-y-2">
-              <li><Link href="/" className="text-gray-300 hover:text-white transition-colors">Find Courts</Link></li>
-              <li><Link href="/matches" className="text-gray-300 hover:text-white transition-colors">Join Matches</Link></li>
-              <li><Link href="/rewards" className="text-gray-300 hover:text-white transition-colors">Rewards Program</Link></li>
-              <li><Link href="/student" className="text-gray-300 hover:text-white transition-colors">Student Discounts</Link></li>
-              <li><Link href="/owner" className="text-gray-300 hover:text-white transition-colors">Become an Owner</Link></li>
+              <li><Link href="/sports" className="text-gray-300 hover:text-white transition-colors">Sports</Link></li>
+              <li><Link href="/esports" className="text-gray-300 hover:text-white transition-colors">E-Sports</Link></li>
+              <li><Link href="/about" className="text-gray-300 hover:text-white transition-colors">About Us</Link></li>
+              <li><Link href="/contact" className="text-gray-300 hover:text-white transition-colors">Contact</Link></li>
+              <li><Link href="/crm" className="text-gray-300 hover:text-white transition-colors">For Owners</Link></li>
             </ul>
           </div>
           
           <div>
             <h4 className="text-lg font-semibold mb-4">Support</h4>
             <ul className="space-y-2">
-              <li><Link href="/help" className="text-gray-300 hover:text-white transition-colors">Help Center</Link></li>
+              <li><Link href="/contact" className="text-gray-300 hover:text-white transition-colors">Help Center</Link></li>
               <li><Link href="/contact" className="text-gray-300 hover:text-white transition-colors">Contact Us</Link></li>
-              <li><Link href="/privacy" className="text-gray-300 hover:text-white transition-colors">Privacy Policy</Link></li>
-              <li><Link href="/terms" className="text-gray-300 hover:text-white transition-colors">Terms of Service</Link></li>
-              <li><Link href="/cancellation" className="text-gray-300 hover:text-white transition-colors">Cancellation Policy</Link></li>
+              <li><Link href="/contact" className="text-gray-300 hover:text-white transition-colors">Privacy Policy</Link></li>
+              <li><Link href="/contact" className="text-gray-300 hover:text-white transition-colors">Terms of Service</Link></li>
+              <li><Link href="/contact" className="text-gray-300 hover:text-white transition-colors">Cancellation Policy</Link></li>
             </ul>
           </div>
         </div>
@@ -53,14 +53,12 @@ export default function Footer() {
         <div className="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-gray-400">© 2024 QuickCourt. All rights reserved.</p>
           <div className="flex items-center space-x-4 mt-4 md:mt-0">
-            <span className="text-gray-400">Download Now:</span>
-            <a href="#" className="flex items-center space-x-2 bg-gray-800 px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors">
-              <i className="fab fa-google-play"></i>
-              <span className="text-sm">Play Store</span>
+            <span className="text-gray-400">Follow Us:</span>
+            <a href="#" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-brand-indigo transition-colors">
+              <i className="fab fa-instagram"></i>
             </a>
-            <a href="#" className="flex items-center space-x-2 bg-gray-800 px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors">
-              <i className="fab fa-apple"></i>
-              <span className="text-sm">App Store</span>
+            <a href="#" className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-brand-indigo transition-colors">
+              <i className="fab fa-twitter"></i>
             </a>
           </div>
         </div>

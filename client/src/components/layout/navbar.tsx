@@ -19,10 +19,11 @@ export default function Navbar() {
   const isMobile = useIsMobile();
 
   const navLinks = [
-    { href: "/", label: "Find Courts" },
-    { href: "/matches", label: "Join Matches" },
-    { href: "/rewards", label: "Rewards" },
-    { href: "/owner", label: "For Owners" },
+    { href: "/", label: "Home" },
+    { href: "/sports", label: "Sports" },
+    { href: "/esports", label: "E-Sports" },
+    { href: "/about", label: "About" },
+    { href: "/contact", label: "Contact" },
   ];
 
   const handleLogout = () => {
@@ -34,7 +35,7 @@ export default function Navbar() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={user?.profilePicture} alt={user?.username} />
+            <AvatarImage src={user?.profilePicture || ""} alt={user?.username} />
             <AvatarFallback className="bg-brand-indigo text-white">
               {user?.firstName?.[0]}{user?.lastName?.[0]}
             </AvatarFallback>
@@ -60,7 +61,7 @@ export default function Navbar() {
         <DropdownMenuItem asChild>
           <Link href="/wallet">
             <CreditCard className="mr-2 h-4 w-4" />
-            Wallet
+            Wallet & Rewards
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>

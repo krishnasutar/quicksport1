@@ -35,9 +35,11 @@ export default function HeroSection() {
                   {user ? "Find Courts" : "Get Started"}
                 </Link>
               </Button>
-              <Button variant="outline" className="border-2 border-white text-white px-8 py-4 rounded-xl font-semibold text-lg hover:bg-white hover:text-brand-indigo transition-all duration-200 glass-effect">
-                <i className="fas fa-search mr-2"></i>
-                Browse Courts
+              <Button variant="outline" asChild className="border-2 border-white text-white px-8 py-4 rounded-xl font-semibold text-lg hover:bg-white hover:text-brand-indigo transition-all duration-200 glass-effect">
+                <Link href="/sports">
+                  <i className="fas fa-search mr-2"></i>
+                  Browse Courts
+                </Link>
               </Button>
             </div>
             

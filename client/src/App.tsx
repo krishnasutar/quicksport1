@@ -13,11 +13,19 @@ import Booking from "@/pages/booking";
 import UserDashboard from "@/pages/user-dashboard";
 import CRMLogin from "@/pages/crm-login";
 import CRMDashboard from "@/pages/crm-dashboard-clean";
+import AboutPage from "@/pages/about";
+import ContactPage from "@/pages/contact";
+import SportsPage from "@/pages/sports";
+import EsportsPage from "@/pages/esports";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/sports" component={SportsPage} />
+      <Route path="/esports" component={EsportsPage} />
+      <Route path="/about" component={AboutPage} />
+      <Route path="/contact" component={ContactPage} />
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
       <Route path="/venue/:id" component={VenueDetails} />
