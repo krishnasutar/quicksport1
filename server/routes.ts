@@ -329,6 +329,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete facility
+  app.delete("/api/facilities/:id", authenticateToken, async (req: any, res: Response) => {
+    try {
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({ message: "Only admins can delete facilities" });
+      }
+
+      const { id } = req.params;
+
+      const facility = await storage.deleteFacility(id);
+      
+      if (!facility) {
+        return res.status(404).json({ message: "Facility not found" });
+      }
+
+      res.json({ 
+        message: "Facility deleted successfully" 
+      });
+    } catch (error) {
+      console.error("Delete facility error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Bookings routes
   app.post("/api/bookings", authenticateToken, async (req: any, res: Response) => {
     try {

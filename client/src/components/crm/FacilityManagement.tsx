@@ -116,9 +116,13 @@ export function FacilityManagement({ onNavigateToAddFacility }: FacilityManageme
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/facilities'] });
+      
+      // Clear status filter to show all facilities after update
+      setSelectedStatus("all");
+      
       toast({
         title: "Success",
-        description: "Facility status updated successfully",
+        description: "Facility status updated successfully. Showing all facilities.",
       });
     },
     onError: (error: any) => {
@@ -132,6 +136,42 @@ export function FacilityManagement({ onNavigateToAddFacility }: FacilityManageme
 
   const handleStatusChange = (facilityId: string, newStatus: string) => {
     updateStatusMutation.mutate({ facilityId, status: newStatus });
+  };
+
+  // Delete facility mutation
+  const deleteFacilityMutation = useMutation({
+    mutationFn: async (facilityId: string) => {
+      const token = localStorage.getItem('crm_token');
+      const response = await fetch(`/api/facilities/${facilityId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) throw new Error('Failed to delete facility');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/facilities'] });
+      toast({
+        title: "Success",
+        description: "Facility deleted successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete facility",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleDeleteFacility = (facilityId: string, facilityName: string) => {
+    if (window.confirm(`Are you sure you want to delete "${facilityName}"? This action cannot be undone.`)) {
+      deleteFacilityMutation.mutate(facilityId);
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -354,9 +394,13 @@ export function FacilityManagement({ onNavigateToAddFacility }: FacilityManageme
                           <Edit className="h-4 w-4 mr-2" />
                           Edit
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="text-red-600">
+                        <DropdownMenuItem 
+                          className="text-red-600"
+                          onClick={() => handleDeleteFacility(facility.id, facility.name)}
+                          disabled={deleteFacilityMutation.isPending}
+                        >
                           <Trash2 className="h-4 w-4 mr-2" />
-                          Delete
+                          {deleteFacilityMutation.isPending ? 'Deleting...' : 'Delete'}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

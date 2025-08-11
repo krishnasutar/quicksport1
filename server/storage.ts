@@ -206,6 +206,21 @@ export class DatabaseStorage implements IStorage {
     return facility || undefined;
   }
 
+  async deleteFacility(id: string): Promise<boolean> {
+    try {
+      // First delete all related courts
+      await db.delete(courts).where(eq(courts.facilityId, id));
+      
+      // Then delete the facility
+      const result = await db.delete(facilities).where(eq(facilities.id, id));
+      
+      return true;
+    } catch (error) {
+      console.error('Delete facility error:', error);
+      return false;
+    }
+  }
+
   async updateFacilityRating(facilityId: string): Promise<void> {
     const [result] = await db
       .select({ 
