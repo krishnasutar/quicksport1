@@ -94,6 +94,36 @@ export class DatabaseStorage implements IStorage {
     return user || undefined;
   }
 
+  async getCrmUserById(id: string) {
+    const result = await db.execute(sql`
+      SELECT 
+        id,
+        username,
+        email,
+        password,
+        password_hash,
+        first_name,
+        last_name,
+        role,
+        phone_number,
+        is_active,
+        created_at,
+        updated_at
+      FROM crm_users 
+      WHERE id = ${id} 
+      LIMIT 1
+    `);
+    
+    if (result.rows[0]) {
+      const user = result.rows[0];
+      // Convert PostgreSQL 't'/'f' to boolean
+      user.isActive = user.is_active === 't' || user.is_active === true;
+      return user;
+    }
+    
+    return null;
+  }
+
   async getCrmUserByEmail(email: string) {
     const result = await db.execute(sql`
       SELECT 

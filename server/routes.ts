@@ -191,14 +191,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { sport, city, minPrice, maxPrice, rating, page = 1, limit = 9 } = req.query;
       
-      // Check if request has CRM token
+      // Check if request has CRM token - if so, show ALL facilities regardless of status
       const token = req.headers.authorization?.split(' ')[1];
       let isCrmUser = false;
       
       if (token) {
         try {
           const decoded = jwt.verify(token, JWT_SECRET) as any;
-          const user = await storage.getCrmUser(decoded.id);
+          const user = await storage.getCrmUserById(decoded.id);
           isCrmUser = user && (user.role === 'admin' || user.role === 'owner');
         } catch (err) {
           // Token invalid, continue as public request
