@@ -34,7 +34,7 @@ interface BookingFormProps {
 }
 
 export default function BookingForm({ court, onSubmit, isLoading }: BookingFormProps) {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [bookingDate, setBookingDate] = useState<Date>();
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [startTime, setStartTime] = useState("");
@@ -113,14 +113,18 @@ export default function BookingForm({ court, onSubmit, isLoading }: BookingFormP
       }
 
       try {
-        // Use token from auth context (which manages localStorage properly)  
-        const authContext = useAuth();
-        const authToken = authContext?.token;
-        const token = authToken || localStorage.getItem('auth_token') || localStorage.getItem('token');
-        console.log('Token from auth context:', authToken ? `${authToken.substring(0, 20)}...` : 'NO AUTH TOKEN');
-        console.log('Token from localStorage:', token ? `${token.substring(0, 20)}...` : 'NO TOKEN FOUND');
+        // Use token from auth context
+        const authToken = token || localStorage.getItem('auth_token') || localStorage.getItem('token');
+        console.log('=== STRIPE PAYMENT DEBUG ===');
+        console.log('Token from auth context:', token ? `${token.substring(0, 20)}...` : 'NO AUTH TOKEN');
+        console.log('Token from localStorage:', authToken ? `${authToken.substring(0, 20)}...` : 'NO TOKEN FOUND');
+        console.log('Payment amount:', finalAmount);
+        console.log('Court ID:', court.id);
+        console.log('Booking date:', format(bookingDate, 'yyyy-MM-dd'));
+        console.log('Start time:', startTime);
+        console.log('End time:', calculateEndTime(startTime, duration));
         
-        if (!token) {
+        if (!authToken) {
           alert('Please login again to make payments');
           return;
         }
@@ -130,7 +134,7 @@ export default function BookingForm({ court, onSubmit, isLoading }: BookingFormP
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${authToken}`
           },
           body: JSON.stringify({
             amount: finalAmount,
