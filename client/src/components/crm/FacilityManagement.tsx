@@ -97,7 +97,7 @@ export function FacilityManagement({ onNavigateToAddFacility }: FacilityManageme
 
   // Filter facilities based on search and filters
   const filteredFacilities = useMemo(() => {
-    return facilities.filter(facility => {
+    const filtered = facilities.filter(facility => {
       const matchesSearch = facility.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           facility.city.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCity = selectedCity === "all" || facility.city === selectedCity;
@@ -105,8 +105,25 @@ export function FacilityManagement({ onNavigateToAddFacility }: FacilityManageme
                           facility.courts?.some(court => court.sportType === selectedSport);
       const matchesStatus = selectedStatus === "all" || facility.status === selectedStatus;
       
-      return matchesSearch && matchesCity && matchesSport && matchesStatus;
+      const matches = matchesSearch && matchesCity && matchesSport && matchesStatus;
+      
+      // Debug logging
+      if (!matches && facility.name) {
+        console.log(`Facility ${facility.name} filtered out:`, {
+          status: facility.status,
+          selectedStatus,
+          matchesStatus,
+          matchesSearch,
+          matchesCity,
+          matchesSport
+        });
+      }
+      
+      return matches;
     });
+    
+    console.log(`Filtered ${filtered.length} facilities from ${facilities.length} total. Filter: status=${selectedStatus}`);
+    return filtered;
   }, [facilities, searchTerm, selectedCity, selectedSport, selectedStatus]);
 
   // Status update mutation
@@ -125,12 +142,13 @@ export function FacilityManagement({ onNavigateToAddFacility }: FacilityManageme
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/facilities'] });
+      console.log('Status updated successfully, clearing filter and invalidating cache');
       
-      // Clear status filter to show all facilities after update
+      // FIRST: Clear the status filter to "all" 
       setSelectedStatus("all");
       
-      console.log('Status updated successfully, clearing filter');
+      // THEN: Invalidate the cache to refetch data
+      queryClient.invalidateQueries({ queryKey: ['/api/facilities'] });
       
       toast({
         title: "Success",
