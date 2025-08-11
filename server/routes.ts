@@ -32,17 +32,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/crm/login", async (req: Request, res: Response) => {
     try {
       const { email, password } = req.body;
+      console.log("CRM Login attempt:", { email, password: password ? "[PROVIDED]" : "[MISSING]" });
 
       if (!email || !password) {
         return res.status(400).json({ message: "Email and password are required" });
       }
 
       const user = await storage.getUserByEmail(email);
-      if (!user || !user.isActive || (user.role !== 'admin' && user.role !== 'owner')) {
-        return res.status(401).json({ message: "Invalid credentials or insufficient permissions" });
+      console.log("User found:", user ? { id: user.id, email: user.email, role: user.role, isActive: user.isActive } : "NOT FOUND");
+      
+      if (!user) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+      
+      if (!user.isActive) {
+        console.log("User is not active");
+        return res.status(401).json({ message: "Account is not active" });
+      }
+      
+      if (user.role !== 'admin' && user.role !== 'owner') {
+        console.log("User role is not admin or owner:", user.role);
+        return res.status(401).json({ message: "Insufficient permissions" });
       }
 
+      console.log("Testing password...");
       const isValidPassword = await bcrypt.compare(password, user.password);
+      console.log("Password valid:", isValidPassword);
+      
       if (!isValidPassword) {
         return res.status(401).json({ message: "Invalid credentials" });
       }
@@ -55,6 +71,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const { password: _, ...userWithoutPassword } = user;
       
+      console.log("CRM Login successful for:", userWithoutPassword.email);
       res.json({ 
         user: userWithoutPassword, 
         token,

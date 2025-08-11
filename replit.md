@@ -10,6 +10,17 @@ The application supports three main user roles: regular users who book courts an
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes
+
+### August 11, 2025 - Application Restructuring
+- **Separated user interfaces**: Created distinct CRM/admin panel at `/crm` for facility owners and administrators
+- **Removed mobile app focus**: Updated user interface to focus on web-based booking, removed app download sections
+- **Role-based authentication**: Implemented separate login systems for regular users vs admin/owner users
+- **CRM dashboard features**: Built comprehensive management interface with facilities, bookings, analytics, inventory, and settings tabs
+- **Test credentials created**: 
+  - Admin: admin@quickcourt.com / admin123
+  - Owner: owner@quickcourt.com / owner123
+
 ## System Architecture
 
 ### Frontend Architecture
