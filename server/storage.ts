@@ -955,6 +955,25 @@ export class DatabaseStorage implements IStorage {
       return false;
     }
   }
+
+  // Get CRM users specifically for company management
+  async getCrmUsers(): Promise<any[]> {
+    try {
+      const crmUsersData = await db.select({
+        id: crmUsers.id,
+        firstName: crmUsers.firstName,
+        lastName: crmUsers.lastName,
+        email: crmUsers.email,
+        role: crmUsers.role,
+        isActive: crmUsers.isActive
+      }).from(crmUsers).where(eq(crmUsers.isActive, true)).orderBy(crmUsers.firstName);
+
+      return crmUsersData;
+    } catch (error) {
+      console.error('Error fetching CRM users:', error);
+      return [];
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();

@@ -987,8 +987,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Admin access required" });
       }
 
-      // Get all CRM users (admin and owners)
-      const users = await storage.getAllUsers('crm');
+      // Get only CRM users (from crm_users table) with admin and owner roles
+      const users = await storage.getCrmUsers();
       res.json(users);
     } catch (error) {
       console.error("Get CRM users error:", error);
