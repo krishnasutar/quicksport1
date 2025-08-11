@@ -254,13 +254,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Only facility owners can create facilities" });
       }
 
-      const facilityData = insertFacilitySchema.parse({
-        ...req.body,
-        ownerId: req.user.id
-      });
-
+      const { courts, ...facilityData } = req.body;
+      
+      // Create facility first
       const facility = await storage.createFacility(facilityData);
-      res.status(201).json(facility);
+      
+      // Create courts for the facility
+      if (courts && courts.length > 0) {
+        for (const court of courts) {
+          await storage.createCourt({
+            ...court,
+            facilityId: facility.id
+          });
+        }
+      }
+      
+      res.status(201).json({ 
+        ...facility, 
+        courts: courts || [],
+        message: "Facility created successfully with courts" 
+      });
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Validation error", errors: error.errors });

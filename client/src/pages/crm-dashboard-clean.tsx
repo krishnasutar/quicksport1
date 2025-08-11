@@ -51,6 +51,7 @@ import {
 import { UsersManagement } from "@/components/crm/UsersManagement";
 import { FacilityManagement } from "@/components/crm/FacilityManagement";
 import { CompanyManagement } from "@/components/crm/CompanyManagement";
+import { AddFacilityForm } from "@/components/crm/AddFacilityForm";
 import { OtherManagement } from "@/components/crm/OtherManagement";
 
 interface CRMUser {
@@ -624,9 +625,8 @@ export default function CRMDashboard() {
           )}
 
           {/* Facilities Management Sections */}
-          {(activeSection === 'all-facilities' || activeSection === 'add-facility') && (
-            <FacilityManagement />
-          )}
+          {activeSection === 'all-facilities' && <FacilityManagement />}
+          {activeSection === 'add-facility' && <AddFacilityForm />}
 
           {/* Other sections */}
           {activeSection === 'bookings' && <OtherManagement section={activeSection} isAdmin={isAdmin} />}

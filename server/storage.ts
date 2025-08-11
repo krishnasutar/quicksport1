@@ -34,6 +34,7 @@ export interface IStorage {
   
   // Court methods
   getCourtsByFacilityId(facilityId: string): Promise<Court[]>;
+  createCourt(insertCourt: InsertCourt): Promise<Court>;
   checkCourtAvailability(courtId: string, date: Date, startTime: string, endTime: string): Promise<boolean>;
   
   // Booking methods
@@ -192,7 +193,7 @@ export class DatabaseStorage implements IStorage {
     // Enhance facilities with courts data
     const facilitiesWithCourts = await Promise.all(
       result.map(async (facility) => {
-        const courts = await db
+        const facilityCourts = await db
           .select({
             id: courts.id,
             name: courts.name,
@@ -205,7 +206,7 @@ export class DatabaseStorage implements IStorage {
         
         return {
           ...facility,
-          courts,
+          courts: facilityCourts,
           status: 'approved', // since we only select approved facilities
           amenities: facility.amenities || [],
           ownerId: 'system' // placeholder for now
@@ -265,6 +266,14 @@ export class DatabaseStorage implements IStorage {
 
   async getCourtsByFacilityId(facilityId: string): Promise<Court[]> {
     return await db.select().from(courts).where(eq(courts.facilityId, facilityId));
+  }
+
+  async createCourt(insertCourt: InsertCourt): Promise<Court> {
+    const [court] = await db
+      .insert(courts)
+      .values(insertCourt)
+      .returning();
+    return court;
   }
 
   async checkCourtAvailability(courtId: string, date: Date, startTime: string, endTime: string): Promise<boolean> {

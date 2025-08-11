@@ -79,11 +79,33 @@ export function CompanyManagement() {
   // Fetch companies
   const { data: companies = [], isLoading: companiesLoading } = useQuery<Company[]>({
     queryKey: ['/api/companies'],
+    queryFn: async () => {
+      const token = localStorage.getItem('crm_token');
+      const response = await fetch('/api/companies', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) throw new Error('Failed to fetch companies');
+      return response.json();
+    },
   });
 
   // Fetch CRM users (owners) for dropdown
   const { data: crmUsers = [] } = useQuery<CrmUser[]>({
     queryKey: ['/api/crm/users'],
+    queryFn: async () => {
+      const token = localStorage.getItem('crm_token');
+      const response = await fetch('/api/crm/users', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) throw new Error('Failed to fetch CRM users');
+      return response.json();
+    },
   });
 
   // Available owners (owners without companies)
@@ -95,10 +117,20 @@ export function CompanyManagement() {
   // Create company mutation
   const createCompanyMutation = useMutation({
     mutationFn: async (companyData: any) => {
-      return apiRequest('/api/companies', {
+      const token = localStorage.getItem('crm_token');
+      const response = await fetch('/api/companies', {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify(companyData),
       });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to create company');
+      }
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/companies'] });
@@ -132,10 +164,20 @@ export function CompanyManagement() {
   // Update company mutation
   const updateCompanyMutation = useMutation({
     mutationFn: async ({ id, ...companyData }: any) => {
-      return apiRequest(`/api/companies/${id}`, {
+      const token = localStorage.getItem('crm_token');
+      const response = await fetch(`/api/companies/${id}`, {
         method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify(companyData),
       });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to update company');
+      }
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/companies'] });
@@ -158,9 +200,19 @@ export function CompanyManagement() {
   // Delete company mutation
   const deleteCompanyMutation = useMutation({
     mutationFn: async (id: string) => {
-      return apiRequest(`/api/companies/${id}`, {
+      const token = localStorage.getItem('crm_token');
+      const response = await fetch(`/api/companies/${id}`, {
         method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
       });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to delete company');
+      }
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/companies'] });
