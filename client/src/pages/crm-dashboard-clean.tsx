@@ -87,7 +87,7 @@ export default function CRMDashboard() {
 
     window.addEventListener('popstate', handlePopState);
 
-    // Also listen for hashchange and custom events for immediate URL updates
+    // Also listen for custom events for immediate URL updates
     const handleURLChange = () => {
       const urlParams = new URLSearchParams(window.location.search);
       const sectionParam = urlParams.get('section');
@@ -96,7 +96,7 @@ export default function CRMDashboard() {
       }
     };
 
-    window.addEventListener('hashchange', handleURLChange);
+    window.addEventListener('urlchange', handleURLChange);
     
     const crmToken = localStorage.getItem('crm_token');
     const crmUser = localStorage.getItem('crm_user');
@@ -111,7 +111,7 @@ export default function CRMDashboard() {
     // Cleanup listeners
     return () => {
       window.removeEventListener('popstate', handlePopState);
-      window.removeEventListener('hashchange', handleURLChange);
+      window.removeEventListener('urlchange', handleURLChange);
     };
   }, [setLocation, activeSection]);
 
@@ -657,7 +657,11 @@ export default function CRMDashboard() {
           )}
 
           {/* Facilities Management Sections */}
-          {activeSection === 'all-facilities' && <FacilityManagement />}
+          {activeSection === 'all-facilities' && (
+            <FacilityManagement 
+              onNavigateToAddFacility={() => setActiveSection('add-facility')} 
+            />
+          )}
           {activeSection === 'add-facility' && <AddFacilityForm />}
 
           {/* Other sections */}

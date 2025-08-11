@@ -51,7 +51,11 @@ interface FacilityWithCourts extends Facility {
   totalBookings?: number;
 }
 
-export function FacilityManagement() {
+interface FacilityManagementProps {
+  onNavigateToAddFacility?: () => void;
+}
+
+export function FacilityManagement({ onNavigateToAddFacility }: FacilityManagementProps = {}) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCity, setSelectedCity] = useState<string>("all");
   const [selectedSport, setSelectedSport] = useState<string>("all");
@@ -132,8 +136,15 @@ export function FacilityManagement() {
         <Button 
           className="gap-2"
           onClick={() => {
-            // Navigate to add facility by updating URL and triggering a page reload
-            window.location.href = `/crm?section=add-facility`;
+            if (onNavigateToAddFacility) {
+              onNavigateToAddFacility();
+            } else {
+              // Fallback to URL navigation
+              const url = new URL(window.location);
+              url.searchParams.set('section', 'add-facility');
+              window.history.pushState({}, '', url.toString());
+              window.dispatchEvent(new CustomEvent('urlchange'));
+            }
           }}
         >
           <Plus className="h-4 w-4" />
