@@ -778,8 +778,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // CRM/Admin owner routes for admin panel
   app.get("/api/admin/facilities", authenticateToken, async (req: any, res: Response) => {
     try {
-      if (req.user.role !== 'admin') {
-        return res.status(403).json({ message: "Admin access required" });
+      if (!['admin', 'owner'].includes(req.user.role)) {
+        return res.status(403).json({ message: "Admin or Owner access required" });
       }
 
       const facilities = await storage.getAllFacilitiesAdmin();

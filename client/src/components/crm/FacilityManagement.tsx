@@ -67,9 +67,20 @@ export function FacilityManagement({ onNavigateToAddFacility }: FacilityManageme
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // Fetch facilities 
+  // Fetch facilities for CRM (includes pending facilities)
   const { data: facilitiesResponse, isLoading: facilitiesLoading, error: facilitiesError } = useQuery<{facilities: FacilityWithCourts[], pagination: any}>({
-    queryKey: ['/api/facilities'],
+    queryKey: ['/api/admin/facilities'],
+    queryFn: async () => {
+      const token = localStorage.getItem('crm_token');
+      const response = await fetch('/api/admin/facilities', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) throw new Error('Failed to fetch facilities');
+      return { facilities: await response.json(), pagination: {} };
+    },
     staleTime: 0, // Always fetch fresh data
     cacheTime: 0, // Don't cache
   });
