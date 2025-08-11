@@ -113,7 +113,10 @@ export default function BookingForm({ court, onSubmit, isLoading }: BookingFormP
       }
 
       try {
-        const token = localStorage.getItem('token');
+        // Use token from auth context (which manages localStorage properly)
+        const { token: authToken } = useAuth();
+        const token = authToken || localStorage.getItem('auth_token') || localStorage.getItem('token');
+        console.log('Token from auth context:', authToken ? `${authToken.substring(0, 20)}...` : 'NO AUTH TOKEN');
         console.log('Token from localStorage:', token ? `${token.substring(0, 20)}...` : 'NO TOKEN FOUND');
         
         if (!token) {
