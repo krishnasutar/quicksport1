@@ -63,46 +63,167 @@ export default function Home() {
       
       <HeroSection />
       
-      <SportsCategory onSportSelect={handleSportSelect} />
-      
-      {/* Quick Stats Section */}
+      {/* What Makes Us Different - Key Features */}
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 slide-in-up">Trusted by Athletes Everywhere</h2>
-            <p className="text-xl text-gray-600">Join the growing community of sports enthusiasts</p>
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Why Choose QuickCourt?</h2>
+            <p className="text-xl text-gray-600">Experience the future of sports booking</p>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            <div className="text-center card-hover p-6 bg-gradient-to-br from-brand-indigo to-brand-purple rounded-2xl text-white transform hover:scale-105 transition-all duration-300">
-              <div className="text-3xl md:text-4xl font-bold mb-2">500+</div>
-              <div className="text-sm md:text-base opacity-90">Sports Venues</div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="text-center p-8 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl card-hover">
+              <div className="w-16 h-16 bg-gradient-to-br from-brand-indigo to-brand-purple rounded-full flex items-center justify-center mx-auto mb-6">
+                <i className="fas fa-bolt text-white text-2xl"></i>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Instant Booking</h3>
+              <p className="text-gray-600">Book courts in seconds with real-time availability. No waiting, no calling - just play!</p>
             </div>
-            <div className="text-center card-hover p-6 bg-gradient-to-br from-brand-cyan to-brand-emerald rounded-2xl text-white transform hover:scale-105 transition-all duration-300">
-              <div className="text-3xl md:text-4xl font-bold mb-2">10K+</div>
-              <div className="text-sm md:text-base opacity-90">Happy Athletes</div>
+            <div className="text-center p-8 bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl card-hover">
+              <div className="w-16 h-16 bg-gradient-to-br from-brand-emerald to-brand-cyan rounded-full flex items-center justify-center mx-auto mb-6">
+                <i className="fas fa-users text-white text-2xl"></i>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Split Payments</h3>
+              <p className="text-gray-600">Share costs with friends instantly. No more awkward money collection!</p>
             </div>
-            <div className="text-center card-hover p-6 bg-gradient-to-br from-brand-orange to-brand-yellow rounded-2xl text-white transform hover:scale-105 transition-all duration-300">
-              <div className="text-3xl md:text-4xl font-bold mb-2">25+</div>
-              <div className="text-sm md:text-base opacity-90">Cities Covered</div>
+            <div className="text-center p-8 bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl card-hover">
+              <div className="w-16 h-16 bg-gradient-to-br from-brand-orange to-brand-yellow rounded-full flex items-center justify-center mx-auto mb-6">
+                <i className="fas fa-gift text-white text-2xl"></i>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Rewards & Offers</h3>
+              <p className="text-gray-600">Earn points on every booking. Get discounts, freebies, and exclusive deals!</p>
             </div>
-            <div className="text-center card-hover p-6 bg-gradient-to-br from-brand-purple to-pink-500 rounded-2xl text-white transform hover:scale-105 transition-all duration-300">
-              <div className="text-3xl md:text-4xl font-bold mb-2">50K+</div>
-              <div className="text-sm md:text-base opacity-90">Bookings Made</div>
+          </div>
+          
+          {/* Trust Stats */}
+          <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div className="text-center">
+              <div className="text-3xl md:text-4xl font-bold text-brand-indigo mb-2">500+</div>
+              <div className="text-sm md:text-base text-gray-600">Verified Venues</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl md:text-4xl font-bold text-brand-indigo mb-2">10K+</div>
+              <div className="text-sm md:text-base text-gray-600">Active Athletes</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl md:text-4xl font-bold text-brand-indigo mb-2">25+</div>
+              <div className="text-sm md:text-base text-gray-600">Cities Available</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl md:text-4xl font-bold text-brand-indigo mb-2">50K+</div>
+              <div className="text-sm md:text-base text-gray-600">Successful Bookings</div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Featured Venues Showcase */}
+      {/* Browse by Sport Categories - Links to Sports Page */}
       <section className="py-16 bg-gradient-to-br from-gray-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 slide-in-up">Featured Sports Venues</h2>
-            <p className="text-xl text-gray-600">Discover top-rated facilities handpicked for you</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Browse Sports Categories</h2>
+            <p className="text-xl text-gray-600">Find venues for your favorite sport in seconds</p>
           </div>
           
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <Link href="/sports?sport=basketball" className="group">
+              <div className="bg-white rounded-2xl p-6 shadow-sm card-hover text-center transform transition-all duration-300 group-hover:scale-105">
+                <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <i className="fas fa-basketball-ball text-white text-2xl"></i>
+                </div>
+                <h3 className="font-bold text-gray-900 mb-2">Basketball</h3>
+                <p className="text-sm text-gray-600">120+ Courts</p>
+              </div>
+            </Link>
+            
+            <Link href="/sports?sport=football" className="group">
+              <div className="bg-white rounded-2xl p-6 shadow-sm card-hover text-center transform transition-all duration-300 group-hover:scale-105">
+                <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <i className="fas fa-futbol text-white text-2xl"></i>
+                </div>
+                <h3 className="font-bold text-gray-900 mb-2">Football</h3>
+                <p className="text-sm text-gray-600">85+ Fields</p>
+              </div>
+            </Link>
+            
+            <Link href="/sports?sport=badminton" className="group">
+              <div className="bg-white rounded-2xl p-6 shadow-sm card-hover text-center transform transition-all duration-300 group-hover:scale-105">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <i className="fas fa-table-tennis text-white text-2xl"></i>
+                </div>
+                <h3 className="font-bold text-gray-900 mb-2">Badminton</h3>
+                <p className="text-sm text-gray-600">200+ Courts</p>
+              </div>
+            </Link>
+            
+            <Link href="/sports?sport=tennis" className="group">
+              <div className="bg-white rounded-2xl p-6 shadow-sm card-hover text-center transform transition-all duration-300 group-hover:scale-105">
+                <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <i className="fas fa-table-tennis text-white text-2xl"></i>
+                </div>
+                <h3 className="font-bold text-gray-900 mb-2">Tennis</h3>
+                <p className="text-sm text-gray-600">60+ Courts</p>
+              </div>
+            </Link>
+            
+            <Link href="/sports?sport=swimming" className="group">
+              <div className="bg-white rounded-2xl p-6 shadow-sm card-hover text-center transform transition-all duration-300 group-hover:scale-105">
+                <div className="w-16 h-16 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <i className="fas fa-swimmer text-white text-2xl"></i>
+                </div>
+                <h3 className="font-bold text-gray-900 mb-2">Swimming</h3>
+                <p className="text-sm text-gray-600">40+ Pools</p>
+              </div>
+            </Link>
+            
+            <Link href="/sports?sport=cricket" className="group">
+              <div className="bg-white rounded-2xl p-6 shadow-sm card-hover text-center transform transition-all duration-300 group-hover:scale-105">
+                <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <i className="fas fa-baseball-ball text-white text-2xl"></i>
+                </div>
+                <h3 className="font-bold text-gray-900 mb-2">Cricket</h3>
+                <p className="text-sm text-gray-600">30+ Nets</p>
+              </div>
+            </Link>
+            
+            <Link href="/esports" className="group">
+              <div className="bg-white rounded-2xl p-6 shadow-sm card-hover text-center transform transition-all duration-300 group-hover:scale-105">
+                <div className="w-16 h-16 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <i className="fas fa-gamepad text-white text-2xl"></i>
+                </div>
+                <h3 className="font-bold text-gray-900 mb-2">E-Sports</h3>
+                <p className="text-sm text-gray-600">25+ Gaming Centers</p>
+              </div>
+            </Link>
+            
+            <Link href="/sports" className="group">
+              <div className="bg-gradient-to-br from-brand-indigo to-brand-purple rounded-2xl p-6 shadow-sm card-hover text-center transform transition-all duration-300 group-hover:scale-105 text-white">
+                <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <i className="fas fa-plus text-white text-2xl"></i>
+                </div>
+                <h3 className="font-bold mb-2">View All</h3>
+                <p className="text-sm opacity-90">500+ Venues</p>
+              </div>
+            </Link>
+          </div>
+        </div>
+      </section>
+      
+      {/* Trending Venues This Week */}
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center mb-12">
+            <div>
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Trending This Week</h2>
+              <p className="text-xl text-gray-600">Most booked venues by athletes like you</p>
+            </div>
+            <Button asChild variant="ghost" className="hidden md:block text-brand-indigo font-semibold hover:underline">
+              <Link href="/sports">View All</Link>
+            </Button>
+          </div>
+          
+          {/* Demo Venue Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="card-hover bg-white rounded-2xl shadow-sm overflow-hidden">
+            <div className="card-hover bg-white rounded-2xl shadow-sm overflow-hidden border">
               <div className="h-48 bg-gradient-to-br from-blue-400 to-blue-600 relative">
                 <img
                   src="https://images.unsplash.com/photo-1546519638-68e109498ffc?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600"
@@ -110,17 +231,17 @@ export default function Home() {
                   className="w-full h-full object-cover mix-blend-overlay"
                 />
                 <div className="absolute top-4 left-4">
-                  <Badge className="bg-white bg-opacity-90 text-blue-600 font-semibold">FEATURED</Badge>
+                  <Badge className="bg-red-500 text-white font-semibold">🔥 TRENDING</Badge>
                 </div>
                 <div className="absolute top-4 right-4 bg-black bg-opacity-60 rounded-lg px-2 py-1">
                   <div className="flex items-center text-white text-sm">
                     <Star className="h-4 w-4 text-yellow-400 fill-current mr-1" />
-                    4.8
+                    4.8 (124 reviews)
                   </div>
                 </div>
               </div>
               <div className="p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Elite Sports Complex</h3>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">PlayZone Sports Complex</h3>
                 <p className="text-gray-600 mb-3 flex items-center">
                   <MapPin className="h-4 w-4 text-gray-400 mr-1" />
                   Koramangala, Bangalore
@@ -128,21 +249,25 @@ export default function Home() {
                 <div className="flex flex-wrap gap-1 mb-4">
                   <Badge variant="outline" className="text-xs">Basketball</Badge>
                   <Badge variant="outline" className="text-xs">Badminton</Badge>
-                  <Badge variant="outline" className="text-xs">Table Tennis</Badge>
+                  <Badge variant="outline" className="text-xs">AC</Badge>
+                  <Badge variant="outline" className="text-xs">Parking</Badge>
                 </div>
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-center mb-3">
                   <div>
-                    <span className="text-2xl font-bold text-brand-indigo">₹400</span>
+                    <span className="text-2xl font-bold text-brand-indigo">₹450</span>
                     <span className="text-gray-500">/hr</span>
                   </div>
-                  <Button className="gradient-bg hover:shadow-lg transform hover:scale-105 transition-all duration-200">
-                    Book Now
-                  </Button>
+                  <div className="text-sm text-gray-500">
+                    <span className="text-green-600 font-medium">24 bookings</span> this week
+                  </div>
                 </div>
+                <Button className="w-full gradient-bg hover:shadow-lg transform hover:scale-105 transition-all duration-200">
+                  Book Now
+                </Button>
               </div>
             </div>
             
-            <div className="card-hover bg-white rounded-2xl shadow-sm overflow-hidden">
+            <div className="card-hover bg-white rounded-2xl shadow-sm overflow-hidden border">
               <div className="h-48 bg-gradient-to-br from-green-400 to-green-600 relative">
                 <img
                   src="https://images.unsplash.com/photo-1551698618-1dfe5d97d256?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600"
@@ -150,17 +275,17 @@ export default function Home() {
                   className="w-full h-full object-cover mix-blend-overlay"
                 />
                 <div className="absolute top-4 left-4">
-                  <Badge className="bg-white bg-opacity-90 text-green-600 font-semibold">HOT</Badge>
+                  <Badge className="bg-orange-500 text-white font-semibold">⚡ POPULAR</Badge>
                 </div>
                 <div className="absolute top-4 right-4 bg-black bg-opacity-60 rounded-lg px-2 py-1">
                   <div className="flex items-center text-white text-sm">
                     <Star className="h-4 w-4 text-yellow-400 fill-current mr-1" />
-                    4.6
+                    4.6 (89 reviews)
                   </div>
                 </div>
               </div>
               <div className="p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Champions Arena</h3>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Champions Ground</h3>
                 <p className="text-gray-600 mb-3 flex items-center">
                   <MapPin className="h-4 w-4 text-gray-400 mr-1" />
                   Bandra West, Mumbai
@@ -168,21 +293,25 @@ export default function Home() {
                 <div className="flex flex-wrap gap-1 mb-4">
                   <Badge variant="outline" className="text-xs">Football</Badge>
                   <Badge variant="outline" className="text-xs">Cricket</Badge>
-                  <Badge variant="outline" className="text-xs">Tennis</Badge>
+                  <Badge variant="outline" className="text-xs">Floodlights</Badge>
+                  <Badge variant="outline" className="text-xs">Changing Room</Badge>
                 </div>
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-center mb-3">
                   <div>
                     <span className="text-2xl font-bold text-brand-indigo">₹800</span>
                     <span className="text-gray-500">/hr</span>
                   </div>
-                  <Button className="gradient-bg hover:shadow-lg transform hover:scale-105 transition-all duration-200">
-                    Book Now
-                  </Button>
+                  <div className="text-sm text-gray-500">
+                    <span className="text-green-600 font-medium">18 bookings</span> this week
+                  </div>
                 </div>
+                <Button className="w-full gradient-bg hover:shadow-lg transform hover:scale-105 transition-all duration-200">
+                  Book Now
+                </Button>
               </div>
             </div>
             
-            <div className="card-hover bg-white rounded-2xl shadow-sm overflow-hidden">
+            <div className="card-hover bg-white rounded-2xl shadow-sm overflow-hidden border">
               <div className="h-48 bg-gradient-to-br from-purple-400 to-purple-600 relative">
                 <img
                   src="https://images.unsplash.com/photo-1622279457486-62dcc4a431d6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600"
@@ -190,17 +319,17 @@ export default function Home() {
                   className="w-full h-full object-cover mix-blend-overlay"
                 />
                 <div className="absolute top-4 left-4">
-                  <Badge className="bg-white bg-opacity-90 text-purple-600 font-semibold">PREMIUM</Badge>
+                  <Badge className="bg-purple-500 text-white font-semibold">💎 PREMIUM</Badge>
                 </div>
                 <div className="absolute top-4 right-4 bg-black bg-opacity-60 rounded-lg px-2 py-1">
                   <div className="flex items-center text-white text-sm">
                     <Star className="h-4 w-4 text-yellow-400 fill-current mr-1" />
-                    4.9
+                    4.9 (156 reviews)
                   </div>
                 </div>
               </div>
               <div className="p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Racquet Club Premium</h3>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Ace Racquet Club</h3>
                 <p className="text-gray-600 mb-3 flex items-center">
                   <MapPin className="h-4 w-4 text-gray-400 mr-1" />
                   Anna Nagar, Chennai
@@ -208,99 +337,53 @@ export default function Home() {
                 <div className="flex flex-wrap gap-1 mb-4">
                   <Badge variant="outline" className="text-xs">Badminton</Badge>
                   <Badge variant="outline" className="text-xs">Table Tennis</Badge>
-                  <Badge variant="outline" className="text-xs">AC</Badge>
+                  <Badge variant="outline" className="text-xs">Premium AC</Badge>
+                  <Badge variant="outline" className="text-xs">Pro Equipment</Badge>
                 </div>
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-center mb-3">
                   <div>
-                    <span className="text-2xl font-bold text-brand-indigo">₹500</span>
+                    <span className="text-2xl font-bold text-brand-indigo">₹600</span>
                     <span className="text-gray-500">/hr</span>
                   </div>
-                  <Button className="gradient-bg hover:shadow-lg transform hover:scale-105 transition-all duration-200">
-                    Book Now
-                  </Button>
+                  <div className="text-sm text-gray-500">
+                    <span className="text-green-600 font-medium">31 bookings</span> this week
+                  </div>
                 </div>
+                <Button className="w-full gradient-bg hover:shadow-lg transform hover:scale-105 transition-all duration-200">
+                  Book Now
+                </Button>
               </div>
             </div>
-          </div>
-          
-          <div className="text-center mt-12">
-            <Button asChild size="lg" className="gradient-bg text-lg px-8 py-4 hover:shadow-xl transform hover:scale-105 transition-all duration-200">
-              <Link href="/sports">
-                <i className="fas fa-search mr-2"></i>
-                Explore All Venues
-                <i className="fas fa-arrow-right ml-2"></i>
-              </Link>
-            </Button>
           </div>
         </div>
       </section>
-      
-      {/* Popular Venues */}
+
+      {/* Find Courts Section */}
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Popular Venues</h2>
-              <p className="text-xl text-gray-600">Top-rated sports facilities near you</p>
-            </div>
-            <Button variant="ghost" className="hidden md:block text-brand-indigo font-semibold hover:underline">
-              View All
-            </Button>
-          </div>
-          
-          {/* Search and Filter Bar */}
+          {/* Quick Search Bar - Links to Sports Page */}
           <div className="bg-white rounded-2xl p-6 shadow-sm mb-8">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input 
-                  placeholder="Search venues..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
+            <div className="text-center">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Find Courts Near You</h3>
+              <div className="max-w-2xl mx-auto">
+                <div className="relative">
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                  <Input 
+                    placeholder="Search by sport, location, or venue name..."
+                    className="pl-12 py-4 text-lg rounded-xl border-2 border-gray-200 focus:border-brand-indigo"
+                    onFocus={() => window.location.href = '/sports'}
+                  />
+                  <Button 
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 gradient-bg px-6"
+                    onClick={() => window.location.href = '/sports'}
+                  >
+                    Search
+                  </Button>
+                </div>
+                <p className="text-sm text-gray-500 mt-2">
+                  Try searching for "basketball Bangalore" or "swimming pool Mumbai"
+                </p>
               </div>
-              
-              <Select value={selectedSport} onValueChange={setSelectedSport}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sport type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Sports</SelectItem>
-                  <SelectItem value="basketball">Basketball</SelectItem>
-                  <SelectItem value="football">Football</SelectItem>
-                  <SelectItem value="tennis">Tennis</SelectItem>
-                  <SelectItem value="volleyball">Volleyball</SelectItem>
-                  <SelectItem value="badminton">Badminton</SelectItem>
-                  <SelectItem value="swimming">Swimming</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              <Select value={selectedCity} onValueChange={setSelectedCity}>
-                <SelectTrigger>
-                  <SelectValue placeholder="City" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Cities</SelectItem>
-                  <SelectItem value="bangalore">Bangalore</SelectItem>
-                  <SelectItem value="mumbai">Mumbai</SelectItem>
-                  <SelectItem value="delhi">Delhi</SelectItem>
-                  <SelectItem value="hyderabad">Hyderabad</SelectItem>
-                  <SelectItem value="pune">Pune</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              <Select value={priceRange} onValueChange={setPriceRange}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Price range" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Prices</SelectItem>
-                  <SelectItem value="0-200">Under ₹200</SelectItem>
-                  <SelectItem value="200-500">₹200 - ₹500</SelectItem>
-                  <SelectItem value="500+">Above ₹500</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
           </div>
           
