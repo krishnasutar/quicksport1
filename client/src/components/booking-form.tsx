@@ -24,6 +24,9 @@ const stripePromise = import.meta.env.VITE_STRIPE_PUBLIC_KEY
   ? loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY) 
   : null;
 
+console.log('Stripe public key available:', !!import.meta.env.VITE_STRIPE_PUBLIC_KEY);
+console.log('Stripe promise created:', !!stripePromise);
+
 interface BookingFormProps {
   court: any;
   onSubmit: (data: any) => void;
@@ -351,7 +354,10 @@ export default function BookingForm({ court, onSubmit, isLoading }: BookingFormP
                 ? 'border-brand-indigo bg-brand-indigo/5'
                 : 'border-gray-200 hover:border-gray-300'
             }`}
-            onClick={() => setPaymentMethod('stripe')}
+            onClick={() => {
+              console.log('Switching to Stripe payment method');
+              setPaymentMethod('stripe');
+            }}
           >
             <div className="flex items-center space-x-2">
               <CreditCard className="h-5 w-5 text-brand-cyan" />
