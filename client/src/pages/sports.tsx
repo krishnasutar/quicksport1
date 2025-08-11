@@ -64,8 +64,10 @@ export default function Sports() {
     queryFn: async () => {
       const response = await fetch('/api/facilities?status=approved');
       if (!response.ok) throw new Error('Failed to fetch facilities');
-      const facilities = await response.json();
-      return { facilities };
+      const data = await response.json();
+      console.log('Facilities API response:', data);
+      // The API returns { facilities: [...] } format
+      return data;
     },
   });
 
@@ -75,9 +77,18 @@ export default function Sports() {
   });
 
   const facilities = facilitiesData?.facilities || [];
+  
+  // Debug logging (can be removed once everything works)
+  if (facilitiesData) {
+    console.log('✅ Facilities loaded:', facilities.length, 'facilities');
+  }
 
   // Get unique cities from facilities
   const cities = useMemo(() => {
+    if (!Array.isArray(facilities)) {
+      console.warn('Facilities is not an array:', facilities);
+      return [];
+    }
     const uniqueCities = Array.from(new Set(facilities.map(f => f.city)));
     return uniqueCities.sort();
   }, [facilities]);
@@ -91,15 +102,15 @@ export default function Sports() {
   }, [sportsData]);
 
   // Categories (indoor/outdoor based on sports)
-  const categories = [
-    { id: "all", name: "All Categories", count: facilities.length },
-    { id: "indoor", name: "Indoor", count: facilities.filter(f => 
+  const categories = useMemo(() => [
+    { id: "all", name: "All Categories", count: Array.isArray(facilities) ? facilities.length : 0 },
+    { id: "indoor", name: "Indoor", count: Array.isArray(facilities) ? facilities.filter(f => 
       f.courts?.some(c => ["basketball", "badminton", "table_tennis", "swimming"].includes(c.sportType))
-    ).length },
-    { id: "outdoor", name: "Outdoor", count: facilities.filter(f => 
+    ).length : 0 },
+    { id: "outdoor", name: "Outdoor", count: Array.isArray(facilities) ? facilities.filter(f => 
       f.courts?.some(c => ["football", "tennis", "volleyball", "cricket"].includes(c.sportType))
-    ).length }
-  ];
+    ).length : 0 }
+  ], [facilities]);
 
   // Time slots
   const timeSlots = [
@@ -111,6 +122,10 @@ export default function Sports() {
 
   // Filter facilities
   const filteredFacilities = useMemo(() => {
+    if (!Array.isArray(facilities)) {
+      console.warn('Cannot filter facilities - not an array:', facilities);
+      return [];
+    }
     return facilities.filter(facility => {
       const matchesSearch = facility.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           facility.city.toLowerCase().includes(searchQuery.toLowerCase());
@@ -128,8 +143,8 @@ export default function Sports() {
         ));
 
       // Price filter
-      const facilityMinPrice = Math.min(...(facility.courts?.map(c => c.pricePerHour) || [0]));
-      const facilityMaxPrice = Math.max(...(facility.courts?.map(c => c.pricePerHour) || [0]));
+      const facilityMinPrice = facility.courts && facility.courts.length > 0 ? Math.min(...facility.courts.map(c => parseFloat(c.pricePerHour))) : 0;
+      const facilityMaxPrice = facility.courts && facility.courts.length > 0 ? Math.max(...facility.courts.map(c => parseFloat(c.pricePerHour))) : 0;
       const matchesPrice = facilityMinPrice >= priceRange[0] && facilityMaxPrice <= priceRange[1];
 
       return matchesSearch && matchesCity && matchesSport && matchesCategory && matchesPrice;
@@ -138,12 +153,15 @@ export default function Sports() {
 
   // Transform facility data for VenueCard component
   const transformedFacilities = useMemo(() => {
+    if (!Array.isArray(filteredFacilities)) {
+      return [];
+    }
     return filteredFacilities.map(facility => ({
       id: facility.id,
       name: facility.name,
       city: facility.city,
       address: facility.address,
-      images: facility.images.length > 0 ? facility.images : [
+      images: (facility.images && facility.images.length > 0) ? facility.images : [
         "https://images.unsplash.com/photo-1546519638-68e109498ffc?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600"
       ],
       rating: facility.rating?.toString() || "4.5",
@@ -151,17 +169,17 @@ export default function Sports() {
       category: facility.courts?.some(c => ["basketball", "badminton", "table_tennis", "swimming"].includes(c.sportType)) ? "indoor" : "outdoor",
       sports: Array.from(new Set(facility.courts?.map(c => c.sportType) || [])),
       priceRange: {
-        min: Math.min(...(facility.courts?.map(c => c.pricePerHour) || [0])),
-        max: Math.max(...(facility.courts?.map(c => c.pricePerHour) || [0]))
+        min: facility.courts && facility.courts.length > 0 ? Math.min(...facility.courts.map(c => parseFloat(c.pricePerHour))) : 0,
+        max: facility.courts && facility.courts.length > 0 ? Math.max(...facility.courts.map(c => parseFloat(c.pricePerHour))) : 0
       },
       timeSlots: ["morning", "afternoon", "evening"], // Default slots
       amenities: facility.amenities || [],
       courts: facility.courts?.map(c => ({
         id: c.id,
         sportType: c.sportType,
-        pricePerHour: c.pricePerHour
+        pricePerHour: parseFloat(c.pricePerHour)
       })) || [],
-      minPrice: Math.min(...(facility.courts?.map(c => c.pricePerHour) || [0]))
+      minPrice: facility.courts && facility.courts.length > 0 ? Math.min(...facility.courts.map(c => parseFloat(c.pricePerHour))) : 0
     }));
   }, [filteredFacilities]);
 
@@ -329,7 +347,7 @@ export default function Sports() {
             <div className="flex justify-between items-center mb-6">
               <div>
                 <h2 className="text-2xl font-bold text-gray-900">
-                  {facilitiesLoading ? "Loading..." : `${filteredFacilities.length} Venues Found`}
+                  {facilitiesLoading ? "Loading..." : `${Array.isArray(filteredFacilities) ? filteredFacilities.length : 0} Venues Found`}
                 </h2>
                 <p className="text-gray-600">
                   {selectedSport !== "all" && `Filtered by ${sports.find(s => s.id === selectedSport)?.name || selectedSport}`}
@@ -348,7 +366,7 @@ export default function Sports() {
                   </div>
                 ))}
               </div>
-            ) : filteredFacilities.length === 0 ? (
+            ) : (!Array.isArray(filteredFacilities) || filteredFacilities.length === 0) ? (
               <div className="text-center py-12">
                 <div className="text-gray-400 text-6xl mb-4">🏟️</div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">No venues found</h3>
