@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   Card, CardContent, CardDescription, CardHeader, CardTitle 
@@ -73,7 +73,7 @@ export function FacilityManagement({ onNavigateToAddFacility }: FacilityManageme
   });
   
   // Log facility data for debugging
-  React.useEffect(() => {
+  useEffect(() => {
     if (facilitiesResponse) {
       console.log(`Loaded ${facilitiesResponse.facilities?.length || 0} facilities, total: ${facilitiesResponse.pagination?.total || 0}`);
     }
