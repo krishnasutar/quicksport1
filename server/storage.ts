@@ -350,10 +350,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserBookings(filters: any): Promise<{ bookings: any[]; total: number }> {
-    const { userId, status, page = 1, limit = 50 } = filters; // Increased limit for better user experience
+    const { userId, status, page = 1, limit = 50 } = filters;
     
-    // Enhanced query with joins to get court and facility details
-    let baseQuery = db
+    // Simple query with proper joins
+    const result = await db
       .select({
         id: bookings.id,
         userId: bookings.userId,
@@ -370,36 +370,38 @@ export class DatabaseStorage implements IStorage {
         rewardPointsEarned: bookings.rewardPointsEarned,
         createdAt: bookings.createdAt,
         updatedAt: bookings.updatedAt,
-        // Court details
-        court: {
-          id: courts.id,
-          name: courts.name,
-          sportType: courts.sportType,
-          pricePerHour: courts.pricePerHour,
-          facilityId: courts.facilityId,
-          // Facility details
-          facility: {
-            id: facilities.id,
-            name: facilities.name,
-            city: facilities.city,
-            address: facilities.address,
-            rating: facilities.rating
-          }
-        }
+        // Flat court and facility fields
+        courtName: courts.name,
+        courtSportType: courts.sportType,
+        courtPricePerHour: courts.pricePerHour,
+        facilityName: facilities.name,
+        facilityCity: facilities.city,
+        facilityAddress: facilities.address,
+        facilityRating: facilities.rating
       })
       .from(bookings)
       .leftJoin(courts, eq(bookings.courtId, courts.id))
       .leftJoin(facilities, eq(courts.facilityId, facilities.id))
-      .where(eq(bookings.userId, userId));
-    
-    if (status) {
-      baseQuery = baseQuery.where(and(eq(bookings.userId, userId), eq(bookings.status, status as any)));
-    }
-
-    const result = await baseQuery
-      .orderBy(desc(bookings.createdAt), desc(bookings.bookingDate)) // Order by creation time first, then booking date
+      .where(status ? and(eq(bookings.userId, userId), eq(bookings.status, status as any)) : eq(bookings.userId, userId))
+      .orderBy(desc(bookings.createdAt), desc(bookings.bookingDate))
       .limit(limit)
       .offset((page - 1) * limit);
+
+    // Transform to expected format
+    const transformedBookings = result.map(booking => ({
+      ...booking,
+      court: {
+        name: booking.courtName,
+        sportType: booking.courtSportType,
+        pricePerHour: booking.courtPricePerHour,
+        facility: {
+          name: booking.facilityName,
+          city: booking.facilityCity,
+          address: booking.facilityAddress,
+          rating: booking.facilityRating
+        }
+      }
+    }));
 
     const [totalResult] = await db
       .select({ count: count() })
@@ -407,7 +409,7 @@ export class DatabaseStorage implements IStorage {
       .where(eq(bookings.userId, userId));
 
     return {
-      bookings: result,
+      bookings: transformedBookings,
       total: totalResult.count
     };
   }

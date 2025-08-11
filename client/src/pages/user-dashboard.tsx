@@ -25,6 +25,7 @@ export default function UserDashboard() {
     queryKey: ['/api/bookings'],
     staleTime: 0, // Always refetch to get latest bookings
     refetchOnWindowFocus: true, // Refetch when user returns to tab
+    refetchInterval: 5000, // Refetch every 5 seconds for real-time updates
   });
 
   const { data: walletData } = useQuery({
@@ -40,6 +41,8 @@ export default function UserDashboard() {
     if (dateA !== dateB) return dateB - dateA; // Most recent creation first
     return new Date(b.bookingDate).getTime() - new Date(a.bookingDate).getTime(); // Then by booking date
   });
+  
+  console.log('Dashboard bookings data:', sortedBookings?.slice(0, 3)); // Debug log
   
   const today = new Date();
   today.setHours(0, 0, 0, 0); // Reset time to start of day for accurate comparison
@@ -173,9 +176,12 @@ export default function UserDashboard() {
                 <div>
                   <p className="text-sm text-gray-600">This Month</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {bookings.filter((b: any) => 
-                      new Date(b.createdAt).getMonth() === new Date().getMonth()
-                    ).length}
+                    {sortedBookings.filter((b: any) => {
+                      const bookingDate = new Date(b.createdAt);
+                      const currentDate = new Date();
+                      return bookingDate.getMonth() === currentDate.getMonth() && 
+                             bookingDate.getFullYear() === currentDate.getFullYear();
+                    }).length}
                   </p>
                 </div>
               </div>
@@ -210,7 +216,7 @@ export default function UserDashboard() {
                           <div className="flex-1">
                             <div className="flex items-center space-x-3 mb-2">
                               <h3 className="font-semibold text-gray-900">
-                                {booking.court?.name || 'Court'} at {booking.court?.facility?.name || 'Facility'}
+                                {booking.court?.name || booking.courtName || 'Court'} at {booking.court?.facility?.name || booking.facilityName || 'Facility'}
                               </h3>
                               <Badge className={getStatusColor(booking.status)}>
                                 {booking.status}
@@ -227,7 +233,7 @@ export default function UserDashboard() {
                               </div>
                               <div className="flex items-center">
                                 <MapPin className="h-4 w-4 mr-1" />
-                                {booking.court?.facility?.city}
+                                {booking.court?.facility?.city || booking.facilityCity}
                               </div>
                             </div>
                           </div>
@@ -272,7 +278,7 @@ export default function UserDashboard() {
                           <div className="flex-1">
                             <div className="flex items-center space-x-3 mb-2">
                               <h3 className="font-medium text-gray-900">
-                                {booking.court?.name || 'Court'} at {booking.court?.facility?.name || 'Facility'}
+                                {booking.court?.name || booking.courtName || 'Court'} at {booking.court?.facility?.name || booking.facilityName || 'Facility'}
                               </h3>
                               <Badge className={getStatusColor(booking.status)}>
                                 {booking.status}
