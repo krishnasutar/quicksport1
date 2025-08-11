@@ -88,12 +88,17 @@ export function FacilityManagement({ onNavigateToAddFacility }: FacilityManageme
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
+  // Get current user to determine endpoint
+  const currentUser = JSON.parse(localStorage.getItem('crm_user') || '{}');
+  const isAdmin = currentUser.role === 'admin';
+
   // Fetch facilities for CRM (includes pending facilities)
   const { data: facilitiesResponse, isLoading: facilitiesLoading, error: facilitiesError } = useQuery<{facilities: FacilityWithCourts[], pagination: any}>({
-    queryKey: ['/api/admin/facilities'],
+    queryKey: [isAdmin ? '/api/admin/facilities' : '/api/owner/facilities'],
     queryFn: async () => {
       const token = localStorage.getItem('crm_token');
-      const response = await fetch('/api/admin/facilities', {
+      const endpoint = isAdmin ? '/api/admin/facilities' : '/api/owner/facilities';
+      const response = await fetch(endpoint, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -199,14 +204,14 @@ export function FacilityManagement({ onNavigateToAddFacility }: FacilityManageme
     onSuccess: () => {
       console.log('Status updated successfully, refreshing data');
       
-      // Invalidate and refetch the admin facilities data
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/facilities'] });
+      // Invalidate and refetch the facilities data (role-based)
+      queryClient.invalidateQueries({ queryKey: [isAdmin ? '/api/admin/facilities' : '/api/owner/facilities'] });
       
       // Also invalidate sports data as it might affect counts
       queryClient.invalidateQueries({ queryKey: ['/api/sports'] });
       
       // Force immediate data refetch without full page reload
-      queryClient.refetchQueries({ queryKey: ['/api/admin/facilities'] });
+      queryClient.refetchQueries({ queryKey: [isAdmin ? '/api/admin/facilities' : '/api/owner/facilities'] });
       
       toast({
         title: "Success",

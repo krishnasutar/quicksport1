@@ -35,9 +35,10 @@ export function FacilitiesManagement({ section, isAdmin }: FacilitiesManagementP
   };
 
   const { data: facilities = [], isLoading } = useQuery({
-    queryKey: ['/api/admin/facilities'],
+    queryKey: [isAdmin ? '/api/admin/facilities' : '/api/owner/facilities'],
     queryFn: async (): Promise<Facility[]> => {
-      const response = await fetch('/api/admin/facilities', {
+      const endpoint = isAdmin ? '/api/admin/facilities' : '/api/owner/facilities';
+      const response = await fetch(endpoint, {
         headers: getAuthHeaders(),
       });
       if (!response.ok) throw new Error('Failed to fetch facilities');

@@ -1201,6 +1201,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get owner's facilities
+  app.get("/api/owner/facilities", authenticateToken, async (req: any, res: Response) => {
+    try {
+      if (req.user.role !== 'owner') {
+        return res.status(403).json({ message: "Owner access required" });
+      }
+
+      const facilities = await storage.getFacilitiesByOwnerId(req.user.id);
+      res.json(facilities);
+    } catch (error) {
+      console.error("Get owner facilities error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Pending bookings approval API for admin/owner
   app.get("/api/admin/bookings/pending", authenticateToken, async (req: any, res: Response) => {
     try {

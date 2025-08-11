@@ -770,6 +770,27 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(facilities).orderBy(desc(facilities.createdAt));
   }
 
+  async getFacilitiesByOwnerId(ownerId: string): Promise<Facility[]> {
+    try {
+      const result = await db.execute(sql`
+        SELECT f.* 
+        FROM facilities f
+        LEFT JOIN companies c ON f.company_id = c.id
+        WHERE c.owner_id = ${ownerId}
+        ORDER BY f.created_at DESC
+      `);
+      
+      return result.rows.map(row => ({
+        ...row,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at
+      }));
+    } catch (error) {
+      console.error('Error fetching facilities by owner ID:', error);
+      return [];
+    }
+  }
+
   async getAllBookingsAdmin(filters: any): Promise<{ bookings: any[]; total: number }> {
     const { page = 1, limit = 10 } = filters;
     
@@ -800,9 +821,7 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
-  async getFacilitiesByOwnerId(ownerId: string): Promise<Facility[]> {
-    return await db.select().from(facilities).where(eq(facilities.ownerId, ownerId)).orderBy(desc(facilities.createdAt));
-  }
+
 
   async getUserById(id: string): Promise<any | undefined> {
     try {
