@@ -17,6 +17,7 @@ Preferred communication style: Simple, everyday language.
 - **Frontend UI/UX improvement phase**: Focus shifted to enhancing user-facing website interface and experience
 - **Base functionality complete**: CRM/admin panel and backend systems fully operational
 - **Current priority**: Improving main website UI for better user engagement and conversion
+- **Future roadmap planned**: Comprehensive feature set including match creation, community features, social engagement, and enhanced booking experience
 
 ### Previous - Application Restructuring
 - **Separated user interfaces**: Created distinct CRM/admin panel at `/crm` for facility owners and administrators
@@ -125,3 +126,28 @@ The frontend implements a cohesive design system targeting Gen-Z users:
 - **Replit-specific plugins** for development environment integration
 
 The application is designed to be easily deployable and scalable, with clear separation of concerns between the client, server, and database layers. The architecture supports future enhancements like real-time features, mobile app development, and third-party integrations.
+
+## Future Feature Roadmap
+
+### Community & Social Features
+- **Match Creation & Joining**: Users can create or join matches with others in their area
+- **Sports Community Notifications**: Notify community members when new matches/events are created
+- **Help Board**: Feature for finding and joining teams
+- **Player Profiles & Skill Ratings**: Social features with comprehensive player profiles and skill-based ratings
+- **One Unified Platform**: Single app for searching, booking, payments, and social engagement
+
+### Enhanced Booking Experience
+- **Real-time Availability**: Live court availability updates with instant booking confirmation
+- **Calendar & Maps Integration**: Instant booking confirmation with seamless calendar and maps integration
+- **Recurring Subscriptions**: Automatic weekly/monthly slot booking for regular players to save time and ensure availability
+
+### Payment & Financial Features
+- **In-app Payment Splitting**: Split payments with friends directly within the platform
+- **S-Wallet System**: In-app wallet for easy recharges, auto-pay for recurring bookings, and seamless transactions
+- **Coupons & Offers**: Comprehensive reward system including referral bonuses, consecutive booking discounts, student discounts, and freebies
+
+### Event Add-ons & Services
+- **Cab Booking Integration**: Direct cab booking to venues through the platform
+- **Beverage Orders**: In-app beverage ordering for events and bookings
+- **Equipment Services**: Equipment rentals and purchases directly through the platform
+- **Complete Event Management**: End-to-end event planning and management capabilities

@@ -155,8 +155,8 @@ export default function Home() {
                   </div>
                 </div>
               ))
-            ) : facilitiesData?.facilities?.length ? (
-              facilitiesData.facilities.map((facility: any) => (
+            ) : facilitiesData?.length ? (
+              facilitiesData.map((facility: any) => (
                 <VenueCard key={facility.id} facility={facility} />
               ))
             ) : (
@@ -177,7 +177,7 @@ export default function Home() {
       </section>
       
       {/* How It Works */}
-      <section className="py-16 bg-white">
+      <section className="py-16 bg-gradient-to-br from-gray-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">How It Works</h2>
@@ -185,9 +185,9 @@ export default function Home() {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center group">
+            <div className="text-center group card-hover p-6 bg-white rounded-2xl shadow-sm">
               <div className="relative mb-8">
-                <div className="w-32 h-32 mx-auto bg-gradient-to-br from-brand-indigo to-brand-purple rounded-full flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform duration-300">
+                <div className="w-32 h-32 mx-auto bg-gradient-to-br from-brand-indigo to-brand-purple rounded-full flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform duration-300 pulse-glow">
                   <Search className="text-white h-12 w-12" />
                 </div>
                 <div className="absolute -top-2 -right-2 w-8 h-8 bg-brand-yellow rounded-full flex items-center justify-center text-white font-bold">1</div>
@@ -196,7 +196,7 @@ export default function Home() {
               <p className="text-gray-600 text-lg">Search and filter courts by sport, location, price, and ratings. Find the perfect match for your game!</p>
             </div>
             
-            <div className="text-center group">
+            <div className="text-center group card-hover p-6 bg-white rounded-2xl shadow-sm">
               <div className="relative mb-8">
                 <div className="w-32 h-32 mx-auto bg-gradient-to-br from-brand-cyan to-brand-emerald rounded-full flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform duration-300">
                   <i className="fas fa-calendar-alt text-white text-4xl"></i>
@@ -207,7 +207,7 @@ export default function Home() {
               <p className="text-gray-600 text-lg">Select your time slot and split payments with friends using UPI. Apply discounts and use your reward points!</p>
             </div>
             
-            <div className="text-center group">
+            <div className="text-center group card-hover p-6 bg-white rounded-2xl shadow-sm">
               <div className="relative mb-8">
                 <div className="w-32 h-32 mx-auto bg-gradient-to-br from-brand-orange to-red-500 rounded-full flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform duration-300">
                   <i className="fas fa-play text-white text-4xl"></i>
@@ -224,10 +224,10 @@ export default function Home() {
       <FeatureSection />
       
       {/* Testimonials */}
-      <section className="py-16 bg-white">
+      <section className="py-16 bg-gradient-to-br from-white to-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">What Athletes Say</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 slide-in-up">What Athletes Say</h2>
             <p className="text-xl text-gray-600">Join thousands of sports enthusiasts who love QuickCourt</p>
           </div>
           
@@ -240,7 +240,7 @@ export default function Home() {
               ];
               
               return (
-                <div key={index} className={`bg-gradient-to-br ${gradients[index]} p-6 rounded-2xl text-white transform hover:scale-105 transition-transform duration-300`}>
+                <div key={index} className={`bg-gradient-to-br ${gradients[index]} p-6 rounded-2xl text-white transform hover:scale-105 transition-transform duration-300 card-hover shadow-xl`}>
                   <div className="flex items-center mb-4">
                     <div className="flex text-brand-yellow">
                       {Array.from({ length: testimonial.rating }).map((_, i) => (

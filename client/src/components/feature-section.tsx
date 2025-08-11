@@ -29,11 +29,11 @@ const features = [
 
 export default function FeatureSection() {
   return (
-    <section className="py-16 bg-gray-50">
+    <section className="py-16 bg-gradient-to-br from-gray-50 to-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <div>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6 slide-in-up">
               Built for Gen-Z Athletes
             </h2>
             <p className="text-xl text-gray-600 mb-8">
@@ -42,7 +42,7 @@ export default function FeatureSection() {
             
             <div className="space-y-6">
               {features.map((feature, index) => (
-                <div key={index} className="flex items-start space-x-4">
+                <div key={index} className="flex items-start space-x-4 p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 card-hover">
                   <div className={`flex-shrink-0 w-12 h-12 bg-gradient-to-br ${feature.gradient} rounded-xl flex items-center justify-center`}>
                     <feature.icon className="h-6 w-6 text-white" />
                   </div>

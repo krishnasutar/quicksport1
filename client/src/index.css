@@ -123,8 +123,80 @@
 
   body {
     @apply font-sans antialiased bg-background text-foreground;
-    font-family: var(--font-sans);
   }
+}
+
+/* Custom Classes for QuickCourt */
+.gradient-text {
+  background: linear-gradient(135deg, var(--brand-indigo), var(--brand-purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-bg {
+  background: linear-gradient(135deg, var(--brand-indigo), var(--brand-purple));
+  @apply text-white border-none hover:shadow-xl transform hover:scale-105 transition-all duration-200;
+}
+
+.hero-gradient {
+  background: linear-gradient(135deg, var(--brand-indigo), var(--brand-purple), var(--brand-cyan));
+}
+
+.card-hover {
+  @apply transform transition-all duration-300 hover:scale-105 hover:shadow-xl;
+}
+
+.text-shadow {
+  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.glass-effect {
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+/* Improved animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { 
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+  }
+  50% { 
+    box-shadow: 0 0 30px rgba(99, 102, 241, 0.5);
+  }
+}
+
+.float-animation {
+  animation: float 3s ease-in-out infinite;
+}
+
+.slide-in-up {
+  animation: slideInUp 0.8s ease-out;
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.glow-text {
+  text-shadow: 0 0 20px rgba(255, 193, 7, 0.6);
 }
 
 @layer utilities {

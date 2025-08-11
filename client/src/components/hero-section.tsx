@@ -6,30 +6,38 @@ export default function HeroSection() {
   const { user } = useAuth();
 
   return (
-    <section className="relative bg-gradient-to-br from-brand-indigo via-brand-purple to-brand-cyan min-h-screen flex items-center">
+    <section className="relative hero-gradient min-h-screen flex items-center overflow-hidden">
       <div className="absolute inset-0 bg-black bg-opacity-20"></div>
+      
+      {/* Background Animation Elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-10 left-10 w-20 h-20 bg-white bg-opacity-10 rounded-full float-animation"></div>
+        <div className="absolute top-32 right-20 w-16 h-16 bg-white bg-opacity-10 rounded-full float-animation" style={{animationDelay: '1s'}}></div>
+        <div className="absolute bottom-20 left-1/4 w-12 h-12 bg-white bg-opacity-10 rounded-full float-animation" style={{animationDelay: '2s'}}></div>
+        <div className="absolute top-1/2 right-10 w-24 h-24 bg-white bg-opacity-10 rounded-full float-animation" style={{animationDelay: '0.5s'}}></div>
+      </div>
       
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="text-white">
-            <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-6">
+            <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-6 slide-in-up text-shadow">
               Book Sports Courts
-              <span className="block text-brand-yellow">Instantly</span>
+              <span className="block text-brand-yellow glow-text">Instantly</span>
             </h1>
             <p className="text-xl md:text-2xl mb-8 text-gray-100">
               Find and book local sports facilities, split payments with friends, and earn rewards. The Gen-Z way to play!
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 mb-8">
-              <Button asChild className="bg-white text-brand-indigo px-8 py-4 rounded-xl font-semibold text-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
+              <Button asChild className="bg-white text-brand-indigo px-8 py-4 rounded-xl font-semibold text-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 pulse-glow">
                 <Link href={user ? "/" : "/register"}>
                   <i className="fas fa-play mr-2"></i>
                   {user ? "Find Courts" : "Get Started"}
                 </Link>
               </Button>
-              <Button variant="outline" className="border-2 border-white text-white px-8 py-4 rounded-xl font-semibold text-lg hover:bg-white hover:text-brand-indigo transition-all duration-200">
-                <i className="fas fa-download mr-2"></i>
-                Download App
+              <Button variant="outline" className="border-2 border-white text-white px-8 py-4 rounded-xl font-semibold text-lg hover:bg-white hover:text-brand-indigo transition-all duration-200 glass-effect">
+                <i className="fas fa-search mr-2"></i>
+                Browse Courts
               </Button>
             </div>
             
@@ -51,7 +59,7 @@ export default function HeroSection() {
           
           <div className="flex justify-center lg:justify-end">
             <div className="relative">
-              <div className="w-80 h-96 bg-gradient-to-br from-gray-800 to-gray-900 rounded-3xl p-2 shadow-2xl transform rotate-6 hover:rotate-0 transition-transform duration-500">
+              <div className="w-80 h-96 bg-gradient-to-br from-gray-800 to-gray-900 rounded-3xl p-2 shadow-2xl transform rotate-6 hover:rotate-0 transition-transform duration-500 float-animation">
                 <div className="w-full h-full bg-white rounded-2xl overflow-hidden">
                   <div className="h-full bg-gradient-to-b from-gray-50 to-white p-4">
                     <div className="flex justify-between items-center mb-4 text-xs text-gray-600">

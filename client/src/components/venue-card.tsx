@@ -29,7 +29,7 @@ export default function VenueCard({ facility }: VenueCardProps) {
   const remainingSports = uniqueSports.length - displaySports.length;
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group cursor-pointer">
+    <div className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group cursor-pointer card-hover">
       <div className="relative h-48 bg-cover bg-center" style={{ backgroundImage: `url(${mainImage})` }}>
         <div className="absolute top-4 left-4">
           {facility.status === 'approved' && (
