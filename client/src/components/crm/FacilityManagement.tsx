@@ -93,7 +93,7 @@ export function FacilityManagement({ onNavigateToAddFacility }: FacilityManageme
   const isAdmin = currentUser.role === 'admin';
 
   // Fetch facilities for CRM (includes pending facilities)
-  const { data: facilitiesResponse, isLoading: facilitiesLoading, error: facilitiesError } = useQuery<{facilities: FacilityWithCourts[], pagination: any}>({
+  const { data: facilities = [], isLoading: facilitiesLoading, error: facilitiesError } = useQuery<FacilityWithCourts[]>({
     queryKey: [isAdmin ? '/api/admin/facilities' : '/api/owner/facilities'],
     queryFn: async () => {
       const token = localStorage.getItem('crm_token');
@@ -105,24 +105,22 @@ export function FacilityManagement({ onNavigateToAddFacility }: FacilityManageme
         },
       });
       if (!response.ok) throw new Error('Failed to fetch facilities');
-      return { facilities: await response.json(), pagination: {} };
+      return await response.json();
     },
     staleTime: 0, // Always fetch fresh data
-    cacheTime: 0, // Don't cache
+    gcTime: 0, // Don't cache (replaces cacheTime in newer versions)
   });
   
   // Log facility data for debugging
   useEffect(() => {
-    if (facilitiesResponse) {
-      console.log(`Loaded ${facilitiesResponse.facilities?.length || 0} facilities, total: ${facilitiesResponse.pagination?.total || 0}`);
-      console.log('Facility IDs:', facilitiesResponse.facilities?.map(f => f.id).join(', '));
+    if (facilities) {
+      console.log(`Loaded ${facilities.length} facilities`);
+      console.log('Facility IDs:', facilities.map(f => f.id).join(', '));
     }
     if (facilitiesError) {
       console.error('Facilities loading error:', facilitiesError);
     }
-  }, [facilitiesResponse, facilitiesError]);
-  
-  const facilities = facilitiesResponse?.facilities || [];
+  }, [facilities, facilitiesError]);
 
   // Fetch pending bookings for approval
   const { data: pendingBookingsData, isLoading: pendingBookingsLoading } = useQuery<{bookings: PendingBooking[], total: number}>({
@@ -151,7 +149,7 @@ export function FacilityManagement({ onNavigateToAddFacility }: FacilityManageme
 
   // Get unique cities from facilities
   const cities = useMemo(() => {
-    const uniqueCities = Array.from(new Set(facilities.map(f => f.city)));
+    const uniqueCities = Array.from(new Set(facilities.map(f => f.city).filter(Boolean)));
     return uniqueCities.sort();
   }, [facilities]);
 
