@@ -411,8 +411,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
 
       if (!isAvailable) {
-        return res.status(400).json({ 
-          message: "Court is not available for the selected time slot. Please choose a different time or check available slots." 
+        return res.status(409).json({ 
+          message: "Court is not available for the selected time slot",
+          error: "COURT_UNAVAILABLE",
+          details: "This time slot is already booked. Please select a different time."
         });
       }
 

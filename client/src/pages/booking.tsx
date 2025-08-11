@@ -28,6 +28,16 @@ export default function Booking() {
       if (!user) throw new Error("Please log in to make a booking");
       
       const response = await apiRequest("POST", "/api/bookings", bookingData);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        const error = new Error(errorData.message || "Booking failed");
+        (error as any).status = response.status;
+        (error as any).details = errorData.details;
+        (error as any).errorCode = errorData.error;
+        throw error;
+      }
+      
       return response.json();
     },
     onSuccess: (data) => {
@@ -40,9 +50,22 @@ export default function Booking() {
       navigate('/dashboard');
     },
     onError: (error: any) => {
+      let title = "Booking Failed";
+      let description = error.message || "Something went wrong. Please try again.";
+      
+      // Check if it's a court availability error
+      if (error.errorCode === "COURT_UNAVAILABLE" || 
+          (error.message && error.message.includes("Court is not available"))) {
+        title = "⏰ Time Slot Already Booked";
+        description = "This court is already reserved for the selected time. Please choose a different time slot or date.";
+      } else if (error.status === 409) {
+        title = "Booking Conflict";
+        description = error.details || "There's a conflict with your booking. Please try a different time.";
+      }
+      
       toast({
-        title: "Booking Failed",
-        description: error.message || "Something went wrong. Please try again.",
+        title,
+        description,
         variant: "destructive",
       });
     },
