@@ -56,7 +56,6 @@ export function FacilityManagement() {
   const [selectedCity, setSelectedCity] = useState<string>("all");
   const [selectedSport, setSelectedSport] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
-  const [activeTab, setActiveTab] = useState("overview");
 
   // Fetch facilities 
   const { data: facilitiesResponse, isLoading: facilitiesLoading } = useQuery<{facilities: FacilityWithCourts[], pagination: any}>({
@@ -130,7 +129,16 @@ export function FacilityManagement() {
             Manage {facilities.length} facilities across {cities.length} cities
           </p>
         </div>
-        <Button className="gap-2">
+        <Button 
+          className="gap-2"
+          onClick={() => {
+            // Navigate to add facility page by updating the URL
+            const currentUrl = new URL(window.location.href);
+            currentUrl.searchParams.set('section', 'add-facility');
+            window.history.pushState({}, '', currentUrl.toString());
+            window.dispatchEvent(new PopStateEvent('popstate'));
+          }}
+        >
           <Plus className="h-4 w-4" />
           Add Facility
         </Button>
@@ -191,16 +199,8 @@ export function FacilityManagement() {
         </CardContent>
       </Card>
 
-      {/* Tabs for different views */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="categories">By Category</TabsTrigger>
-          <TabsTrigger value="list">List View</TabsTrigger>
-        </TabsList>
-
-        {/* Overview Tab */}
-        <TabsContent value="overview" className="space-y-6">
+      {/* Statistics Cards */}
+      <div className="space-y-6">
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Card>
@@ -303,129 +303,86 @@ export function FacilityManagement() {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
 
-        {/* Categories Tab */}
-        <TabsContent value="categories" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {sportsCategories.map((category) => (
-              <Card key={category.sport}>
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <span className="capitalize">{category.sport}</span>
-                    <Badge variant="secondary">{category.count} facilities</Badge>
-                  </CardTitle>
-                  <CardDescription>
-                    Facilities offering {category.sport} courts
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {facilitiesByCategory[category.sport]?.slice(0, 3).map((facility) => (
-                      <div key={facility.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                        <div>
-                          <h5 className="font-medium">{facility.name}</h5>
-                          <p className="text-sm text-muted-foreground">{facility.city}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Star className="h-3 w-3 text-yellow-500" />
-                          <span className="text-sm">{facility.rating}</span>
-                        </div>
-                      </div>
-                    ))}
-                    {facilitiesByCategory[category.sport]?.length > 3 && (
-                      <Button variant="outline" size="sm" className="w-full">
-                        View All {facilitiesByCategory[category.sport].length} Facilities
-                      </Button>
-                    )}
+        {/* Facilities Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredFacilities.map((facility) => (
+            <Card key={facility.id} className="hover:shadow-md transition-shadow">
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <CardTitle className="text-lg">{facility.name}</CardTitle>
+                    <div className="flex items-center gap-1 mt-1">
+                      <MapPin className="h-3 w-3 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">
+                        {facility.city}, {facility.state}
+                      </span>
+                    </div>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
+                  <Badge className={getStatusColor(facility.status)}>
+                    {facility.status}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1">
+                      <Star className="h-4 w-4 text-yellow-500" />
+                      <span>{facility.rating}</span>
+                      <span className="text-sm text-muted-foreground">
+                        ({facility.totalReviews} reviews)
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-2">Sports Available:</p>
+                    <div className="flex flex-wrap gap-1">
+                      {facility.courts?.map((court, index) => (
+                        <Badge key={index} variant="outline" className="text-xs">
+                          {court.sportType}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
 
-        {/* List View Tab */}
-        <TabsContent value="list" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredFacilities.map((facility) => (
-              <Card key={facility.id} className="hover:shadow-md transition-shadow">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle className="text-lg">{facility.name}</CardTitle>
-                      <div className="flex items-center gap-1 mt-1">
-                        <MapPin className="h-3 w-3 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">
-                          {facility.city}, {facility.state}
-                        </span>
-                      </div>
-                    </div>
-                    <Badge className={getStatusColor(facility.status)}>
-                      {facility.status}
-                    </Badge>
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline" size="sm">
+                      <Eye className="h-3 w-3 mr-1" />
+                      View
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      <Edit className="h-3 w-3 mr-1" />
+                      Edit
+                    </Button>
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1">
-                        <Star className="h-4 w-4 text-yellow-500" />
-                        <span>{facility.rating}</span>
-                        <span className="text-sm text-muted-foreground">
-                          ({facility.totalReviews} reviews)
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-2">Sports Available:</p>
-                      <div className="flex flex-wrap gap-1">
-                        {facility.courts?.map((court, index) => (
-                          <Badge key={index} variant="outline" className="text-xs">
-                            {court.sportType}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline" className="flex-1">
-                        <Eye className="h-3 w-3 mr-1" />
-                        View
-                      </Button>
-                      <Button size="sm" variant="outline" className="flex-1">
-                        <Edit className="h-3 w-3 mr-1" />
-                        Edit
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-          
-          {filteredFacilities.length === 0 && (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <p className="text-muted-foreground">No facilities match your current filters.</p>
-                <Button 
-                  variant="outline" 
-                  onClick={() => {
-                    setSearchTerm("");
-                    setSelectedCity("all");
-                    setSelectedSport("all");
-                    setSelectedStatus("all");
-                  }}
-                  className="mt-4"
-                >
-                  Clear Filters
-                </Button>
+                </div>
               </CardContent>
             </Card>
-          )}
-        </TabsContent>
-      </Tabs>
+          ))}
+        </div>
+
+        {filteredFacilities.length === 0 && (
+          <Card>
+            <CardContent className="py-12 text-center">
+              <p className="text-muted-foreground">No facilities match your current filters.</p>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setSearchTerm("");
+                  setSelectedCity("all");
+                  setSelectedSport("all");
+                  setSelectedStatus("all");
+                }}
+                className="mt-4"
+              >
+                Clear Filters
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   );
 }

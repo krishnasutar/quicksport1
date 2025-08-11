@@ -167,7 +167,7 @@ export class DatabaseStorage implements IStorage {
     if (rating) conditions.push(gte(facilities.rating, rating.toString()));
 
     if (conditions.length > 0) {
-      const query2 = db.select({
+      query = db.select({
         id: facilities.id,
         name: facilities.name,
         description: facilities.description,
@@ -178,7 +178,6 @@ export class DatabaseStorage implements IStorage {
         rating: facilities.rating,
         totalReviews: facilities.totalReviews,
       }).from(facilities).where(and(eq(facilities.status, "approved"), ...conditions));
-      query = query2;
     }
 
     const result = await query

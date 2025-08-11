@@ -69,6 +69,13 @@ export default function CRMDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
+    // Check URL params for section
+    const urlParams = new URLSearchParams(window.location.search);
+    const sectionParam = urlParams.get('section');
+    if (sectionParam) {
+      setActiveSection(sectionParam);
+    }
+
     const crmToken = localStorage.getItem('crm_token');
     const crmUser = localStorage.getItem('crm_user');
     
@@ -177,10 +184,7 @@ export default function CRMDashboard() {
       id: 'facilities',
       label: 'Facilities',
       icon: Building2,
-      dropdown: [
-        { label: 'All Facilities', action: () => setActiveSection('all-facilities') },
-        { label: 'Add Facility', action: () => setActiveSection('add-facility') }
-      ]
+      action: () => setActiveSection('all-facilities')
     },
     {
       id: 'bookings',
