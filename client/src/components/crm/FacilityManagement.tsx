@@ -68,9 +68,19 @@ export function FacilityManagement({ onNavigateToAddFacility }: FacilityManageme
   const { toast } = useToast();
 
   // Fetch facilities 
-  const { data: facilitiesResponse, isLoading: facilitiesLoading } = useQuery<{facilities: FacilityWithCourts[], pagination: any}>({
+  const { data: facilitiesResponse, isLoading: facilitiesLoading, error: facilitiesError } = useQuery<{facilities: FacilityWithCourts[], pagination: any}>({
     queryKey: ['/api/facilities'],
   });
+  
+  // Log facility data for debugging
+  React.useEffect(() => {
+    if (facilitiesResponse) {
+      console.log(`Loaded ${facilitiesResponse.facilities?.length || 0} facilities, total: ${facilitiesResponse.pagination?.total || 0}`);
+    }
+    if (facilitiesError) {
+      console.error('Facilities loading error:', facilitiesError);
+    }
+  }, [facilitiesResponse, facilitiesError]);
   
   const facilities = facilitiesResponse?.facilities || [];
 
@@ -119,6 +129,8 @@ export function FacilityManagement({ onNavigateToAddFacility }: FacilityManageme
       
       // Clear status filter to show all facilities after update
       setSelectedStatus("all");
+      
+      console.log('Status updated successfully, clearing filter');
       
       toast({
         title: "Success",

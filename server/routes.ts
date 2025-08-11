@@ -200,8 +200,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const decoded = jwt.verify(token, JWT_SECRET) as any;
           const user = await storage.getCrmUserById(decoded.id);
           isCrmUser = user && (user.role === 'admin' || user.role === 'owner');
+          console.log(`CRM Token Detection: user=${user?.email}, role=${user?.role}, isCrmUser=${isCrmUser}`);
         } catch (err) {
-          // Token invalid, continue as public request
+          console.log('Token verification failed:', err.message);
         }
       }
       
