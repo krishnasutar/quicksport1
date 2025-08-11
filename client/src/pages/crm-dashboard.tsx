@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { UsersManagement } from "@/components/crm/UsersManagement";
 import { FacilitiesManagement } from "@/components/crm/FacilitiesManagement";
+import { CompanyManagement } from "@/components/crm/CompanyManagement";
 import { OtherManagement } from "@/components/crm/OtherManagement";
 
 interface CRMUser {
@@ -129,6 +130,13 @@ export default function CRMDashboard() {
       icon: Home,
       action: () => setActiveSection('dashboard')
     },
+    // Companies - Admin Only
+    ...(isAdmin ? [{
+      id: 'companies',
+      label: 'Companies',
+      icon: Building,
+      action: () => setActiveSection('companies')
+    }] : []),
     {
       id: 'users',
       label: 'Users',
@@ -621,6 +629,11 @@ export default function CRMDashboard() {
           </TabsContent>
         </Tabs>
             </div>
+          )}
+
+          {/* Companies Management Section - Admin Only */}
+          {activeSection === 'companies' && isAdmin && (
+            <CompanyManagement />
           )}
 
           {/* Users Management Sections */}
