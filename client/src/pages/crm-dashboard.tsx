@@ -216,30 +216,32 @@ export default function CRMDashboard() {
                         <item.icon className="mr-3 h-5 w-5" />
                         {item.label}
                       </div>
-                      <ChevronRight className={`h-4 w-4 transition-transform duration-200 ${
-                        expandedMenus.includes(item.id) ? 'rotate-90' : ''
-                      }`} />
+                      {expandedMenus.includes(item.id) ? (
+                        <ChevronDown className="h-4 w-4 transition-all duration-200" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4 transition-all duration-200" />
+                      )}
                     </Button>
                     
-                    {/* Smooth inline dropdown */}
-                    <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                      expandedMenus.includes(item.id) ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
-                    }`}>
-                      <div className="ml-8 mt-1 space-y-1 pb-2">
-                        {item.dropdown.map((subItem, index) => (
-                          <Button 
-                            key={index}
-                            variant="ghost" 
-                            size="sm"
-                            className="w-full justify-start text-sm text-gray-600 hover:bg-purple-50 hover:text-purple-600 pl-2 py-1"
-                            onClick={subItem.action}
-                            data-testid={`button-${item.id}-${subItem.label.toLowerCase().replace(/\s+/g, '-')}`}
-                          >
-                            {subItem.label}
-                          </Button>
-                        ))}
+                    {/* Accordion-style dropdown */}
+                    {expandedMenus.includes(item.id) && (
+                      <div className="animate-in slide-in-from-top-1 duration-200">
+                        <div className="ml-8 mt-1 space-y-1 pb-2">
+                          {item.dropdown.map((subItem, index) => (
+                            <Button 
+                              key={index}
+                              variant="ghost" 
+                              size="sm"
+                              className="w-full justify-start text-sm text-gray-600 hover:bg-purple-50 hover:text-purple-600 pl-2 py-1.5"
+                              onClick={subItem.action}
+                              data-testid={`button-${item.id}-${subItem.label.toLowerCase().replace(/\s+/g, '-')}`}
+                            >
+                              {subItem.label}
+                            </Button>
+                          ))}
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 ) : (
                   <Button 
