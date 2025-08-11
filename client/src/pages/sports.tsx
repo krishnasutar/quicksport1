@@ -98,14 +98,25 @@ export default function Sports() {
     }
   }, [maxPrice, priceRange]);
 
-  // Get unique cities from facilities
+  // Get unique cities from facilities, filtered and formatted
   const cities = useMemo(() => {
     if (!Array.isArray(facilities)) {
       console.warn('Facilities is not an array:', facilities);
       return [];
     }
-    const uniqueCities = Array.from(new Set(facilities.map(f => f.city)));
-    return uniqueCities.sort();
+    const uniqueCities = Array.from(new Set(facilities.map(f => f.city)))
+      .filter(city => city && city.trim().length > 2 && !city.match(/^[a-z]{3,4}$/)) // Filter out invalid test data
+      .map(city => {
+        // Clean up city names - extract main city for areas
+        if (city.includes(', ')) {
+          const parts = city.split(', ');
+          return parts[parts.length - 1]; // Take the main city (last part)
+        }
+        return city;
+      })
+      .filter((city, index, array) => array.indexOf(city) === index) // Remove duplicates after processing
+      .sort();
+    return uniqueCities;
   }, [facilities]);
 
   // Sports with counts from API
