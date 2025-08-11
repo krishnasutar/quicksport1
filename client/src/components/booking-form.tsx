@@ -113,8 +113,9 @@ export default function BookingForm({ court, onSubmit, isLoading }: BookingFormP
       }
 
       try {
-        // Use token from auth context (which manages localStorage properly)
-        const { token: authToken } = useAuth();
+        // Use token from auth context (which manages localStorage properly)  
+        const authContext = useAuth();
+        const authToken = authContext?.token;
         const token = authToken || localStorage.getItem('auth_token') || localStorage.getItem('token');
         console.log('Token from auth context:', authToken ? `${authToken.substring(0, 20)}...` : 'NO AUTH TOKEN');
         console.log('Token from localStorage:', token ? `${token.substring(0, 20)}...` : 'NO TOKEN FOUND');
@@ -124,6 +125,7 @@ export default function BookingForm({ court, onSubmit, isLoading }: BookingFormP
           return;
         }
         
+        console.log('Making payment intent request...');
         const response = await fetch('/api/create-payment-intent', {
           method: 'POST',
           headers: {
@@ -135,9 +137,12 @@ export default function BookingForm({ court, onSubmit, isLoading }: BookingFormP
             courtId: court.id,
             bookingDate: format(bookingDate, 'yyyy-MM-dd'),
             startTime,
-            endTime
+            endTime: calculateEndTime(startTime, duration)
           })
         });
+
+        console.log('Payment intent response status:', response.status);
+        console.log('Payment intent response ok:', response.ok);
 
         if (!response.ok) {
           const error = await response.json();
