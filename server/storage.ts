@@ -61,6 +61,7 @@ export interface IStorage {
   getAllFacilitiesAdmin(): Promise<Facility[]>;
   getAllBookingsAdmin(filters: any): Promise<{ bookings: any[]; total: number }>;
   getFacilitiesByOwnerId(ownerId: string): Promise<Facility[]>;
+  getAllUsers(roleFilter?: string): Promise<User[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -526,6 +527,16 @@ export class DatabaseStorage implements IStorage {
 
   async getFacilitiesByOwnerId(ownerId: string): Promise<Facility[]> {
     return await db.select().from(facilities).where(eq(facilities.ownerId, ownerId)).orderBy(desc(facilities.createdAt));
+  }
+
+  async getAllUsers(roleFilter?: string): Promise<User[]> {
+    let query = db.select().from(users).orderBy(desc(users.createdAt));
+    
+    if (roleFilter && roleFilter !== 'all') {
+      query = query.where(eq(users.role, roleFilter));
+    }
+    
+    return await query;
   }
 }
 

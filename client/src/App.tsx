@@ -12,7 +12,7 @@ import VenueDetails from "@/pages/venue-details";
 import Booking from "@/pages/booking";
 import UserDashboard from "@/pages/user-dashboard";
 import CRMLogin from "@/pages/crm-login";
-import CRMDashboard from "@/pages/crm-dashboard";
+import CRMDashboard from "@/pages/crm-dashboard-clean";
 
 function Router() {
   return (

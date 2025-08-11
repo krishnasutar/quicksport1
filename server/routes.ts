@@ -389,6 +389,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Users management endpoints
+  app.get("/api/admin/users", authenticateToken, async (req: any, res: Response) => {
+    try {
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      
+      const { role } = req.query;
+      const users = await storage.getAllUsers(role);
+      res.json(users);
+    } catch (error) {
+      console.error("Get users error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/admin/users", authenticateToken, async (req: any, res: Response) => {
+    try {
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const userData = insertUserSchema.parse(req.body);
+      
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(userData.email);
+      if (existingUser) {
+        return res.status(400).json({ message: "User already exists with this email" });
+      }
+
+      const existingUsername = await storage.getUserByUsername(userData.username);
+      if (existingUsername) {
+        return res.status(400).json({ message: "Username is already taken" });
+      }
+
+      // Hash password
+      const hashedPassword = await bcrypt.hash(userData.password, 10);
+      
+      // Generate referral code
+      const referralCode = `QC${Math.random().toString(36).substr(2, 8).toUpperCase()}`;
+
+      const user = await storage.createUser({
+        ...userData,
+        password: hashedPassword,
+        referralCode
+      });
+
+      const { password: _, ...userWithoutPassword } = user;
+      res.status(201).json(userWithoutPassword);
+    } catch (error) {
+      console.error("Create user error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   app.get("/api/bookings", authenticateToken, async (req: any, res: Response) => {
     try {
       const { status, page = 1, limit = 10 } = req.query;
