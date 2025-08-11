@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Navbar from "@/components/layout/navbar";
 import Footer from "@/components/layout/footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,14 +14,17 @@ import { Link, useLocation } from "wouter";
 export default function UserDashboard() {
   const { user } = useAuth();
   const [, navigate] = useLocation();
+  const queryClient = useQueryClient();
   
   if (!user) {
     navigate('/login');
     return null;
   }
 
-  const { data: bookingsData, isLoading: bookingsLoading } = useQuery({
+  const { data: bookingsData, isLoading: bookingsLoading, refetch: refetchBookings } = useQuery({
     queryKey: ['/api/bookings'],
+    staleTime: 0, // Always refetch to get latest bookings
+    refetchOnWindowFocus: true, // Refetch when user returns to tab
   });
 
   const { data: walletData } = useQuery({
@@ -70,9 +73,10 @@ export default function UserDashboard() {
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center space-x-4 mb-4">
-            <Avatar className="h-20 w-20">
-              <AvatarImage src={user.profilePicture} alt={user.username} />
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-4">
+              <Avatar className="h-20 w-20">
+                <AvatarImage src={user.profilePicture} alt={user.username} />
               <AvatarFallback className="bg-brand-indigo text-white text-xl">
                 {user.firstName?.[0]}{user.lastName?.[0]}
               </AvatarFallback>
@@ -81,8 +85,19 @@ export default function UserDashboard() {
               <h1 className="text-3xl font-bold text-gray-900">
                 Welcome back, {user.firstName}!
               </h1>
-              <p className="text-gray-600">Manage your bookings and profile</p>
+              <p className="text-gray-600">Ready for your next game?</p>
             </div>
+            </div>
+            <Button 
+              onClick={() => {
+                refetchBookings();
+                queryClient.invalidateQueries({ queryKey: ['/api/wallet'] });
+              }}
+              variant="outline"
+              className="text-brand-indigo border-brand-indigo hover:bg-brand-indigo hover:text-white"
+            >
+              Refresh Bookings
+            </Button>
           </div>
         </div>
 

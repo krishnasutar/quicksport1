@@ -36,6 +36,7 @@ export default function Booking() {
         description: `Your booking has been confirmed. You earned ${data.rewardPointsEarned} reward points!`,
       });
       queryClient.invalidateQueries({ queryKey: ['/api/bookings'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/wallet'] });
       navigate('/dashboard');
     },
     onError: (error: any) => {
