@@ -86,7 +86,11 @@ export function AddFacilityForm({ onCancel }: AddFacilityFormProps = {}) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // Fetch companies for dropdown
+  // Get current user first to determine if we should fetch companies
+  const currentUser = JSON.parse(localStorage.getItem('crm_user') || '{}');
+  const isAdmin = currentUser.role === 'admin';
+
+  // Fetch companies for dropdown (only for admins)
   const { data: companies = [] } = useQuery<Company[]>({
     queryKey: ['/api/companies'],
     queryFn: async () => {
@@ -100,11 +104,14 @@ export function AddFacilityForm({ onCancel }: AddFacilityFormProps = {}) {
       if (!response.ok) throw new Error('Failed to fetch companies');
       return response.json();
     },
+    enabled: isAdmin, // Only fetch for admins
   });
 
-  // Get current user from localStorage
-  const currentUser = JSON.parse(localStorage.getItem('crm_user') || '{}');
+  // Current user already defined above
 
+  // For owners, find their company automatically
+  const ownerCompany = companies.find(c => c.ownerId === currentUser.id);
+  
   // Filter owner based on selected company
   const selectedCompany = companies.find(c => c.id === facilityData.companyId);
 
@@ -158,15 +165,23 @@ export function AddFacilityForm({ onCancel }: AddFacilityFormProps = {}) {
     },
   });
 
-  // Auto-select owner when company is selected
+  // Auto-select company and owner for owners, or owner when company is selected for admins
   useEffect(() => {
-    if (selectedCompany) {
+    if (!isAdmin && ownerCompany) {
+      // For owners, automatically assign their company
+      setFacilityData(prev => ({
+        ...prev,
+        companyId: ownerCompany.id,
+        ownerId: ownerCompany.ownerId
+      }));
+    } else if (isAdmin && selectedCompany) {
+      // For admins, set owner when company is selected
       setFacilityData(prev => ({
         ...prev,
         ownerId: selectedCompany.ownerId
       }));
     }
-  }, [selectedCompany]);
+  }, [selectedCompany, ownerCompany, isAdmin]);
 
   const handleAddCourt = () => {
     if (!newCourt.name || !newCourt.sportType || !newCourt.pricePerHour) {
@@ -228,7 +243,7 @@ export function AddFacilityForm({ onCancel }: AddFacilityFormProps = {}) {
     console.log('Upload completed:', result);
     
     // Add uploaded image URLs to facility data
-    const uploadedUrls = result.successful.map(file => file.uploadURL);
+    const uploadedUrls = (result.successful || []).map(file => file.uploadURL).filter(Boolean) as string[];
     setFacilityData(prev => ({
       ...prev,
       images: [...prev.images, ...uploadedUrls]
@@ -236,7 +251,7 @@ export function AddFacilityForm({ onCancel }: AddFacilityFormProps = {}) {
     
     toast({
       title: "Success",
-      description: `${result.successful.length} image(s) uploaded successfully!`,
+      description: `${(result.successful || []).length} image(s) uploaded successfully!`,
     });
   };
 
@@ -276,7 +291,9 @@ export function AddFacilityForm({ onCancel }: AddFacilityFormProps = {}) {
     if (!finalOwnerId) {
       toast({
         title: "Error",
-        description: `Owner ID is missing. Company: ${selectedCompanyData?.name || 'none'}, Owner: ${selectedCompanyData?.ownerId || 'missing'}`,
+        description: !isAdmin 
+          ? "You need to be assigned to a company before creating facilities. Please contact an administrator."
+          : `Owner ID is missing. Company: ${selectedCompanyData?.name || 'none'}, Owner: ${selectedCompanyData?.ownerId || 'missing'}`,
         variant: "destructive",
       });
       return;
@@ -313,21 +330,34 @@ export function AddFacilityForm({ onCancel }: AddFacilityFormProps = {}) {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="company">Company *</Label>
-              <Select 
-                value={facilityData.companyId} 
-                onValueChange={(value) => setFacilityData({...facilityData, companyId: value})}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select company" />
-                </SelectTrigger>
-                <SelectContent>
-                  {companies.map(company => (
-                    <SelectItem key={company.id} value={company.id}>
-                      {company.name} - {company.ownerName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {isAdmin ? (
+                <Select 
+                  value={facilityData.companyId} 
+                  onValueChange={(value) => setFacilityData({...facilityData, companyId: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select company" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {companies.map(company => (
+                      <SelectItem key={company.id} value={company.id}>
+                        {company.name} - {company.ownerName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <div className="p-3 bg-gray-50 border rounded-md">
+                  <p className="text-sm font-medium">
+                    {ownerCompany ? ownerCompany.name : 'No company assigned'}
+                  </p>
+                  {!ownerCompany && (
+                    <p className="text-sm text-red-500 mt-1">
+                      You need to be assigned to a company before creating facilities. Please contact an administrator.
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
