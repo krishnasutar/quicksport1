@@ -1182,6 +1182,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get owner's assigned company
+  app.get("/api/owner/company", authenticateToken, async (req: any, res: Response) => {
+    try {
+      if (req.user.role !== 'owner') {
+        return res.status(403).json({ message: "Owner access required" });
+      }
+
+      const company = await storage.getCompanyByOwnerId(req.user.id);
+      if (!company) {
+        return res.status(404).json({ message: "No company assigned to this owner" });
+      }
+
+      res.json(company);
+    } catch (error) {
+      console.error("Get owner company error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Pending bookings approval API for admin/owner
   app.get("/api/admin/bookings/pending", authenticateToken, async (req: any, res: Response) => {
     try {

@@ -78,6 +78,7 @@ export interface IStorage {
   // Company methods
   getCompanies(): Promise<Company[]>;
   getCompanyById(id: string): Promise<Company | undefined>;
+  getCompanyByOwnerId(ownerId: string): Promise<Company | undefined>;
   createCompany(insertCompany: InsertCompany): Promise<Company>;
   updateCompany(id: string, updateData: Partial<Company>): Promise<Company | undefined>;
   deleteCompany(id: string): Promise<boolean>;
@@ -1156,6 +1157,34 @@ export class DatabaseStorage implements IStorage {
       return company || undefined;
     } catch (error) {
       console.error('Error fetching company by id:', error);
+      return undefined;
+    }
+  }
+
+  async getCompanyByOwnerId(ownerId: string): Promise<Company | undefined> {
+    try {
+      const result = await db.execute(sql`
+        SELECT 
+          c.*,
+          cu.first_name || ' ' || cu.last_name as owner_name,
+          (SELECT COUNT(*) FROM facilities f WHERE f.company_id = c.id) as facilities_count
+        FROM companies c
+        LEFT JOIN crm_users cu ON c.owner_id = cu.id
+        WHERE c.owner_id = ${ownerId} AND c.is_active = true
+        LIMIT 1
+      `);
+      
+      if (result.rows.length === 0) return undefined;
+      
+      const row = result.rows[0];
+      return {
+        ...row,
+        ownerId: row.owner_id,
+        ownerName: row.owner_name,
+        facilitiesCount: Number(row.facilities_count)
+      };
+    } catch (error) {
+      console.error('Error fetching company by owner ID:', error);
       return undefined;
     }
   }

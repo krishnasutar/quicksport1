@@ -90,21 +90,23 @@ export function AddFacilityForm({ onCancel }: AddFacilityFormProps = {}) {
   const currentUser = JSON.parse(localStorage.getItem('crm_user') || '{}');
   const isAdmin = currentUser.role === 'admin';
 
-  // Fetch companies for dropdown (only for admins)
+  // Fetch companies for admins, or owner's company for owners
   const { data: companies = [] } = useQuery<Company[]>({
     queryKey: ['/api/companies'],
     queryFn: async () => {
       const token = localStorage.getItem('crm_token');
-      const response = await fetch('/api/companies', {
+      const endpoint = isAdmin ? '/api/companies' : '/api/owner/company';
+      const response = await fetch(endpoint, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
       if (!response.ok) throw new Error('Failed to fetch companies');
-      return response.json();
+      const data = await response.json();
+      // For owners, wrap single company in array for consistency
+      return isAdmin ? data : (data ? [data] : []);
     },
-    enabled: isAdmin, // Only fetch for admins
   });
 
   // Current user already defined above
