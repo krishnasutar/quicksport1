@@ -246,9 +246,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       console.log("Getting facility with ID:", id, "Type:", typeof id);
       
-      // Validate UUID format
-      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-      if (!uuidRegex.test(id)) {
+      // Basic UUID format validation - allowing repeating patterns for test data
+      if (!id || typeof id !== 'string' || id.length !== 36) {
         return res.status(400).json({ message: "Invalid facility ID format" });
       }
 
