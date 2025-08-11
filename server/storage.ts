@@ -89,14 +89,23 @@ export class DatabaseStorage implements IStorage {
         last_name,
         role,
         phone_number,
-        is_active as "isActive",
+        is_active,
         created_at,
         updated_at
       FROM crm_users 
       WHERE email = ${email} 
       LIMIT 1
     `);
-    return result.rows[0] || null;
+    
+    if (result.rows[0]) {
+      const user = result.rows[0];
+      // Convert PostgreSQL 't'/'f' to boolean
+      user.isActive = user.is_active === 't' || user.is_active === true;
+      console.log("CRM user found:", { email: user.email, isActive: user.isActive, raw_is_active: user.is_active });
+      return user;
+    }
+    
+    return null;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
