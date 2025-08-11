@@ -56,6 +56,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       console.log("Testing password...");
+      console.log("User object keys:", Object.keys(user));
+      console.log("Password hash exists:", !!user.password_hash);
+      console.log("Password hash length:", user.password_hash ? user.password_hash.length : 'undefined');
       const isValidPassword = await bcrypt.compare(password, user.password_hash as string);
       console.log("Password valid:", isValidPassword);
       

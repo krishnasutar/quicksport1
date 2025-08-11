@@ -85,6 +85,7 @@ export class DatabaseStorage implements IStorage {
         username,
         email,
         password,
+        password_hash,
         first_name,
         last_name,
         role,
@@ -101,7 +102,13 @@ export class DatabaseStorage implements IStorage {
       const user = result.rows[0];
       // Convert PostgreSQL 't'/'f' to boolean
       user.isActive = user.is_active === 't' || user.is_active === true;
-      console.log("CRM user found:", { email: user.email, isActive: user.isActive, raw_is_active: user.is_active });
+      console.log("CRM user found:", { 
+        email: user.email, 
+        isActive: user.isActive, 
+        raw_is_active: user.is_active,
+        has_password_hash: !!user.password_hash,
+        keys: Object.keys(user)
+      });
       return user;
     }
     
