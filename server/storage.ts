@@ -13,9 +13,12 @@ import { eq, and, gte, lte, desc, asc, count, avg, sum, like, ilike, or, sql } f
 export interface IStorage {
   // User methods
   getUser(id: string): Promise<User | undefined>;
+  getUserById(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(insertUser: InsertUser & { referralCode?: string }): Promise<User>;
+  updateUser(id: string, updateData: Partial<User>): Promise<User | undefined>;
+  deleteUser(id: string): Promise<boolean>;
   updateUserRewardPoints(userId: string, points: number): Promise<void>;
   
   // CRM User methods
@@ -564,9 +567,55 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(facilities).where(eq(facilities.ownerId, ownerId)).orderBy(desc(facilities.createdAt));
   }
 
+  async getUserById(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async updateUser(id: string, updateData: Partial<User>): Promise<User | undefined> {
+    const [user] = await db.update(users).set(updateData).where(eq(users.id, id)).returning();
+    return user;
+  }
+
+  async deleteUser(id: string): Promise<boolean> {
+    const result = await db.delete(users).where(eq(users.id, id));
+    return result.rowCount > 0;
+  }
+
   async getAllUsers(roleFilter?: string): Promise<User[]> {
-    // Since users table now only contains web portal users (no role column), ignore roleFilter
-    return await db.select().from(users).orderBy(desc(users.createdAt));
+    // Get regular users from 'users' table
+    const regularUsers = await db.select({
+      id: users.id,
+      username: users.username,
+      email: users.email,
+      firstName: users.firstName,
+      lastName: users.lastName,
+      role: sql`'regular'`.as('role'),
+      isActive: users.isActive,
+      createdAt: users.createdAt
+    }).from(users).orderBy(desc(users.createdAt));
+
+    // Get CRM users (admin/owners) from 'crm_users' table  
+    const crmUsersQuery = await db.select({
+      id: crmUsers.id,
+      username: crmUsers.username,
+      email: crmUsers.email,
+      firstName: crmUsers.first_name,
+      lastName: crmUsers.last_name,
+      role: crmUsers.role,
+      isActive: crmUsers.is_active,
+      createdAt: crmUsers.createdAt
+    }).from(crmUsers).orderBy(desc(crmUsers.createdAt));
+
+    // Combine both arrays
+    const allUsers = [...regularUsers, ...crmUsersQuery];
+    
+    // Filter by role if specified
+    if (roleFilter) {
+      return allUsers.filter(user => user.role === roleFilter);
+    }
+    
+    return allUsers;
   }
 }
 
