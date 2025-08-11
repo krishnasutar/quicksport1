@@ -53,8 +53,18 @@ export default function Booking() {
       let title = "Booking Failed";
       let description = error.message || "Something went wrong. Please try again.";
       
+      // Check for wallet balance errors
+      if (error.errorCode === "INSUFFICIENT_WALLET_BALANCE" || 
+          (error.message && error.message.includes("Insufficient wallet balance"))) {
+        title = "💰 Insufficient Wallet Balance";
+        if (error.details) {
+          description = `Your wallet balance (₹${error.details.walletBalance}) is not enough for this booking (₹${error.details.requiredAmount}). Please add ₹${error.details.shortfall} to your wallet or choose a different payment method.`;
+        } else {
+          description = "Your wallet doesn't have enough balance for this booking. Please add funds or choose a different payment method.";
+        }
+      }
       // Check if it's a court availability error
-      if (error.errorCode === "COURT_UNAVAILABLE" || 
+      else if (error.errorCode === "COURT_UNAVAILABLE" || 
           (error.message && error.message.includes("Court is not available"))) {
         title = "⏰ Time Slot Already Booked";
         description = "This court is already reserved for the selected time. Please choose a different time slot or date.";

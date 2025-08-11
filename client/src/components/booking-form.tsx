@@ -34,6 +34,14 @@ export default function BookingForm({ court, onSubmit, isLoading }: BookingFormP
   const [couponCode, setCouponCode] = useState("");
   const [splitPayment, setSplitPayment] = useState(false);
   const [splitUsers, setSplitUsers] = useState([{ name: "", upiId: "" }]);
+
+  // Fetch user's wallet balance
+  const { data: walletData } = useQuery({
+    queryKey: ['/api/wallet'],
+    enabled: !!user,
+  });
+
+  const walletBalance = parseFloat(walletData?.balance || '0');
   
   const { data: couponsData } = useQuery({
     queryKey: ['/api/coupons', { facilityId: court.facilityId }],
@@ -69,6 +77,12 @@ export default function BookingForm({ court, onSubmit, isLoading }: BookingFormP
     e.preventDefault();
     
     if (!bookingDate || !startTime) {
+      return;
+    }
+
+    // Validate wallet balance if wallet payment is selected
+    if (paymentMethod === 'wallet' && walletBalance < finalAmount) {
+      alert(`Insufficient wallet balance! Your balance: ₹${walletBalance.toFixed(2)}, Required: ₹${finalAmount.toFixed(2)}`);
       return;
     }
     
@@ -225,7 +239,10 @@ export default function BookingForm({ court, onSubmit, isLoading }: BookingFormP
               <div>
                 <h4 className="font-medium">Wallet</h4>
                 <p className="text-sm text-gray-500">
-                  Balance: ₹{parseFloat(user?.walletBalance || "0").toFixed(0)}
+                  Balance: ₹{walletBalance.toFixed(2)}
+                  {walletBalance < finalAmount && paymentMethod === 'wallet' && (
+                    <span className="text-red-500 ml-1">(Insufficient)</span>
+                  )}
                 </p>
               </div>
             </div>
@@ -409,13 +426,27 @@ export default function BookingForm({ court, onSubmit, isLoading }: BookingFormP
         </CardContent>
       </Card>
 
+      {/* Wallet Balance Warning */}
+      {paymentMethod === 'wallet' && walletBalance < finalAmount && (
+        <div className="text-sm text-red-600 bg-red-50 p-3 rounded-lg border border-red-200">
+          ⚠️ <strong>Insufficient Wallet Balance!</strong><br />
+          Your balance: ₹{walletBalance.toFixed(2)} | Required: ₹{finalAmount.toFixed(2)}<br />
+          Please recharge your wallet or choose a different payment method.
+        </div>
+      )}
+
       {/* Submit Button */}
       <Button
         type="submit"
         className="w-full gradient-bg hover:shadow-lg"
-        disabled={isLoading || !bookingDate || !startTime}
+        disabled={isLoading || !bookingDate || !startTime || (paymentMethod === 'wallet' && walletBalance < finalAmount)}
       >
-        {isLoading ? "Processing..." : `Book Court for ₹${finalAmount.toFixed(0)}`}
+        {isLoading 
+          ? "Processing..." 
+          : (paymentMethod === 'wallet' && walletBalance < finalAmount)
+          ? `Insufficient Balance (₹${walletBalance.toFixed(2)} available)`
+          : `Book Court for ₹${finalAmount.toFixed(0)}`
+        }
       </Button>
     </form>
   );

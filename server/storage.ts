@@ -574,6 +574,38 @@ export class DatabaseStorage implements IStorage {
     return transaction;
   }
 
+  async deductFromWallet(userId: string, amount: number, description: string): Promise<WalletTransaction> {
+    const [user] = await db.select({ walletBalance: users.walletBalance })
+      .from(users)
+      .where(eq(users.id, userId));
+    
+    const currentBalance = parseFloat(user?.walletBalance || "0");
+    
+    if (currentBalance < amount) {
+      throw new Error(`Insufficient wallet balance. Current: ₹${currentBalance}, Required: ₹${amount}`);
+    }
+    
+    const newBalance = currentBalance - amount;
+
+    await db
+      .update(users)
+      .set({ walletBalance: newBalance.toString() })
+      .where(eq(users.id, userId));
+
+    const [transaction] = await db
+      .insert(walletTransactions)
+      .values({
+        userId,
+        type: "debit",
+        amount: amount.toString(),
+        description: description || `Wallet deduction of ₹${amount}`,
+        balanceAfter: newBalance.toString()
+      })
+      .returning();
+
+    return transaction;
+  }
+
   async getActiveCoupons(facilityId?: string): Promise<Coupon[]> {
     let query = db.select().from(coupons)
       .where(and(

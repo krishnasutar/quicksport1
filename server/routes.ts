@@ -402,6 +402,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         bookingDate: new Date(req.body.bookingDate)
       });
 
+      // Wallet balance validation for wallet payments
+      if (bookingData.paymentMethod === 'wallet') {
+        const userWallet = await storage.getUserWallet(req.user.id);
+        const walletBalance = parseFloat(userWallet.balance || '0');
+        const requiredAmount = parseFloat(bookingData.finalAmount.toString());
+
+        if (walletBalance < requiredAmount) {
+          return res.status(400).json({
+            message: "Insufficient wallet balance for this booking",
+            error: "INSUFFICIENT_WALLET_BALANCE",
+            details: {
+              walletBalance: walletBalance.toFixed(2),
+              requiredAmount: requiredAmount.toFixed(2),
+              shortfall: (requiredAmount - walletBalance).toFixed(2)
+            }
+          });
+        }
+      }
+
       // Check court availability
       const isAvailable = await storage.checkCourtAvailability(
         bookingData.courtId,
@@ -419,6 +438,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const booking = await storage.createBooking(bookingData);
+      
+      // Deduct wallet balance if wallet payment was used
+      if (bookingData.paymentMethod === 'wallet') {
+        const requiredAmount = parseFloat(bookingData.finalAmount.toString());
+        await storage.deductFromWallet(req.user.id, requiredAmount, `Booking payment for court booking #${booking.id}`);
+      }
       
       // Update user's reward points
       const rewardPoints = Math.floor(parseFloat(bookingData.finalAmount.toString()) / 10);
