@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MapPin, Phone, Mail, Clock, MessageSquare, Headphones, Users } from "lucide-react";
+import Navbar from "@/components/layout/navbar";
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -72,6 +73,7 @@ export default function ContactPage() {
 
   return (
     <div className="min-h-screen bg-white">
+      <Navbar />
       {/* Hero Section */}
       <section className="hero-gradient text-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

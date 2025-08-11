@@ -1,6 +1,7 @@
 import { Users, Trophy, Heart, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
+import Navbar from "@/components/layout/navbar";
 
 export default function AboutPage() {
   const stats = [
@@ -33,6 +34,7 @@ export default function AboutPage() {
 
   return (
     <div className="min-h-screen bg-white">
+      <Navbar />
       {/* Hero Section */}
       <section className="hero-gradient text-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
