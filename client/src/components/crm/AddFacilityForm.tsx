@@ -12,12 +12,14 @@ import {
 } from "@/components/ui/card";
 import { 
   Plus, X, Building2, MapPin, Phone, Mail, Star, 
-  Camera, Users, Wifi, Car, ShowerHead, Coffee
+  Camera, Users, Wifi, Car, ShowerHead, Coffee, Upload
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { ObjectUploader } from "@/components/ui/ObjectUploader";
+import type { UploadResult } from "@uppy/core";
 
 interface Company {
   id: string;
@@ -199,6 +201,44 @@ export function AddFacilityForm({ onCancel }: AddFacilityFormProps = {}) {
     setFacilityData({
       ...facilityData,
       images: facilityData.images.filter((_, i) => i !== index)
+    });
+  };
+
+  // Upload functionality handlers
+  const handleGetUploadParameters = async () => {
+    const token = localStorage.getItem('crm_token');
+    const response = await fetch('/api/facilities/upload-image', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to get upload URL');
+    }
+    
+    const data = await response.json();
+    return {
+      method: 'PUT' as const,
+      url: data.uploadURL,
+    };
+  };
+
+  const handleUploadComplete = (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+    console.log('Upload completed:', result);
+    
+    // Add uploaded image URLs to facility data
+    const uploadedUrls = result.successful.map(file => file.uploadURL);
+    setFacilityData(prev => ({
+      ...prev,
+      images: [...prev.images, ...uploadedUrls]
+    }));
+    
+    toast({
+      title: "Success",
+      description: `${result.successful.length} image(s) uploaded successfully!`,
     });
   };
 
@@ -487,16 +527,27 @@ export function AddFacilityForm({ onCancel }: AddFacilityFormProps = {}) {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <Input
                 placeholder="Enter image URL"
                 value={imageUrl}
                 onChange={(e) => setImageUrl(e.target.value)}
+                className="flex-1 min-w-64"
               />
               <Button onClick={handleAddImage} variant="outline">
                 <Plus className="h-4 w-4 mr-1" />
-                Add Image
+                Add URL
               </Button>
+              <ObjectUploader
+                maxNumberOfFiles={5}
+                maxFileSize={5242880} // 5MB
+                onGetUploadParameters={handleGetUploadParameters}
+                onComplete={handleUploadComplete}
+                buttonClassName="bg-blue-600 hover:bg-blue-700"
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Upload Images
+              </ObjectUploader>
             </div>
 
             <div className="grid grid-cols-3 gap-4">

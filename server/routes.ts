@@ -272,30 +272,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const { courts, ...facilityData } = req.body;
       
+      console.log('Creating facility with data:', facilityData);
+      console.log('Courts data:', courts);
+      
       // Create facility first
       const facility = await storage.createFacility(facilityData);
       
-      // Create courts for the facility
+      // Create courts for the facility - FIXED validation issue
+      const createdCourts = [];
       if (courts && courts.length > 0) {
         for (const court of courts) {
-          await storage.createCourt({
+          console.log('Creating court:', court.name, 'for facility:', facility.id);
+          
+          const createdCourt = await storage.createCourt({
             ...court,
             facilityId: facility.id
           });
+          createdCourts.push(createdCourt);
         }
       }
       
       res.status(201).json({ 
         ...facility, 
-        courts: courts || [],
+        courts: createdCourts,
         message: "Facility created successfully with courts" 
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Validation error", errors: error.errors });
+        console.error("Zod validation error:", error.errors);
+        return res.status(400).json({ 
+          message: "Validation error", 
+          errors: error.errors.map(e => `${e.path.join('.')}: ${e.message}`)
+        });
       }
       console.error("Create facility error:", error);
       res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Image upload endpoint for facilities  
+  app.post("/api/facilities/upload-image", authenticateToken, async (req: any, res: Response) => {
+    try {
+      if (!['admin', 'owner'].includes(req.user.role)) {
+        return res.status(403).json({ message: "Insufficient permissions" });
+      }
+
+      const { ObjectStorageService } = require('./objectStorage');
+      const objectStorageService = new ObjectStorageService();
+      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+      
+      res.json({ 
+        uploadURL,
+        method: "PUT"
+      });
+    } catch (error) {
+      console.error("Generate upload URL error:", error);
+      res.status(500).json({ message: "Failed to generate upload URL" });
     }
   });
 
