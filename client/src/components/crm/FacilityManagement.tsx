@@ -164,14 +164,12 @@ export function FacilityManagement({ onNavigateToAddFacility }: FacilityManageme
       // Also invalidate sports data as it might affect counts
       queryClient.invalidateQueries({ queryKey: ['/api/sports'] });
       
-      // Simple reload to show immediate effect
-      setTimeout(() => {
-        window.location.reload();
-      }, 500);
+      // Force immediate data refetch without full page reload
+      queryClient.refetchQueries({ queryKey: ['/api/admin/facilities'] });
       
       toast({
         title: "Success",
-        description: "Facility status updated successfully. Page will refresh to show changes.",
+        description: "Facility status updated successfully.",
       });
     },
     onError: (error: any) => {
