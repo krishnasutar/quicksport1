@@ -151,6 +151,7 @@ export default function BookingForm({ court, onSubmit, isLoading }: BookingFormP
         setShowStripeCheckout(true);
         return;
       } catch (error) {
+        console.error('Payment initialization error:', error);
         alert('Failed to initialize payment. Please try again.');
         return;
       }
