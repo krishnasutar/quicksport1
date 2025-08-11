@@ -181,13 +181,19 @@ export class DatabaseStorage implements IStorage {
       // For public API, filter by approved status
       const isCrmRequest = filters?.includePending || false;
       
+      console.log(`getFacilities called: isCrmRequest=${isCrmRequest}, filters=${JSON.stringify(filters)}`);
+      
       let query = db.select().from(facilities);
       
       if (!isCrmRequest) {
+        console.log('Filtering to approved only (public request)');
         query = query.where(eq(facilities.status, "approved"));
+      } else {
+        console.log('Showing ALL facilities (CRM request)');
       }
       
       const result = await query;
+      console.log(`Query returned ${result.length} facilities`);
       
       const facilitiesWithCourts = await Promise.all(
         result.map(async (facility) => {

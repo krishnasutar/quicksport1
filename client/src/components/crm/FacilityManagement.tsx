@@ -70,12 +70,15 @@ export function FacilityManagement({ onNavigateToAddFacility }: FacilityManageme
   // Fetch facilities 
   const { data: facilitiesResponse, isLoading: facilitiesLoading, error: facilitiesError } = useQuery<{facilities: FacilityWithCourts[], pagination: any}>({
     queryKey: ['/api/facilities'],
+    staleTime: 0, // Always fetch fresh data
+    cacheTime: 0, // Don't cache
   });
   
   // Log facility data for debugging
   useEffect(() => {
     if (facilitiesResponse) {
       console.log(`Loaded ${facilitiesResponse.facilities?.length || 0} facilities, total: ${facilitiesResponse.pagination?.total || 0}`);
+      console.log('Facility IDs:', facilitiesResponse.facilities?.map(f => f.id).join(', '));
     }
     if (facilitiesError) {
       console.error('Facilities loading error:', facilitiesError);
@@ -147,8 +150,12 @@ export function FacilityManagement({ onNavigateToAddFacility }: FacilityManageme
       // FIRST: Clear the status filter to "all" 
       setSelectedStatus("all");
       
-      // THEN: Invalidate the cache to refetch data
+      // THEN: Force a complete cache refresh 
+      queryClient.removeQueries({ queryKey: ['/api/facilities'] });
       queryClient.invalidateQueries({ queryKey: ['/api/facilities'] });
+      
+      // Also invalidate sports data as it might affect counts
+      queryClient.invalidateQueries({ queryKey: ['/api/sports'] });
       
       toast({
         title: "Success",
@@ -165,6 +172,7 @@ export function FacilityManagement({ onNavigateToAddFacility }: FacilityManageme
   });
 
   const handleStatusChange = (facilityId: string, newStatus: string) => {
+    console.log(`Changing status for facility ${facilityId} to ${newStatus}`);
     updateStatusMutation.mutate({ facilityId, status: newStatus });
   };
 
