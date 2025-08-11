@@ -97,7 +97,15 @@ export default function Booking() {
   }
 
   const court = courtData;
-  const facility = court.facility;
+  // Create facility object from court data
+  const facility = {
+    id: court.facilityId,
+    name: court.facilityName,
+    address: court.facilityAddress,
+    city: court.facilityCity,
+    phoneNumber: court.facilityPhone,
+    email: court.facilityEmail
+  };
 
   const handleBookingSubmit = (bookingData: any) => {
     const finalBookingData = {
@@ -158,7 +166,7 @@ export default function Booking() {
                     <h3 className="font-semibold text-gray-900 mb-2">Facility</h3>
                     <div className="flex items-start space-x-3">
                       <img
-                        src={facility.images?.[0] || 'https://images.unsplash.com/photo-1546519638-68e109498ffc?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&h=100'}
+                        src='https://images.unsplash.com/photo-1546519638-68e109498ffc?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&h=100'
                         alt={facility.name}
                         className="w-16 h-16 rounded-lg object-cover"
                       />
@@ -168,10 +176,7 @@ export default function Booking() {
                           <MapPin className="h-4 w-4 mr-1" />
                           {facility.city}
                         </div>
-                        <div className="flex items-center text-gray-600 text-sm">
-                          <Star className="h-4 w-4 text-brand-yellow fill-current mr-1" />
-                          {parseFloat(facility.rating || "0").toFixed(1)} ({facility.totalReviews} reviews)
-                        </div>
+                        {/* We don't have rating/reviews in facility object, skip this section */}
                       </div>
                     </div>
                   </div>

@@ -746,6 +746,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Courts route - Get court by ID for booking
+  app.get("/api/courts/:id", async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      console.log("Getting court with ID:", id, "Type:", typeof id);
+      
+      // Validate UUID format
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(id)) {
+        return res.status(400).json({ message: "Invalid court ID format" });
+      }
+
+      // Get court data with facility info
+      const [court] = await db
+        .select({
+          id: courts.id,
+          facilityId: courts.facilityId,
+          name: courts.name,
+          sportType: courts.sportType,
+          description: courts.description,
+          pricePerHour: courts.pricePerHour,
+          images: courts.images,
+          operatingHoursStart: courts.operatingHoursStart,
+          operatingHoursEnd: courts.operatingHoursEnd,
+          isActive: courts.isActive,
+          facilityName: facilities.name,
+          facilityAddress: facilities.address,
+          facilityCity: facilities.city,
+          facilityPhone: facilities.phoneNumber,
+          facilityEmail: facilities.email
+        })
+        .from(courts)
+        .innerJoin(facilities, eq(courts.facilityId, facilities.id))
+        .where(eq(courts.id, id));
+
+      if (!court) {
+        return res.status(404).json({ message: "Court not found" });
+      }
+
+      res.json(court);
+    } catch (error) {
+      console.error("Get court error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Reviews routes
   app.post("/api/reviews", authenticateToken, async (req: any, res: Response) => {
     try {
