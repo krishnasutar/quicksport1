@@ -409,7 +409,7 @@ export default function Home() {
                   </div>
                 </div>
               ))
-            ) : facilitiesData?.length ? (
+            ) : facilitiesData && facilitiesData.length > 0 ? (
               facilitiesData.map((facility: any) => (
                 <VenueCard key={facility.id} facility={facility} />
               ))
@@ -533,7 +533,7 @@ export default function Home() {
                 Get Started Today
               </Link>
             </Button>
-            <Button asChild variant="outline" className="border-white text-white hover:bg-white hover:text-brand-indigo px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-200">
+            <Button asChild variant="outline" className="border-2 border-white text-white hover:bg-white hover:text-brand-indigo px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-200 bg-transparent">
               <Link href="/login">
                 Sign In
               </Link>
