@@ -77,7 +77,7 @@ export function AddFacilityForm({ onCancel }: AddFacilityFormProps = {}) {
     isAvailable: true
   });
 
-  const [imageUrl, setImageUrl] = useState("");
+  // Removed imageUrl state as we only support file uploads now
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -187,15 +187,7 @@ export function AddFacilityForm({ onCancel }: AddFacilityFormProps = {}) {
     setCourts(courts.filter((_, i) => i !== index));
   };
 
-  const handleAddImage = () => {
-    if (imageUrl.trim()) {
-      setFacilityData({
-        ...facilityData,
-        images: [...facilityData.images, imageUrl.trim()]
-      });
-      setImageUrl("");
-    }
-  };
+  // Removed handleAddImage as we only support file uploads now
 
   const removeImage = (index: number) => {
     setFacilityData({
@@ -263,10 +255,14 @@ export function AddFacilityForm({ onCancel }: AddFacilityFormProps = {}) {
       return;
     }
 
-    if (!facilityData.ownerId) {
+    // FIXED: Auto-set owner ID from selected company if missing
+    const selectedCompanyData = companies.find(c => c.id === facilityData.companyId);
+    const finalOwnerId = facilityData.ownerId || selectedCompanyData?.ownerId;
+
+    if (!finalOwnerId) {
       toast({
         title: "Error",
-        description: "Owner ID is missing. Please select a company first.",
+        description: "Owner ID is missing. Please select a valid company.",
         variant: "destructive",
       });
       return;
@@ -274,6 +270,7 @@ export function AddFacilityForm({ onCancel }: AddFacilityFormProps = {}) {
 
     const facilityPayload = {
       ...facilityData,
+      ownerId: finalOwnerId,
       courts: courts
     };
 
@@ -527,17 +524,7 @@ export function AddFacilityForm({ onCancel }: AddFacilityFormProps = {}) {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex gap-2 flex-wrap">
-              <Input
-                placeholder="Enter image URL"
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                className="flex-1 min-w-64"
-              />
-              <Button onClick={handleAddImage} variant="outline">
-                <Plus className="h-4 w-4 mr-1" />
-                Add URL
-              </Button>
+            <div className="flex gap-2">
               <ObjectUploader
                 maxNumberOfFiles={5}
                 maxFileSize={5242880} // 5MB
