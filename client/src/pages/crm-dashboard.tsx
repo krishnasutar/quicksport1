@@ -217,39 +217,77 @@ export default function CRMDashboard() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {facilities?.length ? facilities.map((facility: any) => (
-                    <div key={facility.id} className="border rounded-lg p-4">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="font-semibold">{facility.name}</h3>
-                          <p className="text-sm text-gray-600">{facility.address}</p>
-                          <Badge 
-                            variant={facility.status === 'approved' ? 'default' : 'secondary'}
-                            className="mt-2"
-                          >
-                            {facility.status}
-                          </Badge>
-                        </div>
-                        <div className="flex space-x-2">
-                          <Button variant="outline" size="sm">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button variant="outline" size="sm" className="text-red-600">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  )) : (
-                    <p className="text-center text-gray-500 py-8">
-                      No facilities found. Add your first facility to get started.
-                    </p>
-                  )}
-                </div>
+                {facilities?.length ? (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Facility
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Location
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Rating
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {facilities.map((facility: any) => (
+                          <tr key={facility.id}>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div>
+                                <div className="text-sm font-medium text-gray-900">{facility.name}</div>
+                                <div className="text-sm text-gray-500">{facility.description?.substring(0, 50)}...</div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-900">{facility.city}, {facility.state}</div>
+                              <div className="text-sm text-gray-500">{facility.address}</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <Badge 
+                                variant={facility.status === 'approved' ? 'default' : 
+                                        facility.status === 'pending' ? 'secondary' : 'destructive'}
+                              >
+                                {facility.status}
+                              </Badge>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              ⭐ {facility.rating}/5 ({facility.totalReviews} reviews)
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                              <div className="flex space-x-2">
+                                <Button size="sm" variant="outline">
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                <Button size="sm" variant="outline">
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                {isAdmin && (
+                                  <Button size="sm" variant="outline">
+                                    <Trash2 className="h-4 w-4 text-red-500" />
+                                  </Button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    No facilities found. {isAdmin ? 'Add your first facility to get started.' : 'Facilities will appear here once added.'}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -257,31 +295,77 @@ export default function CRMDashboard() {
           <TabsContent value="bookings" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Recent Bookings</CardTitle>
+                <CardTitle>Bookings Management</CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {isAdmin ? 'Manage all platform bookings' : 'Manage bookings for your facilities'}
+                </p>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {bookings?.bookings?.length ? bookings.bookings.map((booking: any) => (
-                    <div key={booking.id} className="border rounded-lg p-4">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <p className="font-medium">Booking #{booking.id.slice(0, 8)}</p>
-                          <p className="text-sm text-gray-600">
-                            {booking.bookingDate} • {booking.startTime} - {booking.endTime}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-semibold">₹{booking.totalAmount}</p>
-                          <Badge variant={booking.status === 'confirmed' ? 'default' : 'secondary'}>
-                            {booking.status}
-                          </Badge>
-                        </div>
-                      </div>
-                    </div>
-                  )) : (
-                    <p className="text-center text-gray-500 py-8">No bookings found.</p>
-                  )}
-                </div>
+                {bookings?.bookings?.length ? (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Booking ID
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Date & Time
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Amount
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {bookings.bookings.map((booking: any) => (
+                          <tr key={booking.id}>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm font-medium text-gray-900">
+                                #{booking.id.slice(0, 8)}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-900">{booking.bookingDate}</div>
+                              <div className="text-sm text-gray-500">{booking.startTime} - {booking.endTime}</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              ₹{booking.totalAmount}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <Badge variant={booking.status === 'confirmed' ? 'default' : 
+                                            booking.status === 'pending' ? 'secondary' : 'destructive'}>
+                                {booking.status}
+                              </Badge>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                              <div className="flex space-x-2">
+                                <Button size="sm" variant="outline">
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                {isAdmin && (
+                                  <Button size="sm" variant="outline">
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    No bookings found.
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -312,7 +396,7 @@ export default function CRMDashboard() {
               </CardHeader>
               <CardContent>
                 <p className="text-center text-gray-500 py-8">
-                  Stock management system coming soon...
+                  Equipment and inventory tracking coming soon...
                 </p>
               </CardContent>
             </Card>
@@ -323,13 +407,37 @@ export default function CRMDashboard() {
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Settings className="h-5 w-5 mr-2" />
-                  Settings
+                  {isAdmin ? 'Platform Settings' : 'Account Settings'}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-center text-gray-500 py-8">
-                  Settings panel coming soon...
-                </p>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center p-4 border rounded-lg">
+                    <div>
+                      <h3 className="font-medium">Email Notifications</h3>
+                      <p className="text-sm text-gray-600">Receive booking updates via email</p>
+                    </div>
+                    <Button variant="outline" size="sm">Configure</Button>
+                  </div>
+                  
+                  {isAdmin && (
+                    <div className="flex justify-between items-center p-4 border rounded-lg">
+                      <div>
+                        <h3 className="font-medium">Platform Settings</h3>
+                        <p className="text-sm text-gray-600">Manage platform-wide configurations</p>
+                      </div>
+                      <Button variant="outline" size="sm">Manage</Button>
+                    </div>
+                  )}
+                  
+                  <div className="flex justify-between items-center p-4 border rounded-lg">
+                    <div>
+                      <h3 className="font-medium">Security</h3>
+                      <p className="text-sm text-gray-600">Update password and security settings</p>
+                    </div>
+                    <Button variant="outline" size="sm">Update</Button>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
