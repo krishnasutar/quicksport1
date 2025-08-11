@@ -44,18 +44,50 @@ export default function CRMDashboard() {
     setUser(JSON.parse(crmUser));
   }, [setLocation]);
 
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('crm_token');
+    return {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    };
+  };
+
   const { data: dashboardStats } = useQuery({
     queryKey: [user?.role === 'admin' ? '/api/admin/dashboard' : '/api/owner/dashboard'],
+    queryFn: async () => {
+      const endpoint = user?.role === 'admin' ? '/api/admin/dashboard' : '/api/owner/dashboard';
+      const response = await fetch(endpoint, {
+        headers: getAuthHeaders(),
+      });
+      if (!response.ok) throw new Error('Failed to fetch dashboard stats');
+      return response.json();
+    },
     enabled: !!user,
   });
 
   const { data: facilities } = useQuery({
     queryKey: [user?.role === 'admin' ? '/api/admin/facilities' : '/api/owner/facilities'],
+    queryFn: async () => {
+      const endpoint = user?.role === 'admin' ? '/api/admin/facilities' : '/api/owner/facilities';
+      const response = await fetch(endpoint, {
+        headers: getAuthHeaders(),
+      });
+      if (!response.ok) throw new Error('Failed to fetch facilities');
+      return response.json();
+    },
     enabled: !!user,
   });
 
   const { data: bookings } = useQuery({
     queryKey: [user?.role === 'admin' ? '/api/admin/bookings' : '/api/owner/bookings'],
+    queryFn: async () => {
+      const endpoint = user?.role === 'admin' ? '/api/admin/bookings' : '/api/owner/bookings';
+      const response = await fetch(endpoint, {
+        headers: getAuthHeaders(),
+      });
+      if (!response.ok) throw new Error('Failed to fetch bookings');
+      return response.json();
+    },
     enabled: !!user,
   });
 

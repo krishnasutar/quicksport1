@@ -307,6 +307,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin/Owner Dashboard Routes
+  app.get("/api/admin/dashboard", authenticateToken, async (req: any, res: Response) => {
+    try {
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      const stats = await storage.getAdminDashboardStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Admin dashboard error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/owner/dashboard", authenticateToken, async (req: any, res: Response) => {
+    try {
+      if (req.user.role !== 'owner') {
+        return res.status(403).json({ message: "Owner access required" });
+      }
+      const stats = await storage.getOwnerDashboardStats(req.user.id);
+      res.json(stats);
+    } catch (error) {
+      console.error("Owner dashboard error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/admin/facilities", authenticateToken, async (req: any, res: Response) => {
+    try {
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      const facilities = await storage.getAllFacilitiesAdmin();
+      res.json(facilities);
+    } catch (error) {
+      console.error("Admin facilities error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/owner/facilities", authenticateToken, async (req: any, res: Response) => {
+    try {
+      if (req.user.role !== 'owner') {
+        return res.status(403).json({ message: "Owner access required" });
+      }
+      const facilities = await storage.getFacilitiesByOwnerId(req.user.id);
+      res.json(facilities);
+    } catch (error) {
+      console.error("Owner facilities error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/admin/bookings", authenticateToken, async (req: any, res: Response) => {
+    try {
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      const { bookings, total } = await storage.getAllBookingsAdmin(req.query);
+      res.json({ bookings, total });
+    } catch (error) {
+      console.error("Admin bookings error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/owner/bookings", authenticateToken, async (req: any, res: Response) => {
+    try {
+      if (req.user.role !== 'owner') {
+        return res.status(403).json({ message: "Owner access required" });
+      }
+      // Get bookings for facilities owned by this user
+      const facilities = await storage.getFacilitiesByOwnerId(req.user.id);
+      const facilityIds = facilities.map(f => f.id);
+      const { bookings, total } = await storage.getAllBookingsAdmin({ ...req.query, facilityIds });
+      res.json({ bookings, total });
+    } catch (error) {
+      console.error("Owner bookings error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   app.get("/api/bookings", authenticateToken, async (req: any, res: Response) => {
     try {
       const { status, page = 1, limit = 10 } = req.query;

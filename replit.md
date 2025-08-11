@@ -16,10 +16,13 @@ Preferred communication style: Simple, everyday language.
 - **Separated user interfaces**: Created distinct CRM/admin panel at `/crm` for facility owners and administrators
 - **Removed mobile app focus**: Updated user interface to focus on web-based booking, removed app download sections
 - **Role-based authentication**: Implemented separate login systems for regular users vs admin/owner users
+- **Role-based permissions**: 
+  - **Admin role**: Full access to all facilities, bookings, analytics, and platform management
+  - **Owner role**: Access only to their own facilities, bookings, and analytics
 - **CRM dashboard features**: Built comprehensive management interface with facilities, bookings, analytics, inventory, and settings tabs
 - **Test credentials created**: 
-  - Admin: admin@quickcourt.com / admin123
-  - Owner: owner@quickcourt.com / owner123
+  - Admin: admin@quickcourt.com / admin123 (super user with full platform access)
+  - Owner: owner@quickcourt.com / owner123 (limited to own facilities)
 
 ## System Architecture
 
