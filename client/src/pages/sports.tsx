@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import * as React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -83,6 +84,20 @@ export default function Sports() {
     console.log('✅ Facilities loaded:', facilities.length, 'facilities');
   }
 
+  // Dynamic price range based on actual facility prices
+  const maxPrice = useMemo(() => {
+    if (!Array.isArray(facilities) || facilities.length === 0) return 1500;
+    const allPrices = facilities.flatMap(f => f.courts?.map(c => parseFloat(c.pricePerHour)) || []);
+    return allPrices.length > 0 ? Math.max(...allPrices) : 1500;
+  }, [facilities]);
+
+  // Update price range when maxPrice changes
+  React.useEffect(() => {
+    if (maxPrice > 1500 && priceRange[1] === 1500) {
+      setPriceRange([0, maxPrice]);
+    }
+  }, [maxPrice, priceRange]);
+
   // Get unique cities from facilities
   const cities = useMemo(() => {
     if (!Array.isArray(facilities)) {
@@ -142,14 +157,18 @@ export default function Sports() {
           ["football", "tennis", "volleyball", "cricket"].includes(c.sportType)
         ));
 
-      // Price filter
-      const facilityMinPrice = facility.courts && facility.courts.length > 0 ? Math.min(...facility.courts.map(c => parseFloat(c.pricePerHour))) : 0;
-      const facilityMaxPrice = facility.courts && facility.courts.length > 0 ? Math.max(...facility.courts.map(c => parseFloat(c.pricePerHour))) : 0;
-      const matchesPrice = facilityMinPrice >= priceRange[0] && facilityMaxPrice <= priceRange[1];
+      // Price filter - check if facility has courts within the price range
+      const matchesPrice = facility.courts?.some(court => {
+        const price = parseFloat(court.pricePerHour);
+        return price >= priceRange[0] && price <= priceRange[1];
+      }) ?? false;
 
-      return matchesSearch && matchesCity && matchesSport && matchesCategory && matchesPrice;
+      // Time slot filter - for now, we'll match all facilities since we don't have specific operating hour logic
+      const matchesTimeSlot = selectedTimeSlot === "all" || true; // All facilities available for all time slots
+
+      return matchesSearch && matchesCity && matchesSport && matchesCategory && matchesPrice && matchesTimeSlot;
     });
-  }, [facilities, searchQuery, selectedCity, selectedSport, selectedCategory, priceRange]);
+  }, [facilities, searchQuery, selectedCity, selectedSport, selectedCategory, selectedTimeSlot, priceRange]);
 
   // Transform facility data for VenueCard component
   const transformedFacilities = useMemo(() => {
@@ -304,6 +323,23 @@ export default function Sports() {
                   </Select>
                 </div>
 
+                {/* Time Slot Filter */}
+                <div className="mb-6">
+                  <h4 className="font-medium text-gray-900 mb-3">Time Slot</h4>
+                  <Select value={selectedTimeSlot} onValueChange={setSelectedTimeSlot}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select time slot" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {timeSlots.map(slot => (
+                        <SelectItem key={slot.id} value={slot.id}>
+                          {slot.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 {/* Price Range */}
                 <div className="mb-6">
                   <h4 className="font-medium text-gray-900 mb-3">Price Range</h4>
@@ -311,7 +347,7 @@ export default function Sports() {
                     <Slider
                       value={priceRange}
                       onValueChange={setPriceRange}
-                      max={1500}
+                      max={maxPrice}
                       min={0}
                       step={50}
                       className="mb-2"
@@ -332,7 +368,7 @@ export default function Sports() {
                     setSelectedCity("all");
                     setSelectedCategory("all");
                     setSelectedTimeSlot("all");
-                    setPriceRange([0, 1500]);
+                    setPriceRange([0, maxPrice]);
                   }}
                   className="w-full"
                 >
@@ -377,7 +413,8 @@ export default function Sports() {
                     setSelectedSport("all");
                     setSelectedCity("all");
                     setSelectedCategory("all");
-                    setPriceRange([0, 1500]);
+                    setSelectedTimeSlot("all");
+                    setPriceRange([0, maxPrice]);
                   }}
                 >
                   Clear Filters
