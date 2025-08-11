@@ -1,0 +1,186 @@
+QuickCourt Build
+Project Name: QuickCourt – Local Sports Booking & Community Platform
+
+Goal:
+Build a full-stack, mobile-first web application for booking sports facilities, joining matches, managing subscriptions, splitting payments, earning rewards, and receiving instant WhatsApp confirmations — with dedicated dashboards for Users, Facility Owners, and Admins.
+
+Step-by-Step Build Plan for AI
+STEP 1 – Project Setup
+Use React (Next.js) + Tailwind CSS for frontend (responsive, Gen-Z design, fast loading)
+
+Use Node.js + Express for backend API
+
+Use PostgreSQL for relational data (users, bookings, facilities, payments, subscriptions, rewards)
+
+Use JWT authentication with bcrypt for password hashing
+
+Use Cloudinary for image uploads
+
+Use Chart.js or Recharts for analytics
+
+Create role-based access control (User, Owner, Admin)
+
+STEP 2 – User Role Features
+Homepage
+
+Welcome banner or carousel
+
+Popular Venues & Popular Sports sections
+
+Filters: sport type, price, venue type, rating
+
+Pagination for venue list
+
+Venue Details Page
+
+Name, description, address, sports offered, amenities, photo gallery, reviews
+
+Book Now button
+
+Booking Flow
+
+Select court & time slot
+
+View price & total
+
+Apply coupons, referral rewards, or student discount (auto-applied if verified student)
+
+Split payment option via UPI IDs (like Splitwise)
+
+Simulated payment gateway
+
+Subscriptions
+
+Weekly/monthly recurring booking of same slot
+
+Rewards & Referrals
+
+Earn reward points per booking
+
+Redeem points on future bookings
+
+Invite friends for bonus points
+
+Post-Booking
+
+WhatsApp confirmation with:
+
+Venue image
+
+Thank you message
+
+Google Maps link
+
+Book a ride option
+
+Pre-book beverages/snacks option
+
+Wallet
+
+Add funds via UPI/credit card
+
+Use wallet balance for bookings & subscriptions
+
+Auto-convert reward points to wallet balance (optional)
+
+My Bookings
+
+List bookings with details & status
+
+Cancel upcoming bookings
+
+Filters by date/status
+
+Profile
+
+Name, email, profile picture, student verification status
+
+STEP 3 – Facility Owner Features
+Dashboard
+
+KPIs: total bookings, active courts, earnings, booking calendar
+
+Charts: Booking Trends, Earnings Summary, Peak Hours
+
+Notifications: send offers/news to users
+
+Facility Management
+
+Add/Edit facility details: name, location, description, sports types, amenities, photos
+
+Add coupons/offers
+
+Manage courts: name, sport type, pricing/hr, operating hours
+
+Set availability & block slots for maintenance
+
+Booking Management
+
+View upcoming/past bookings
+
+Send targeted notifications to users
+
+Profile
+
+Edit owner details & payout info
+
+STEP 4 – Admin Features
+Dashboard
+
+KPIs: total users, facility owners, bookings, courts
+
+Charts: Booking Activity, User Trends, Facility Approvals, Most Active Sports, Earnings Simulation
+
+Facility Approval
+
+Review facility submissions with details/photos
+
+Approve/Reject with comments
+
+User Management
+
+Search/filter users by role/status
+
+Ban/unban users
+
+View booking history
+
+Reports & Moderation
+
+Handle reported facilities/users
+
+Send platform-wide announcements
+
+STEP 5 – Global Features
+Real-time notifications (push & email)
+
+Mobile-first UI with smooth animations
+
+Search, filtering, and pagination everywhere
+
+Image upload for venues/profiles
+
+Secure backend APIs
+
+Dummy seed data for demo
+
+Mock UPI payments for hackathon demo
+
+WhatsApp Business API integration for booking confirmations
+
+Firebase Cloud Messaging for push notifications
+
+Instruction to AI:
+Build this application module-by-module in sequence (Users → Owners → Admin → Global features). Ensure:
+
+Modular architecture
+
+Reusable UI components
+
+Well-documented API endpoints
+
+Responsive design optimized for mobile-first
+
+Test data for each feature
+
+Prioritize speed, usability, and social payment/sharing features for Gen-Z appeal
