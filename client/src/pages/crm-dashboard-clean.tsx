@@ -87,6 +87,17 @@ export default function CRMDashboard() {
 
     window.addEventListener('popstate', handlePopState);
 
+    // Also listen for hashchange and custom events for immediate URL updates
+    const handleURLChange = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const sectionParam = urlParams.get('section');
+      if (sectionParam && sectionParam !== activeSection) {
+        setActiveSection(sectionParam);
+      }
+    };
+
+    window.addEventListener('hashchange', handleURLChange);
+    
     const crmToken = localStorage.getItem('crm_token');
     const crmUser = localStorage.getItem('crm_user');
     
@@ -96,7 +107,13 @@ export default function CRMDashboard() {
     }
     
     setUser(JSON.parse(crmUser));
-  }, [setLocation]);
+
+    // Cleanup listeners
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('hashchange', handleURLChange);
+    };
+  }, [setLocation, activeSection]);
 
   const getAuthHeaders = () => {
     const token = localStorage.getItem('crm_token');
