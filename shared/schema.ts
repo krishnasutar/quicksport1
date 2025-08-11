@@ -10,7 +10,7 @@ export const sportTypeEnum = pgEnum("sport_type", ["basketball", "football", "te
 export const bookingStatusEnum = pgEnum("booking_status", ["pending", "confirmed", "cancelled", "completed"]);
 export const facilityStatusEnum = pgEnum("facility_status", ["pending", "approved", "rejected", "suspended"]);
 
-// Users table
+// Web portal users table (customers only)
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
   username: text("username").notNull().unique(),
@@ -20,7 +20,6 @@ export const users = pgTable("users", {
   lastName: text("last_name").notNull(),
   phoneNumber: text("phone_number"),
   profilePicture: text("profile_picture"),
-  role: userRoleEnum("role").notNull().default("user"),
   isStudentVerified: boolean("is_student_verified").default(false),
   walletBalance: decimal("wallet_balance", { precision: 10, scale: 2 }).default("0"),
   rewardPoints: integer("reward_points").default(0),
@@ -30,10 +29,28 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow()
 });
 
+// Define CRM role enum first
+export const crmRoleEnum = pgEnum("crm_role", ["admin", "owner"]);
+
+// CRM users table (admin and facility owners)
+export const crmUsers = pgTable("crm_users", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  username: text("username").notNull().unique(),
+  email: text("email").notNull().unique(),
+  password: text("password").notNull(),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  phoneNumber: text("phone_number"),
+  role: crmRoleEnum("role").notNull(),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
 // Facilities table
 export const facilities = pgTable("facilities", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
-  ownerId: uuid("owner_id").notNull().references(() => users.id),
+  ownerId: uuid("owner_id").notNull().references(() => crmUsers.id),
   name: text("name").notNull(),
   description: text("description"),
   address: text("address").notNull(),
@@ -294,6 +311,13 @@ export const insertUserSchema = createInsertSchema(users).omit({
   isActive: true
 });
 
+export const insertCrmUserSchema = createInsertSchema(crmUsers).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  isActive: true
+});
+
 export const insertFacilitySchema = createInsertSchema(facilities).omit({
   id: true,
   createdAt: true,
@@ -341,6 +365,8 @@ export const insertSubscriptionSchema = createInsertSchema(subscriptions).omit({
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
+export type InsertCrmUser = z.infer<typeof insertCrmUserSchema>;
+export type CrmUser = typeof crmUsers.$inferSelect;
 export type InsertFacility = z.infer<typeof insertFacilitySchema>;
 export type Facility = typeof facilities.$inferSelect;
 export type InsertCourt = z.infer<typeof insertCourtSchema>;

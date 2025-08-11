@@ -1,6 +1,6 @@
 import { 
   users, facilities, courts, bookings, reviews, coupons, subscriptions, 
-  splitPayments, referrals, walletTransactions,
+  splitPayments, referrals, walletTransactions, crmUsers,
   type User, type InsertUser, type Facility, type InsertFacility,
   type Court, type InsertCourt, type Booking, type InsertBooking,
   type Review, type InsertReview, type Coupon, type InsertCoupon,
@@ -150,7 +150,18 @@ export class DatabaseStorage implements IStorage {
     if (rating) conditions.push(gte(facilities.rating, rating.toString()));
 
     if (conditions.length > 0) {
-      query = query.where(and(eq(facilities.status, "approved"), ...conditions));
+      const query2 = db.select({
+        id: facilities.id,
+        name: facilities.name,
+        description: facilities.description,
+        address: facilities.address,
+        city: facilities.city,
+        state: facilities.state,
+        images: facilities.images,
+        rating: facilities.rating,
+        totalReviews: facilities.totalReviews,
+      }).from(facilities).where(and(eq(facilities.status, "approved"), ...conditions));
+      query = query2;
     }
 
     const result = await query
@@ -267,7 +278,8 @@ export class DatabaseStorage implements IStorage {
     let query = db.select().from(bookings).where(eq(bookings.userId, userId));
     
     if (status) {
-      query = query.where(and(eq(bookings.userId, userId), eq(bookings.status, status as any)));
+      const query2 = db.select().from(bookings).where(and(eq(bookings.userId, userId), eq(bookings.status, status as any)));
+      query = query2;
     }
 
     const result = await query
@@ -455,18 +467,13 @@ export class DatabaseStorage implements IStorage {
       ));
 
     if (facilityId) {
-      query = query.where(and(
+      const query2 = db.select().from(coupons).where(and(
         eq(coupons.facilityId, facilityId),
         eq(coupons.isActive, true),
         lte(coupons.validFrom, new Date()),
         gte(coupons.validUntil, new Date())
       ));
-    } else {
-      query = query.where(and(
-        eq(coupons.isActive, true),
-        lte(coupons.validFrom, new Date()),
-        gte(coupons.validUntil, new Date())
-      ));
+      query = query2;
     }
 
     return await query;
@@ -482,20 +489,14 @@ export class DatabaseStorage implements IStorage {
       ));
 
     if (facilityId) {
-      query = query.where(and(
+      const query2 = db.select().from(coupons).where(and(
         eq(coupons.code, code),
         eq(coupons.facilityId, facilityId),
         eq(coupons.isActive, true),
         lte(coupons.validFrom, new Date()),
         gte(coupons.validUntil, new Date())
       ));
-    } else {
-      query = query.where(and(
-        eq(coupons.code, code),
-        eq(coupons.isActive, true),
-        lte(coupons.validFrom, new Date()),
-        gte(coupons.validUntil, new Date())
-      ));
+      query = query2;
     }
 
     const [coupon] = await query;
@@ -563,13 +564,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllUsers(roleFilter?: string): Promise<User[]> {
-    let query = db.select().from(users).orderBy(desc(users.createdAt));
-    
-    if (roleFilter && roleFilter !== 'all') {
-      query = query.where(eq(users.role, roleFilter));
-    }
-    
-    return await query;
+    // Since users table now only contains web portal users (no role column), ignore roleFilter
+    return await db.select().from(users).orderBy(desc(users.createdAt));
   }
 }
 

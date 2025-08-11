@@ -317,9 +317,9 @@ export default function CRMDashboard() {
           )}
 
           {/* Other sections */}
-          {activeSection === 'bookings' && <BookingsManagement isAdmin={isAdmin} />}
-          {activeSection === 'analytics' && <AnalyticsPanel isAdmin={isAdmin} />}
-          {activeSection === 'settings' && <SettingsPanel isAdmin={isAdmin} />}
+          {activeSection === 'bookings' && <OtherManagement section={activeSection} isAdmin={isAdmin} />}
+          {activeSection === 'analytics' && <OtherManagement section={activeSection} isAdmin={isAdmin} />}
+          {activeSection === 'settings' && <OtherManagement section={activeSection} isAdmin={isAdmin} />}
         </div>
       </div>
 

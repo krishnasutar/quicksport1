@@ -56,7 +56,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       console.log("Testing password...");
-      const isValidPassword = await bcrypt.compare(password, user.password);
+      const isValidPassword = await bcrypt.compare(password, user.password as string);
       console.log("Password valid:", isValidPassword);
       
       if (!isValidPassword) {

@@ -14,7 +14,12 @@ interface User {
   createdAt: string;
 }
 
-export function UsersManagement() {
+interface UsersManagementProps {
+  section: string;
+  isAdmin: boolean;
+}
+
+export function UsersManagement({ section, isAdmin }: UsersManagementProps) {
   const getAuthHeaders = () => {
     const token = localStorage.getItem('crm_token');
     return {

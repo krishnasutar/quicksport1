@@ -20,7 +20,12 @@ interface Facility {
   };
 }
 
-export function FacilitiesManagement() {
+interface FacilitiesManagementProps {
+  section: string;
+  isAdmin: boolean;
+}
+
+export function FacilitiesManagement({ section, isAdmin }: FacilitiesManagementProps) {
   const getAuthHeaders = () => {
     const token = localStorage.getItem('crm_token');
     return {
