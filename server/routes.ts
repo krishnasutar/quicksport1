@@ -320,6 +320,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Enhanced admin analytics endpoints
+  app.get("/api/admin/analytics/revenue", authenticateToken, async (req: any, res: Response) => {
+    try {
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      const analytics = await storage.getRevenueAnalytics();
+      res.json(analytics);
+    } catch (error) {
+      console.error("Revenue analytics error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/admin/analytics/facilities", authenticateToken, async (req: any, res: Response) => {
+    try {
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      const analytics = await storage.getFacilityAnalytics();
+      res.json(analytics);
+    } catch (error) {
+      console.error("Facility analytics error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/admin/analytics/bookings", authenticateToken, async (req: any, res: Response) => {
+    try {
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+      const analytics = await storage.getBookingAnalytics();
+      res.json(analytics);
+    } catch (error) {
+      console.error("Booking analytics error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   app.get("/api/owner/dashboard", authenticateToken, async (req: any, res: Response) => {
     try {
       if (req.user.role !== 'owner') {

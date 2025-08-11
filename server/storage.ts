@@ -68,6 +68,11 @@ export interface IStorage {
   getAllBookingsAdmin(filters: any): Promise<{ bookings: any[]; total: number }>;
   getFacilitiesByOwnerId(ownerId: string): Promise<Facility[]>;
   getAllUsers(roleFilter?: string): Promise<User[]>;
+  
+  // Analytics methods
+  getRevenueAnalytics(): Promise<any>;
+  getFacilityAnalytics(): Promise<any>;
+  getBookingAnalytics(): Promise<any>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -688,6 +693,174 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error in getAllUsers:', error);
       throw error;
+    }
+  }
+
+  async getRevenueAnalytics(): Promise<any> {
+    try {
+      // Monthly revenue for the last 12 months
+      const monthlyRevenue = await db
+        .select({
+          month: sql<string>`DATE_TRUNC('month', ${bookings.createdAt})`,
+          revenue: sum(bookings.totalAmount),
+          bookingCount: count(bookings.id)
+        })
+        .from(bookings)
+        .where(and(
+          eq(bookings.status, 'confirmed'),
+          gte(bookings.createdAt, sql`NOW() - INTERVAL '12 months'`)
+        ))
+        .groupBy(sql`DATE_TRUNC('month', ${bookings.createdAt})`)
+        .orderBy(sql`DATE_TRUNC('month', ${bookings.createdAt})`);
+
+      // YTD totals
+      const [ytdStats] = await db
+        .select({
+          totalRevenue: sum(bookings.totalAmount),
+          totalBookings: count(bookings.id),
+          avgBookingValue: avg(bookings.totalAmount)
+        })
+        .from(bookings)
+        .where(and(
+          eq(bookings.status, 'confirmed'),
+          gte(bookings.createdAt, sql`DATE_TRUNC('year', NOW())`)
+        ));
+
+      return {
+        monthlyRevenue: monthlyRevenue.map(m => ({
+          month: m.month,
+          revenue: parseFloat(m.revenue || '0'),
+          bookingCount: m.bookingCount || 0
+        })),
+        ytdStats: {
+          totalRevenue: parseFloat(ytdStats.totalRevenue || '0'),
+          totalBookings: ytdStats.totalBookings || 0,
+          avgBookingValue: parseFloat(ytdStats.avgBookingValue || '0')
+        }
+      };
+    } catch (error) {
+      console.error('Revenue analytics error:', error);
+      return { monthlyRevenue: [], ytdStats: { totalRevenue: 0, totalBookings: 0, avgBookingValue: 0 } };
+    }
+  }
+
+  async getFacilityAnalytics(): Promise<any> {
+    try {
+      // Facility performance with YTD earnings
+      const facilityPerformance = await db
+        .select({
+          facilityId: facilities.id,
+          facilityName: facilities.name,
+          location: facilities.location,
+          totalRevenue: sum(bookings.totalAmount),
+          totalBookings: count(bookings.id),
+          avgRating: avg(facilities.averageRating),
+          status: facilities.status,
+          ownerName: sql<string>`COALESCE(${crmUsers.firstName} || ' ' || ${crmUsers.lastName}, 'Unknown Owner')`
+        })
+        .from(facilities)
+        .leftJoin(crmUsers, eq(facilities.ownerId, crmUsers.id))
+        .leftJoin(courts, eq(courts.facilityId, facilities.id))
+        .leftJoin(bookings, and(
+          eq(bookings.courtId, courts.id),
+          eq(bookings.status, 'confirmed'),
+          gte(bookings.createdAt, sql`DATE_TRUNC('year', NOW())`)
+        ))
+        .groupBy(facilities.id, facilities.name, facilities.location, facilities.status, facilities.averageRating, crmUsers.firstName, crmUsers.lastName)
+        .orderBy(desc(sum(bookings.totalAmount)));
+
+      // Sports breakdown
+      const sportsBreakdown = await db
+        .select({
+          sport: courts.sportType,
+          facilityCount: count(sql`DISTINCT ${facilities.id}`),
+          courtCount: count(courts.id),
+          totalRevenue: sum(bookings.totalAmount)
+        })
+        .from(courts)
+        .leftJoin(facilities, eq(courts.facilityId, facilities.id))
+        .leftJoin(bookings, and(
+          eq(bookings.courtId, courts.id),
+          eq(bookings.status, 'confirmed')
+        ))
+        .groupBy(courts.sportType)
+        .orderBy(desc(sum(bookings.totalAmount)));
+
+      return {
+        facilityPerformance: facilityPerformance.map(f => ({
+          ...f,
+          totalRevenue: parseFloat(f.totalRevenue || '0'),
+          avgRating: parseFloat(f.avgRating || '0')
+        })),
+        sportsBreakdown: sportsBreakdown.map(s => ({
+          ...s,
+          totalRevenue: parseFloat(s.totalRevenue || '0')
+        }))
+      };
+    } catch (error) {
+      console.error('Facility analytics error:', error);
+      return { facilityPerformance: [], sportsBreakdown: [] };
+    }
+  }
+
+  async getBookingAnalytics(): Promise<any> {
+    try {
+      // Weekly booking trends
+      const weeklyBookings = await db
+        .select({
+          week: sql<string>`DATE_TRUNC('week', ${bookings.createdAt})`,
+          bookingCount: count(bookings.id),
+          revenue: sum(bookings.totalAmount)
+        })
+        .from(bookings)
+        .where(and(
+          eq(bookings.status, 'confirmed'),
+          gte(bookings.createdAt, sql`NOW() - INTERVAL '12 weeks'`)
+        ))
+        .groupBy(sql`DATE_TRUNC('week', ${bookings.createdAt})`)
+        .orderBy(sql`DATE_TRUNC('week', ${bookings.createdAt})`);
+
+      // Peak times analysis
+      const peakTimes = await db
+        .select({
+          timeSlot: sql<string>`
+            CASE 
+              WHEN EXTRACT(HOUR FROM ${bookings.startTime}) BETWEEN 6 AND 11 THEN 'Morning'
+              WHEN EXTRACT(HOUR FROM ${bookings.startTime}) BETWEEN 12 AND 17 THEN 'Afternoon'
+              WHEN EXTRACT(HOUR FROM ${bookings.startTime}) BETWEEN 18 AND 23 THEN 'Evening'
+              ELSE 'Night'
+            END
+          `,
+          bookingCount: count(bookings.id),
+          totalRevenue: sum(bookings.totalAmount)
+        })
+        .from(bookings)
+        .where(eq(bookings.status, 'confirmed'))
+        .groupBy(sql`
+          CASE 
+            WHEN EXTRACT(HOUR FROM ${bookings.startTime}) BETWEEN 6 AND 11 THEN 'Morning'
+            WHEN EXTRACT(HOUR FROM ${bookings.startTime}) BETWEEN 12 AND 17 THEN 'Afternoon'
+            WHEN EXTRACT(HOUR FROM ${bookings.startTime}) BETWEEN 18 AND 23 THEN 'Evening'
+            ELSE 'Night'
+          END
+        `)
+        .orderBy(desc(count(bookings.id)));
+
+      return {
+        weeklyBookings: weeklyBookings.map(w => ({
+          week: w.week,
+          bookingCount: w.bookingCount || 0,
+          revenue: parseFloat(w.revenue || '0')
+        })),
+        peakTimes: peakTimes.map(p => ({
+          timeSlot: p.timeSlot,
+          bookingCount: p.bookingCount || 0,
+          totalRevenue: parseFloat(p.totalRevenue || '0')
+        }))
+      };
+    } catch (error) {
+      console.error('Booking analytics error:', error);
+      return { weeklyBookings: [], peakTimes: [] };
     }
   }
 }
