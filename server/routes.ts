@@ -399,7 +399,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const bookingData = insertBookingSchema.parse({
         ...req.body,
-        userId: req.user.id
+        userId: req.user.id,
+        bookingDate: new Date(req.body.bookingDate)
       });
 
       // Check court availability

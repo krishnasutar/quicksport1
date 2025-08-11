@@ -74,7 +74,8 @@ export default function BookingForm({ court, onSubmit, isLoading }: BookingFormP
     const endTime = calculateEndTime(startTime, duration);
     
     const bookingData = {
-      bookingDate: bookingDate.toISOString().split('T')[0],
+      courtId: court.id,
+      bookingDate: bookingDate.toISOString(),
       startTime,
       endTime,
       totalAmount: basePrice.toFixed(2),
