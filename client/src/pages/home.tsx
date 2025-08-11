@@ -10,7 +10,8 @@ import FeatureSection from "@/components/feature-section";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Filter } from "lucide-react";
+import { Search, Filter, Star, MapPin } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -63,6 +64,176 @@ export default function Home() {
       <HeroSection />
       
       <SportsCategory onSportSelect={handleSportSelect} />
+      
+      {/* Quick Stats Section */}
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 slide-in-up">Trusted by Athletes Everywhere</h2>
+            <p className="text-xl text-gray-600">Join the growing community of sports enthusiasts</p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div className="text-center card-hover p-6 bg-gradient-to-br from-brand-indigo to-brand-purple rounded-2xl text-white transform hover:scale-105 transition-all duration-300">
+              <div className="text-3xl md:text-4xl font-bold mb-2">500+</div>
+              <div className="text-sm md:text-base opacity-90">Sports Venues</div>
+            </div>
+            <div className="text-center card-hover p-6 bg-gradient-to-br from-brand-cyan to-brand-emerald rounded-2xl text-white transform hover:scale-105 transition-all duration-300">
+              <div className="text-3xl md:text-4xl font-bold mb-2">10K+</div>
+              <div className="text-sm md:text-base opacity-90">Happy Athletes</div>
+            </div>
+            <div className="text-center card-hover p-6 bg-gradient-to-br from-brand-orange to-brand-yellow rounded-2xl text-white transform hover:scale-105 transition-all duration-300">
+              <div className="text-3xl md:text-4xl font-bold mb-2">25+</div>
+              <div className="text-sm md:text-base opacity-90">Cities Covered</div>
+            </div>
+            <div className="text-center card-hover p-6 bg-gradient-to-br from-brand-purple to-pink-500 rounded-2xl text-white transform hover:scale-105 transition-all duration-300">
+              <div className="text-3xl md:text-4xl font-bold mb-2">50K+</div>
+              <div className="text-sm md:text-base opacity-90">Bookings Made</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Venues Showcase */}
+      <section className="py-16 bg-gradient-to-br from-gray-50 to-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 slide-in-up">Featured Sports Venues</h2>
+            <p className="text-xl text-gray-600">Discover top-rated facilities handpicked for you</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="card-hover bg-white rounded-2xl shadow-sm overflow-hidden">
+              <div className="h-48 bg-gradient-to-br from-blue-400 to-blue-600 relative">
+                <img
+                  src="https://images.unsplash.com/photo-1546519638-68e109498ffc?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600"
+                  alt="Basketball Court"
+                  className="w-full h-full object-cover mix-blend-overlay"
+                />
+                <div className="absolute top-4 left-4">
+                  <Badge className="bg-white bg-opacity-90 text-blue-600 font-semibold">FEATURED</Badge>
+                </div>
+                <div className="absolute top-4 right-4 bg-black bg-opacity-60 rounded-lg px-2 py-1">
+                  <div className="flex items-center text-white text-sm">
+                    <Star className="h-4 w-4 text-yellow-400 fill-current mr-1" />
+                    4.8
+                  </div>
+                </div>
+              </div>
+              <div className="p-6">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Elite Sports Complex</h3>
+                <p className="text-gray-600 mb-3 flex items-center">
+                  <MapPin className="h-4 w-4 text-gray-400 mr-1" />
+                  Koramangala, Bangalore
+                </p>
+                <div className="flex flex-wrap gap-1 mb-4">
+                  <Badge variant="outline" className="text-xs">Basketball</Badge>
+                  <Badge variant="outline" className="text-xs">Badminton</Badge>
+                  <Badge variant="outline" className="text-xs">Table Tennis</Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <span className="text-2xl font-bold text-brand-indigo">₹400</span>
+                    <span className="text-gray-500">/hr</span>
+                  </div>
+                  <Button className="gradient-bg hover:shadow-lg transform hover:scale-105 transition-all duration-200">
+                    Book Now
+                  </Button>
+                </div>
+              </div>
+            </div>
+            
+            <div className="card-hover bg-white rounded-2xl shadow-sm overflow-hidden">
+              <div className="h-48 bg-gradient-to-br from-green-400 to-green-600 relative">
+                <img
+                  src="https://images.unsplash.com/photo-1551698618-1dfe5d97d256?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600"
+                  alt="Football Field"
+                  className="w-full h-full object-cover mix-blend-overlay"
+                />
+                <div className="absolute top-4 left-4">
+                  <Badge className="bg-white bg-opacity-90 text-green-600 font-semibold">HOT</Badge>
+                </div>
+                <div className="absolute top-4 right-4 bg-black bg-opacity-60 rounded-lg px-2 py-1">
+                  <div className="flex items-center text-white text-sm">
+                    <Star className="h-4 w-4 text-yellow-400 fill-current mr-1" />
+                    4.6
+                  </div>
+                </div>
+              </div>
+              <div className="p-6">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Champions Arena</h3>
+                <p className="text-gray-600 mb-3 flex items-center">
+                  <MapPin className="h-4 w-4 text-gray-400 mr-1" />
+                  Bandra West, Mumbai
+                </p>
+                <div className="flex flex-wrap gap-1 mb-4">
+                  <Badge variant="outline" className="text-xs">Football</Badge>
+                  <Badge variant="outline" className="text-xs">Cricket</Badge>
+                  <Badge variant="outline" className="text-xs">Tennis</Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <span className="text-2xl font-bold text-brand-indigo">₹800</span>
+                    <span className="text-gray-500">/hr</span>
+                  </div>
+                  <Button className="gradient-bg hover:shadow-lg transform hover:scale-105 transition-all duration-200">
+                    Book Now
+                  </Button>
+                </div>
+              </div>
+            </div>
+            
+            <div className="card-hover bg-white rounded-2xl shadow-sm overflow-hidden">
+              <div className="h-48 bg-gradient-to-br from-purple-400 to-purple-600 relative">
+                <img
+                  src="https://images.unsplash.com/photo-1622279457486-62dcc4a431d6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600"
+                  alt="Badminton Court"
+                  className="w-full h-full object-cover mix-blend-overlay"
+                />
+                <div className="absolute top-4 left-4">
+                  <Badge className="bg-white bg-opacity-90 text-purple-600 font-semibold">PREMIUM</Badge>
+                </div>
+                <div className="absolute top-4 right-4 bg-black bg-opacity-60 rounded-lg px-2 py-1">
+                  <div className="flex items-center text-white text-sm">
+                    <Star className="h-4 w-4 text-yellow-400 fill-current mr-1" />
+                    4.9
+                  </div>
+                </div>
+              </div>
+              <div className="p-6">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Racquet Club Premium</h3>
+                <p className="text-gray-600 mb-3 flex items-center">
+                  <MapPin className="h-4 w-4 text-gray-400 mr-1" />
+                  Anna Nagar, Chennai
+                </p>
+                <div className="flex flex-wrap gap-1 mb-4">
+                  <Badge variant="outline" className="text-xs">Badminton</Badge>
+                  <Badge variant="outline" className="text-xs">Table Tennis</Badge>
+                  <Badge variant="outline" className="text-xs">AC</Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <span className="text-2xl font-bold text-brand-indigo">₹500</span>
+                    <span className="text-gray-500">/hr</span>
+                  </div>
+                  <Button className="gradient-bg hover:shadow-lg transform hover:scale-105 transition-all duration-200">
+                    Book Now
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="text-center mt-12">
+            <Button asChild size="lg" className="gradient-bg text-lg px-8 py-4 hover:shadow-xl transform hover:scale-105 transition-all duration-200">
+              <Link href="/sports">
+                <i className="fas fa-search mr-2"></i>
+                Explore All Venues
+                <i className="fas fa-arrow-right ml-2"></i>
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </section>
       
       {/* Popular Venues */}
       <section className="py-16 bg-gray-50">
