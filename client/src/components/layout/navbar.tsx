@@ -21,7 +21,6 @@ export default function Navbar() {
   const navLinks = [
     { href: "/", label: "Home" },
     { href: "/sports", label: "Sports" },
-    { href: "/esports", label: "E-Sports" },
     { href: "/about", label: "About" },
     { href: "/contact", label: "Contact" },
   ];
