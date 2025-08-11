@@ -313,7 +313,7 @@ export function CompanyManagement() {
                     <SelectValue placeholder="Select owner" />
                   </SelectTrigger>
                   <SelectContent>
-                    {availableOwners.map(owner => (
+                    {crmUsers.filter(user => user.role === 'owner').map(owner => (
                       <SelectItem key={owner.id} value={owner.id}>
                         {owner.firstName} {owner.lastName} ({owner.email})
                       </SelectItem>
