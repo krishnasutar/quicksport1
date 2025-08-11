@@ -964,6 +964,7 @@ export class DatabaseStorage implements IStorage {
       
       return result.rows.map(row => ({
         ...row,
+        ownerId: row.owner_id, // FIXED: Add camelCase ownerId
         ownerName: row.owner_name,
         facilitiesCount: Number(row.facilities_count)
       }));

@@ -317,7 +317,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Insufficient permissions" });
       }
 
-      const { ObjectStorageService } = require('./objectStorage');
+      // FIXED: Use ES6 import instead of require
+      const { ObjectStorageService } = await import('./objectStorage');
       const objectStorageService = new ObjectStorageService();
       const uploadURL = await objectStorageService.getObjectEntityUploadURL();
       

@@ -259,10 +259,18 @@ export function AddFacilityForm({ onCancel }: AddFacilityFormProps = {}) {
     const selectedCompanyData = companies.find(c => c.id === facilityData.companyId);
     const finalOwnerId = facilityData.ownerId || selectedCompanyData?.ownerId;
 
+    console.log('Validation check:', {
+      companyId: facilityData.companyId,
+      selectedCompany: selectedCompanyData,
+      facilityOwnerId: facilityData.ownerId,
+      finalOwnerId,
+      companies
+    });
+
     if (!finalOwnerId) {
       toast({
         title: "Error",
-        description: "Owner ID is missing. Please select a valid company.",
+        description: `Owner ID is missing. Company: ${selectedCompanyData?.name || 'none'}, Owner: ${selectedCompanyData?.ownerId || 'missing'}`,
         variant: "destructive",
       });
       return;
