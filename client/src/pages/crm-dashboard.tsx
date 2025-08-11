@@ -206,38 +206,40 @@ export default function CRMDashboard() {
                   <div>
                     <Button 
                       variant="ghost" 
-                      className={`w-full justify-start text-gray-700 hover:bg-purple-50 hover:text-purple-600 ${
+                      className={`w-full justify-between text-gray-700 hover:bg-purple-50 hover:text-purple-600 ${
                         expandedMenus.includes(item.id) ? 'bg-purple-50 text-purple-600' : ''
                       }`}
                       onClick={() => toggleExpandedMenu(item.id)}
                       data-testid={`button-${item.id}`}
                     >
-                      <item.icon className="mr-3 h-5 w-5" />
-                      {item.label}
-                      {expandedMenus.includes(item.id) ? (
-                        <ChevronDown className="ml-auto h-4 w-4" />
-                      ) : (
-                        <ChevronRight className="ml-auto h-4 w-4" />
-                      )}
+                      <div className="flex items-center">
+                        <item.icon className="mr-3 h-5 w-5" />
+                        {item.label}
+                      </div>
+                      <ChevronRight className={`h-4 w-4 transition-transform duration-200 ${
+                        expandedMenus.includes(item.id) ? 'rotate-90' : ''
+                      }`} />
                     </Button>
-                    {expandedMenus.includes(item.id) && (
-                      <div className="ml-4 mt-1 space-y-1 border-l-2 border-purple-100 pl-4">
+                    
+                    {/* Smooth inline dropdown */}
+                    <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                      expandedMenus.includes(item.id) ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+                    }`}>
+                      <div className="ml-8 mt-1 space-y-1 pb-2">
                         {item.dropdown.map((subItem, index) => (
                           <Button 
                             key={index}
                             variant="ghost" 
                             size="sm"
-                            className={`w-full justify-start text-gray-600 hover:bg-purple-50 hover:text-purple-600 ${
-                              activeSection === subItem.action.toString().split("'")[1] ? 'bg-purple-50 text-purple-600' : ''
-                            }`}
+                            className="w-full justify-start text-sm text-gray-600 hover:bg-purple-50 hover:text-purple-600 pl-2 py-1"
                             onClick={subItem.action}
-                            data-testid={`button-${item.id}-${subItem.label.toLowerCase().replace(' ', '-')}`}
+                            data-testid={`button-${item.id}-${subItem.label.toLowerCase().replace(/\s+/g, '-')}`}
                           >
                             {subItem.label}
                           </Button>
                         ))}
                       </div>
-                    )}
+                    </div>
                   </div>
                 ) : (
                   <Button 
