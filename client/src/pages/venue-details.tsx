@@ -32,12 +32,12 @@ export default function VenueDetails() {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   const { data: facility, isLoading } = useQuery({
-    queryKey: ['/api/facilities', params.id],
+    queryKey: [`/api/facilities/${params.id}`],
     enabled: !!params.id,
   });
 
   const { data: reviews } = useQuery({
-    queryKey: ['/api/reviews', params.id],
+    queryKey: [`/api/reviews/${params.id}`],
     enabled: !!params.id,
   });
 
