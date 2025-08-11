@@ -27,9 +27,10 @@ Preferred communication style: Simple, everyday language.
   - **Admin role**: Full access to all facilities, bookings, analytics, and platform management
   - **Owner role**: Access only to their own facilities, bookings, and analytics
 - **CRM dashboard features**: Built comprehensive management interface with facilities, bookings, analytics, inventory, and settings tabs
-- **Test credentials created**: 
+- **Test credentials working**: 
   - Admin: admin@quickcourt.com / admin123 (super user with full platform access)
   - Owner: owner@quickcourt.com / owner123 (limited to own facilities)
+  - Both accounts properly created in database with correct password hashing
 
 ## System Architecture
 
