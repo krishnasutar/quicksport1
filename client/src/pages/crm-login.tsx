@@ -17,6 +17,8 @@ export default function CRMLogin() {
 
   const loginMutation = useMutation({
     mutationFn: async (data: { email: string; password: string }) => {
+      console.log("Attempting CRM login with:", data);
+      
       const response = await fetch('/api/crm/login', {
         method: 'POST',
         headers: {
@@ -25,12 +27,15 @@ export default function CRMLogin() {
         body: JSON.stringify(data),
       });
       
+      console.log("Response status:", response.status);
+      const responseData = await response.json();
+      console.log("Response data:", responseData);
+      
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Login failed');
+        throw new Error(responseData.message || 'Login failed');
       }
       
-      return response.json();
+      return responseData;
     },
     onSuccess: (data) => {
       localStorage.setItem('crm_token', data.token);

@@ -32,7 +32,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/crm/login", async (req: Request, res: Response) => {
     try {
       const { email, password } = req.body;
-      console.log("CRM Login attempt:", { email, password: password ? "[PROVIDED]" : "[MISSING]" });
+      console.log("CRM Login attempt:", { email, password: password ? "[PROVIDED]" : "[MISSING]", body: req.body });
 
       if (!email || !password) {
         return res.status(400).json({ message: "Email and password are required" });
