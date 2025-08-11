@@ -80,7 +80,21 @@ export class DatabaseStorage implements IStorage {
 
   async getCrmUserByEmail(email: string) {
     const result = await db.execute(sql`
-      SELECT * FROM crm_users WHERE email = ${email} LIMIT 1
+      SELECT 
+        id,
+        username,
+        email,
+        password,
+        first_name,
+        last_name,
+        role,
+        phone_number,
+        is_active as "isActive",
+        created_at,
+        updated_at
+      FROM crm_users 
+      WHERE email = ${email} 
+      LIMIT 1
     `);
     return result.rows[0] || null;
   }

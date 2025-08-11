@@ -45,8 +45,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Invalid credentials" });
       }
       
-      if (!user.isActive) {
-        console.log("User is not active");
+      if (user.isActive !== true) {
+        console.log("User is not active, isActive value:", user.isActive);
         return res.status(401).json({ message: "Account is not active" });
       }
       
