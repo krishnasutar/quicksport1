@@ -90,6 +90,9 @@ export default function BookingForm({ court, onSubmit, isLoading }: BookingFormP
       return;
     }
 
+    console.log('Payment method selected:', paymentMethod);
+    console.log('Stripe promise available:', !!stripePromise);
+
     // Validate wallet balance if wallet payment is selected
     if (paymentMethod === 'wallet' && walletBalance < finalAmount) {
       alert(`Insufficient wallet balance! Your balance: ₹${walletBalance.toFixed(2)}, Required: ₹${finalAmount.toFixed(2)}`);
@@ -100,6 +103,7 @@ export default function BookingForm({ court, onSubmit, isLoading }: BookingFormP
 
     // If Stripe payment is selected, create payment intent and show checkout
     if (paymentMethod === 'stripe') {
+      console.log('Starting Stripe payment flow...');
       if (!stripePromise) {
         alert('Stripe is not configured. Please use wallet payment or contact support.');
         return;
@@ -129,6 +133,7 @@ export default function BookingForm({ court, onSubmit, isLoading }: BookingFormP
         }
 
         const { clientSecret } = await response.json();
+        console.log('Payment intent created, showing Stripe checkout...');
         setClientSecret(clientSecret);
         setShowStripeCheckout(true);
         return;
@@ -138,6 +143,7 @@ export default function BookingForm({ court, onSubmit, isLoading }: BookingFormP
       }
     }
     
+    console.log('Processing wallet payment...');
     const bookingData = {
       courtId: court.id,
       bookingDate: bookingDate.toISOString(),
