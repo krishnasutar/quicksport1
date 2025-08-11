@@ -32,12 +32,29 @@ export default function UserDashboard() {
   });
 
   const bookings = bookingsData?.bookings || [];
-  const upcomingBookings = bookings.filter((booking: any) => 
-    booking.status === 'confirmed' && new Date(booking.bookingDate) >= new Date()
-  );
-  const pastBookings = bookings.filter((booking: any) => 
-    booking.status === 'completed' || new Date(booking.bookingDate) < new Date()
-  );
+  
+  // Sort bookings by creation date (most recent first) and then by booking date
+  const sortedBookings = [...bookings].sort((a, b) => {
+    const dateA = new Date(a.createdAt).getTime();
+    const dateB = new Date(b.createdAt).getTime();
+    if (dateA !== dateB) return dateB - dateA; // Most recent creation first
+    return new Date(b.bookingDate).getTime() - new Date(a.bookingDate).getTime(); // Then by booking date
+  });
+  
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Reset time to start of day for accurate comparison
+  
+  const upcomingBookings = sortedBookings.filter((booking: any) => {
+    const bookingDate = new Date(booking.bookingDate);
+    bookingDate.setHours(0, 0, 0, 0);
+    return (booking.status === 'confirmed' || booking.status === 'pending') && bookingDate >= today;
+  });
+  
+  const pastBookings = sortedBookings.filter((booking: any) => {
+    const bookingDate = new Date(booking.bookingDate);
+    bookingDate.setHours(0, 0, 0, 0);
+    return booking.status === 'completed' || bookingDate < today;
+  });
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -188,12 +205,12 @@ export default function UserDashboard() {
                 {upcomingBookings.length > 0 ? (
                   <div className="space-y-4">
                     {upcomingBookings.map((booking: any) => (
-                      <div key={booking.id} className="border border-gray-200 rounded-lg p-4">
+                      <div key={booking.id} className="border border-gray-200 rounded-lg p-4 bg-white hover:shadow-md transition-shadow">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <div className="flex items-center space-x-3 mb-2">
                               <h3 className="font-semibold text-gray-900">
-                                {booking.court?.name} at {booking.court?.facility?.name}
+                                {booking.court?.name || 'Court'} at {booking.court?.facility?.name || 'Facility'}
                               </h3>
                               <Badge className={getStatusColor(booking.status)}>
                                 {booking.status}
@@ -249,13 +266,13 @@ export default function UserDashboard() {
               <CardContent>
                 {pastBookings.length > 0 ? (
                   <div className="space-y-4">
-                    {pastBookings.slice(0, 5).map((booking: any) => (
-                      <div key={booking.id} className="border border-gray-100 rounded-lg p-4">
+                    {pastBookings.slice(0, 10).map((booking: any) => (
+                      <div key={booking.id} className="border border-gray-100 rounded-lg p-4 bg-white hover:shadow-sm transition-shadow">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <div className="flex items-center space-x-3 mb-2">
                               <h3 className="font-medium text-gray-900">
-                                {booking.court?.name} at {booking.court?.facility?.name}
+                                {booking.court?.name || 'Court'} at {booking.court?.facility?.name || 'Facility'}
                               </h3>
                               <Badge className={getStatusColor(booking.status)}>
                                 {booking.status}
