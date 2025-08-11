@@ -15,7 +15,12 @@ Preferred communication style: Simple, everyday language.
 ### August 11, 2025 - Migration to Personal Neon Database & UI/UX Focus
 - **Successfully migrated to user's personal Neon database**: Full database ownership and control with connection string: `ep-twilight-truth-a1qwp2nr-pooler.ap-southeast-1.aws.neon.tech`
 - **Complete database setup**: All tables, test accounts, and demo data populated successfully
-- **Test credentials confirmed working**: admin@quickcourt.com/admin123 and owner@quickcourt.com/owner123
+- **Simplified role-based system created**: Clear data separation between admin and 3 different owners
+- **Test credentials setup**:
+  - **Admin**: admin@quickcourt.com/admin123 (sees ALL data from all 3 owners)
+  - **Owner 1**: owner1@quickcourt.com/owner123 (Rajesh Sharma - SportZone Central only)
+  - **Owner 2**: owner2@quickcourt.com/owner123 (Priya Patel - Elite Sports Academy + Power Sports Arena)
+  - **Owner 3**: owner3@quickcourt.com/owner123 (Amit Kumar - Urban Sports Hub + Metro Sports Club)
 - **Demo data populated**: 3 facilities (SportZone Central, Elite Sports Academy, Urban Sports Hub) with 9 courts across multiple sports
 - **Frontend UI/UX improvement phase**: Focus shifted to enhancing user-facing website interface and experience
 - **Base functionality complete**: CRM/admin panel and backend systems fully operational
