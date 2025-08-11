@@ -309,8 +309,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { status } = req.body;
 
       // Validate status
-      if (!['pending', 'approved', 'declined'].includes(status)) {
-        return res.status(400).json({ message: "Invalid status. Must be pending, approved, or declined" });
+      if (!['pending', 'approved', 'rejected'].includes(status)) {
+        return res.status(400).json({ message: "Invalid status. Must be pending, approved, or rejected" });
       }
 
       const facility = await storage.updateFacilityStatus(id, status);

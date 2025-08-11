@@ -146,10 +146,10 @@ export function FacilityManagement({ onNavigateToAddFacility }: FacilityManageme
           <Clock className="h-3 w-3 mr-1" />
           Pending
         </Badge>;
-      case 'declined': 
+      case 'rejected': 
         return <Badge className="bg-red-100 text-red-800 hover:bg-red-200">
           <XCircle className="h-3 w-3 mr-1" />
-          Declined
+          Rejected
         </Badge>;
       default: 
         return <Badge variant="secondary">{status}</Badge>;
@@ -227,7 +227,7 @@ export function FacilityManagement({ onNavigateToAddFacility }: FacilityManageme
                 <SelectItem value="all">All Status</SelectItem>
                 <SelectItem value="approved">Approved</SelectItem>
                 <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="declined">Declined</SelectItem>
+                <SelectItem value="rejected">Rejected</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -328,11 +328,11 @@ export function FacilityManagement({ onNavigateToAddFacility }: FacilityManageme
                           Mark Pending
                         </DropdownMenuItem>
                         <DropdownMenuItem 
-                          onClick={() => handleStatusChange(facility.id, 'declined')}
-                          disabled={facility.status === 'declined'}
+                          onClick={() => handleStatusChange(facility.id, 'rejected')}
+                          disabled={facility.status === 'rejected'}
                         >
                           <XCircle className="h-4 w-4 mr-2 text-red-600" />
-                          Decline
+                          Reject
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

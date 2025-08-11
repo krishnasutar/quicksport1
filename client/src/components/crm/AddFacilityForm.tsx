@@ -47,7 +47,11 @@ const amenityOptions = [
   { id: "equipment_rental", label: "Equipment Rental", icon: Star },
 ];
 
-export function AddFacilityForm() {
+interface AddFacilityFormProps {
+  onCancel?: () => void;
+}
+
+export function AddFacilityForm({ onCancel }: AddFacilityFormProps = {}) {
   const [facilityData, setFacilityData] = useState({
     companyId: "",
     ownerId: "",
@@ -520,7 +524,7 @@ export function AddFacilityForm() {
 
       {/* Submit Button */}
       <div className="flex justify-end gap-4">
-        <Button variant="outline" onClick={() => window.history.back()}>
+        <Button variant="outline" onClick={onCancel || (() => window.history.back())}>
           Cancel
         </Button>
         <Button 
