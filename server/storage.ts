@@ -147,7 +147,17 @@ export class DatabaseStorage implements IStorage {
 
   async getFacilities(filters: any): Promise<{ facilities: any[]; total: number }> {
     try {
-      const result = await db.select().from(facilities).where(eq(facilities.status, "approved"));
+      // For CRM dashboard, return ALL facilities regardless of status
+      // For public API, filter by approved status
+      const isCrmRequest = filters?.includePending || false;
+      
+      let query = db.select().from(facilities);
+      
+      if (!isCrmRequest) {
+        query = query.where(eq(facilities.status, "approved"));
+      }
+      
+      const result = await query;
       
       const facilitiesWithCourts = await Promise.all(
         result.map(async (facility) => {

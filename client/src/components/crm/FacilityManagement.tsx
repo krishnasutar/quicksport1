@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   Card, CardContent, CardDescription, CardHeader, CardTitle 
 } from "@/components/ui/card";
@@ -9,10 +9,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
-  Search, Plus, MapPin, Star, Calendar, Users, TrendingUp,
-  Filter, MoreVertical, Edit, Trash2, Eye
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
+} from "@/components/ui/table";
+import { 
+  Search, Plus, MapPin, Star, MoreVertical, Edit, Trash2, Eye, 
+  CheckCircle, XCircle, Clock
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -20,6 +22,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useToast } from "@/hooks/use-toast";
 
 interface Facility {
   id: string;
@@ -60,6 +63,9 @@ export function FacilityManagement({ onNavigateToAddFacility }: FacilityManageme
   const [selectedCity, setSelectedCity] = useState<string>("all");
   const [selectedSport, setSelectedSport] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
+  
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   // Fetch facilities 
   const { data: facilitiesResponse, isLoading: facilitiesLoading } = useQuery<{facilities: FacilityWithCourts[], pagination: any}>({
@@ -75,7 +81,7 @@ export function FacilityManagement({ onNavigateToAddFacility }: FacilityManageme
 
   // Get unique cities from facilities
   const cities = useMemo(() => {
-    const uniqueCities = [...new Set(facilities.map(f => f.city))];
+    const uniqueCities = Array.from(new Set(facilities.map(f => f.city)));
     return uniqueCities.sort();
   }, [facilities]);
 
@@ -93,25 +99,60 @@ export function FacilityManagement({ onNavigateToAddFacility }: FacilityManageme
     });
   }, [facilities, searchTerm, selectedCity, selectedSport, selectedStatus]);
 
-  // Group facilities by sport category
-  const facilitiesByCategory = useMemo(() => {
-    const categories: { [key: string]: FacilityWithCourts[] } = {};
-    
-    sportsCategories.forEach(sport => {
-      categories[sport.sport] = facilities.filter(facility => 
-        facility.courts?.some(court => court.sportType === sport.sport)
-      );
-    });
-    
-    return categories;
-  }, [facilities, sportsCategories]);
+  // Status update mutation
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ facilityId, status }: { facilityId: string; status: string }) => {
+      const token = localStorage.getItem('crm_token');
+      const response = await fetch(`/api/facilities/${facilityId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status }),
+      });
+      if (!response.ok) throw new Error('Failed to update status');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/facilities'] });
+      toast({
+        title: "Success",
+        description: "Facility status updated successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update status",
+        variant: "destructive",
+      });
+    },
+  });
 
-  const getStatusColor = (status: string) => {
+  const handleStatusChange = (facilityId: string, newStatus: string) => {
+    updateStatusMutation.mutate({ facilityId, status: newStatus });
+  };
+
+  const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'approved': return 'bg-green-100 text-green-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'rejected': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'approved': 
+        return <Badge className="bg-green-100 text-green-800 hover:bg-green-200">
+          <CheckCircle className="h-3 w-3 mr-1" />
+          Approved
+        </Badge>;
+      case 'pending': 
+        return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200">
+          <Clock className="h-3 w-3 mr-1" />
+          Pending
+        </Badge>;
+      case 'declined': 
+        return <Badge className="bg-red-100 text-red-800 hover:bg-red-200">
+          <XCircle className="h-3 w-3 mr-1" />
+          Declined
+        </Badge>;
+      default: 
+        return <Badge variant="secondary">{status}</Badge>;
     }
   };
 
@@ -125,29 +166,15 @@ export function FacilityManagement({ onNavigateToAddFacility }: FacilityManageme
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Facility Management</h2>
+          <h2 className="text-3xl font-bold tracking-tight">All Facilities</h2>
           <p className="text-muted-foreground">
-            Manage {facilities.length} facilities across {cities.length} cities
+            Manage all facilities with approval status controls
           </p>
         </div>
-        <Button 
-          className="gap-2"
-          onClick={() => {
-            if (onNavigateToAddFacility) {
-              onNavigateToAddFacility();
-            } else {
-              // Fallback to URL navigation
-              const url = new URL(window.location);
-              url.searchParams.set('section', 'add-facility');
-              window.history.pushState({}, '', url.toString());
-              window.dispatchEvent(new CustomEvent('urlchange'));
-            }
-          }}
-        >
-          <Plus className="h-4 w-4" />
+        <Button onClick={onNavigateToAddFacility} size="sm">
+          <Plus className="h-4 w-4 mr-2" />
           Add Facility
         </Button>
       </div>
@@ -155,11 +182,11 @@ export function FacilityManagement({ onNavigateToAddFacility }: FacilityManageme
       {/* Search and Filters */}
       <Card>
         <CardContent className="pt-6">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search facilities by name or city..."
+                placeholder="Search facilities..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -167,8 +194,8 @@ export function FacilityManagement({ onNavigateToAddFacility }: FacilityManageme
             </div>
             
             <Select value={selectedCity} onValueChange={setSelectedCity}>
-              <SelectTrigger className="w-full sm:w-[180px]">
-                <SelectValue placeholder="Select City" />
+              <SelectTrigger>
+                <SelectValue placeholder="Filter by city" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Cities</SelectItem>
@@ -177,10 +204,10 @@ export function FacilityManagement({ onNavigateToAddFacility }: FacilityManageme
                 ))}
               </SelectContent>
             </Select>
-
+            
             <Select value={selectedSport} onValueChange={setSelectedSport}>
-              <SelectTrigger className="w-full sm:w-[180px]">
-                <SelectValue placeholder="Select Sport" />
+              <SelectTrigger>
+                <SelectValue placeholder="Filter by sport" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Sports</SelectItem>
@@ -191,206 +218,169 @@ export function FacilityManagement({ onNavigateToAddFacility }: FacilityManageme
                 ))}
               </SelectContent>
             </Select>
-
+            
             <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-              <SelectTrigger className="w-full sm:w-[180px]">
-                <SelectValue placeholder="Status" />
+              <SelectTrigger>
+                <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
                 <SelectItem value="approved">Approved</SelectItem>
                 <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="rejected">Rejected</SelectItem>
+                <SelectItem value="declined">Declined</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </CardContent>
       </Card>
 
-      {/* Statistics Cards */}
-      <div className="space-y-6">
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Total Facilities</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{facilities.length}</div>
-                <p className="text-sm text-muted-foreground">Across {cities.length} cities</p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Approved</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-green-600">
-                  {facilities.filter(f => f.status === 'approved').length}
-                </div>
-                <p className="text-sm text-muted-foreground">Active facilities</p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Pending Review</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-yellow-600">
-                  {facilities.filter(f => f.status === 'pending').length}
-                </div>
-                <p className="text-sm text-muted-foreground">Awaiting approval</p>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Sports Categories</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{sportsCategories.length}</div>
-                <p className="text-sm text-muted-foreground">Different sports</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Recent Facilities */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Facilities</CardTitle>
-              <CardDescription>Latest facility additions and updates</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {filteredFacilities.slice(0, 5).map((facility) => (
-                  <div key={facility.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white font-semibold">
-                        {facility.name.charAt(0).toUpperCase()}
-                      </div>
-                      <div>
-                        <h4 className="font-semibold">{facility.name}</h4>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <MapPin className="h-3 w-3" />
-                          {facility.city}, {facility.state}
-                          <Star className="h-3 w-3 ml-2" />
-                          {facility.rating} ({facility.totalReviews})
+      {/* Facilities Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Facilities ({filteredFacilities.length})</CardTitle>
+          <CardDescription>
+            Click status dropdown to approve or decline facilities
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Facility</TableHead>
+                <TableHead>Location</TableHead>
+                <TableHead>Sports</TableHead>
+                <TableHead>Rating</TableHead>
+                <TableHead>Revenue</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredFacilities.map((facility) => (
+                <TableRow key={facility.id}>
+                  <TableCell>
+                    <div>
+                      <div className="font-medium">{facility.name}</div>
+                      {facility.description && (
+                        <div className="text-sm text-muted-foreground line-clamp-1">
+                          {facility.description}
                         </div>
-                      </div>
+                      )}
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Badge className={getStatusColor(facility.status)}>
-                        {facility.status}
-                      </Badge>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                          <DropdownMenuItem>
-                            <Eye className="h-4 w-4 mr-2" />
-                            View Details
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Edit className="h-4 w-4 mr-2" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="text-red-600">
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-        {/* Facilities Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredFacilities.map((facility) => (
-            <Card key={facility.id} className="hover:shadow-md transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="text-lg">{facility.name}</CardTitle>
-                    <div className="flex items-center gap-1 mt-1">
-                      <MapPin className="h-3 w-3 text-muted-foreground" />
-                      <span className="text-sm text-muted-foreground">
-                        {facility.city}, {facility.state}
-                      </span>
-                    </div>
-                  </div>
-                  <Badge className={getStatusColor(facility.status)}>
-                    {facility.status}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1">
-                      <Star className="h-4 w-4 text-yellow-500" />
-                      <span>{facility.rating}</span>
-                      <span className="text-sm text-muted-foreground">
-                        ({facility.totalReviews} reviews)
-                      </span>
-                    </div>
-                  </div>
+                  </TableCell>
                   
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-2">Sports Available:</p>
+                  <TableCell>
+                    <div className="flex items-center gap-1">
+                      <MapPin className="h-3 w-3 text-muted-foreground" />
+                      <span className="text-sm">{facility.city}, {facility.state}</span>
+                    </div>
+                  </TableCell>
+                  
+                  <TableCell>
                     <div className="flex flex-wrap gap-1">
-                      {facility.courts?.map((court, index) => (
+                      {facility.courts?.slice(0, 2).map((court, index) => (
                         <Badge key={index} variant="outline" className="text-xs">
                           {court.sportType}
                         </Badge>
-                      ))}
+                      )) || []}
+                      {(facility.courts?.length || 0) > 2 && (
+                        <Badge variant="outline" className="text-xs">
+                          +{(facility.courts?.length || 0) - 2}
+                        </Badge>
+                      )}
                     </div>
-                  </div>
-
-                  <div className="flex justify-end gap-2">
-                    <Button variant="outline" size="sm">
-                      <Eye className="h-3 w-3 mr-1" />
-                      View
-                    </Button>
-                    <Button variant="outline" size="sm">
-                      <Edit className="h-3 w-3 mr-1" />
-                      Edit
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {filteredFacilities.length === 0 && (
-          <Card>
-            <CardContent className="py-12 text-center">
-              <p className="text-muted-foreground">No facilities match your current filters.</p>
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  setSearchTerm("");
-                  setSelectedCity("all");
-                  setSelectedSport("all");
-                  setSelectedStatus("all");
-                }}
-                className="mt-4"
-              >
-                Clear Filters
+                  </TableCell>
+                  
+                  <TableCell>
+                    <div className="flex items-center gap-1">
+                      <Star className="h-3 w-3 text-yellow-500" />
+                      <span className="text-sm">{facility.rating}</span>
+                      <span className="text-xs text-muted-foreground">({facility.totalReviews})</span>
+                    </div>
+                  </TableCell>
+                  
+                  <TableCell>
+                    <div className="font-medium">
+                      {facility.totalRevenue ? `₹${facility.totalRevenue.toLocaleString()}` : '₹0'}
+                    </div>
+                  </TableCell>
+                  
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-8">
+                          {getStatusBadge(facility.status)}
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuItem 
+                          onClick={() => handleStatusChange(facility.id, 'approved')}
+                          disabled={facility.status === 'approved'}
+                        >
+                          <CheckCircle className="h-4 w-4 mr-2 text-green-600" />
+                          Approve
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => handleStatusChange(facility.id, 'pending')}
+                          disabled={facility.status === 'pending'}
+                        >
+                          <Clock className="h-4 w-4 mr-2 text-yellow-600" />
+                          Mark Pending
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => handleStatusChange(facility.id, 'declined')}
+                          disabled={facility.status === 'declined'}
+                        >
+                          <XCircle className="h-4 w-4 mr-2 text-red-600" />
+                          Decline
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                  
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuItem>
+                          <Eye className="h-4 w-4 mr-2" />
+                          View Details
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-red-600">
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          
+          {filteredFacilities.length === 0 && (
+            <div className="py-12 text-center">
+              <MapPin className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No facilities found</h3>
+              <p className="text-muted-foreground mb-4">
+                Try adjusting your filters or add a new facility.
+              </p>
+              <Button onClick={onNavigateToAddFacility}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add First Facility
               </Button>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

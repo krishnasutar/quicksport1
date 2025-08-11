@@ -187,9 +187,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Facilities routes
-  app.get("/api/facilities", async (req: Request, res: Response) => {
+  app.get("/api/facilities", async (req: any, res: Response) => {
     try {
       const { sport, city, minPrice, maxPrice, rating, page = 1, limit = 9 } = req.query;
+      
+      // Check if request has CRM token
+      const token = req.headers.authorization?.split(' ')[1];
+      let isCrmUser = false;
+      
+      if (token) {
+        try {
+          const decoded = jwt.verify(token, JWT_SECRET) as any;
+          const user = await storage.getCrmUser(decoded.id);
+          isCrmUser = user && (user.role === 'admin' || user.role === 'owner');
+        } catch (err) {
+          // Token invalid, continue as public request
+        }
+      }
       
       const filters = {
         sport: sport as string,
@@ -198,7 +212,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         maxPrice: maxPrice ? parseFloat(maxPrice as string) : undefined,
         rating: rating ? parseFloat(rating as string) : undefined,
         page: parseInt(page as string),
-        limit: parseInt(limit as string)
+        limit: parseInt(limit as string),
+        includePending: isCrmUser // Include all facilities for CRM users
       };
 
       const { facilities, total } = await storage.getFacilities(filters);
@@ -279,6 +294,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Validation error", errors: error.errors });
       }
       console.error("Create facility error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Update facility status
+  app.patch("/api/facilities/:id/status", authenticateToken, async (req: any, res: Response) => {
+    try {
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({ message: "Only admins can update facility status" });
+      }
+
+      const { id } = req.params;
+      const { status } = req.body;
+
+      // Validate status
+      if (!['pending', 'approved', 'declined'].includes(status)) {
+        return res.status(400).json({ message: "Invalid status. Must be pending, approved, or declined" });
+      }
+
+      const facility = await storage.updateFacilityStatus(id, status);
+      
+      if (!facility) {
+        return res.status(404).json({ message: "Facility not found" });
+      }
+
+      res.json({ 
+        ...facility,
+        message: `Facility status updated to ${status}` 
+      });
+    } catch (error) {
+      console.error("Update facility status error:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
