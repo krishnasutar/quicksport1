@@ -292,6 +292,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async checkCourtAvailability(courtId: string, date: Date, startTime: string, endTime: string): Promise<boolean> {
+    console.log('Checking court availability:', { courtId, date: date.toISOString(), startTime, endTime });
+    
     const existingBookings = await db
       .select()
       .from(bookings)
@@ -319,6 +321,17 @@ export class DatabaseStorage implements IStorage {
           )
         )
       );
+    
+    console.log('Existing conflicting bookings:', existingBookings.length);
+    if (existingBookings.length > 0) {
+      console.log('Conflicts:', existingBookings.map(b => ({ 
+        id: b.id, 
+        date: b.bookingDate, 
+        start: b.startTime, 
+        end: b.endTime, 
+        status: b.status 
+      })));
+    }
     
     return existingBookings.length === 0;
   }
