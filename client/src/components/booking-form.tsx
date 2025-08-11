@@ -25,6 +25,7 @@ interface BookingFormProps {
 export default function BookingForm({ court, onSubmit, isLoading }: BookingFormProps) {
   const { user } = useAuth();
   const [bookingDate, setBookingDate] = useState<Date>();
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [startTime, setStartTime] = useState("");
   const [duration, setDuration] = useState(1);
   const [notes, setNotes] = useState("");
@@ -118,7 +119,7 @@ export default function BookingForm({ court, onSubmit, isLoading }: BookingFormP
       {/* Date Selection */}
       <div className="space-y-2">
         <Label>Select Date</Label>
-        <Popover>
+        <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
           <PopoverTrigger asChild>
             <Button
               variant="outline"
@@ -135,7 +136,10 @@ export default function BookingForm({ court, onSubmit, isLoading }: BookingFormP
             <Calendar
               mode="single"
               selected={bookingDate}
-              onSelect={setBookingDate}
+              onSelect={(date) => {
+                setBookingDate(date);
+                setIsCalendarOpen(false); // Close calendar after selection
+              }}
               disabled={(date) => isBefore(date, startOfDay(new Date()))}
               fromDate={new Date()}
               toDate={addDays(new Date(), 30)}
