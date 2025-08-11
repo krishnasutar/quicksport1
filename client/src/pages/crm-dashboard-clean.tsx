@@ -136,7 +136,7 @@ export default function CRMDashboard() {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}>
+      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-200 ease-in-out lg:translate-x-0`}>
         {/* Logo */}
         <div className="flex items-center justify-between h-16 px-6 border-b">
           <div className="flex items-center">
@@ -157,7 +157,7 @@ export default function CRMDashboard() {
         </div>
 
         {/* Navigation */}
-        <nav className="mt-8 px-4">
+        <nav className="mt-8 px-4 h-full overflow-y-auto pb-24">
           <div className="space-y-2">
             {menuItems.map((item) => (
               <div key={item.id}>
@@ -222,7 +222,7 @@ export default function CRMDashboard() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 lg:ml-0">
+      <div className="flex-1 lg:ml-64">
         {/* Mobile header */}
         <header className="lg:hidden bg-white shadow-sm border-b">
           <div className="px-4 sm:px-6">
