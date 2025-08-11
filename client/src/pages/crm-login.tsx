@@ -42,7 +42,7 @@ export default function CRMLogin() {
       localStorage.setItem('crm_user', JSON.stringify(data.user));
       toast({
         title: "Login successful",
-        description: `Welcome back, ${data.user.firstName}!`,
+        description: `Welcome back, ${data.user.first_name}!`,
       });
       setLocation('/crm/dashboard');
     },

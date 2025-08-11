@@ -55,12 +55,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Insufficient permissions" });
       }
 
-      console.log("Testing password...");
-      console.log("User object keys:", Object.keys(user));
-      console.log("Password hash exists:", !!user.password_hash);
-      console.log("Password hash length:", user.password_hash ? user.password_hash.length : 'undefined');
       const isValidPassword = await bcrypt.compare(password, user.password_hash as string);
-      console.log("Password valid:", isValidPassword);
       
       if (!isValidPassword) {
         return res.status(401).json({ message: "Invalid credentials" });
@@ -74,7 +69,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const { password: _, ...userWithoutPassword } = user;
       
-      console.log("CRM Login successful for:", userWithoutPassword.email);
+      console.log(`CRM Login successful: ${userWithoutPassword.first_name} ${userWithoutPassword.last_name} (${userWithoutPassword.role})`);
       res.json({ 
         user: userWithoutPassword, 
         token,
