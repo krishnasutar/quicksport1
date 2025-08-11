@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "wouter";
 import Navbar from "@/components/layout/navbar";
 import Footer from "@/components/layout/footer";
 import HeroSection from "@/components/hero-section";
@@ -272,35 +273,17 @@ export default function Home() {
           <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">Ready to Play?</h2>
           <p className="text-xl text-gray-100 mb-8">Join thousands of athletes who have already discovered the easiest way to book sports courts.</p>
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-            <Button className="bg-white text-brand-indigo px-8 py-4 rounded-xl font-semibold text-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center">
-              <i className="fab fa-google-play mr-3 text-xl"></i>
-              Download for Android
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Button asChild className="bg-white text-brand-indigo px-8 py-4 rounded-xl font-semibold text-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
+              <Link href="/register">
+                Get Started Today
+              </Link>
             </Button>
-            <Button className="bg-white text-brand-indigo px-8 py-4 rounded-xl font-semibold text-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center">
-              <i className="fab fa-apple mr-3 text-xl"></i>
-              Download for iOS
+            <Button asChild variant="outline" className="border-white text-white hover:bg-white hover:text-brand-indigo px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-200">
+              <Link href="/login">
+                Sign In
+              </Link>
             </Button>
-          </div>
-          
-          <div className="flex justify-center">
-            <div className="grid grid-cols-3 gap-4 max-w-lg">
-              <img 
-                src="https://images.unsplash.com/photo-1574068468668-a05a11f871da?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=400" 
-                alt="QuickCourt mobile app interface preview" 
-                className="rounded-2xl shadow-2xl transform rotate-12 hover:rotate-0 transition-transform duration-500" 
-              />
-              <img 
-                src="https://images.unsplash.com/photo-1563770660941-20978e870e26?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=400" 
-                alt="Sports booking app interface on mobile device" 
-                className="rounded-2xl shadow-2xl transform -rotate-6 hover:rotate-0 transition-transform duration-500" 
-              />
-              <img 
-                src="https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=400" 
-                alt="Mobile application interface with modern design" 
-                className="rounded-2xl shadow-2xl transform rotate-6 hover:rotate-0 transition-transform duration-500" 
-              />
-            </div>
           </div>
         </div>
       </section>

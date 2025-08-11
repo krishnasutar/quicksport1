@@ -87,7 +87,7 @@ export default function VenueCard({ facility }: VenueCardProps) {
             <span className="text-gray-500">/hour</span>
           </div>
           <Button asChild className="gradient-bg hover:shadow-lg transform hover:scale-105 transition-all duration-200">
-            <Link href={`/venue/${facility.id}`}>
+            <Link href={`/venue/${encodeURIComponent(facility.id)}`}>
               Book Now
             </Link>
           </Button>

@@ -11,8 +11,8 @@ import Register from "@/pages/register";
 import VenueDetails from "@/pages/venue-details";
 import Booking from "@/pages/booking";
 import UserDashboard from "@/pages/user-dashboard";
-import OwnerDashboard from "@/pages/owner-dashboard";
-import AdminDashboard from "@/pages/admin-dashboard";
+import CRMLogin from "@/pages/crm-login";
+import CRMDashboard from "@/pages/crm-dashboard";
 
 function Router() {
   return (
@@ -23,8 +23,8 @@ function Router() {
       <Route path="/venue/:id" component={VenueDetails} />
       <Route path="/booking/:courtId" component={Booking} />
       <Route path="/dashboard" component={UserDashboard} />
-      <Route path="/owner-dashboard" component={OwnerDashboard} />
-      <Route path="/admin-dashboard" component={AdminDashboard} />
+      <Route path="/crm" component={CRMLogin} />
+      <Route path="/crm/dashboard" component={CRMDashboard} />
       <Route component={NotFound} />
     </Switch>
   );

@@ -28,7 +28,45 @@ const authenticateToken = (req: any, res: Response, next: any) => {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
-  // Auth routes
+  // CRM Auth routes
+  app.post("/api/crm/login", async (req: Request, res: Response) => {
+    try {
+      const { email, password } = req.body;
+
+      if (!email || !password) {
+        return res.status(400).json({ message: "Email and password are required" });
+      }
+
+      const user = await storage.getUserByEmail(email);
+      if (!user || !user.isActive || (user.role !== 'admin' && user.role !== 'owner')) {
+        return res.status(401).json({ message: "Invalid credentials or insufficient permissions" });
+      }
+
+      const isValidPassword = await bcrypt.compare(password, user.password);
+      if (!isValidPassword) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+
+      const token = jwt.sign(
+        { id: user.id, username: user.username, role: user.role },
+        JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+
+      const { password: _, ...userWithoutPassword } = user;
+      
+      res.json({ 
+        user: userWithoutPassword, 
+        token,
+        message: "CRM login successful" 
+      });
+    } catch (error) {
+      console.error("CRM Login error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Regular user auth routes
   app.post("/api/auth/register", async (req: Request, res: Response) => {
     try {
       const userData = insertUserSchema.parse(req.body);
@@ -166,13 +204,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/facilities/:id", async (req: Request, res: Response) => {
     try {
-      const facility = await storage.getFacilityById(req.params.id);
+      const { id } = req.params;
+      console.log("Getting facility with ID:", id, "Type:", typeof id);
+      
+      // Validate UUID format
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(id)) {
+        return res.status(400).json({ message: "Invalid facility ID format" });
+      }
+
+      const facility = await storage.getFacilityById(id);
       if (!facility) {
         return res.status(404).json({ message: "Facility not found" });
       }
 
-      const courts = await storage.getCourtsByFacilityId(req.params.id);
-      const reviews = await storage.getReviewsByFacilityId(req.params.id);
+      const courts = await storage.getCourtsByFacilityId(id);
+      const reviews = await storage.getReviewsByFacilityId(id);
 
       res.json({
         ...facility,
@@ -329,6 +376,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Validation error", errors: error.errors });
       }
       console.error("Create review error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // CRM/Admin owner routes for admin panel
+  app.get("/api/admin/facilities", authenticateToken, async (req: any, res: Response) => {
+    try {
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const facilities = await storage.getAllFacilitiesAdmin();
+      res.json(facilities);
+    } catch (error) {
+      console.error("Get admin facilities error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/admin/bookings", authenticateToken, async (req: any, res: Response) => {
+    try {
+      if (req.user.role !== 'admin') {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const { page = 1, limit = 10 } = req.query;
+      const filters = {
+        page: parseInt(page as string),
+        limit: parseInt(limit as string)
+      };
+
+      const { bookings, total } = await storage.getAllBookingsAdmin(filters);
+      
+      res.json({
+        bookings,
+        pagination: {
+          page: filters.page,
+          limit: filters.limit,
+          total,
+          totalPages: Math.ceil(total / filters.limit)
+        }
+      });
+    } catch (error) {
+      console.error("Get admin bookings error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/owner/facilities", authenticateToken, async (req: any, res: Response) => {
+    try {
+      if (req.user.role !== 'owner') {
+        return res.status(403).json({ message: "Owner access required" });
+      }
+
+      const facilities = await storage.getFacilitiesByOwnerId(req.user.id);
+      res.json(facilities);
+    } catch (error) {
+      console.error("Get owner facilities error:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });

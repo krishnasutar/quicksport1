@@ -56,6 +56,11 @@ export interface IStorage {
   
   // Other methods
   getSportsWithCounts(): Promise<any[]>;
+  
+  // Admin-specific methods
+  getAllFacilitiesAdmin(): Promise<Facility[]>;
+  getAllBookingsAdmin(filters: any): Promise<{ bookings: any[]; total: number }>;
+  getFacilitiesByOwnerId(ownerId: string): Promise<Facility[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -483,6 +488,44 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(count(courts.id)));
 
     return result;
+  }
+
+  async getAllFacilitiesAdmin(): Promise<Facility[]> {
+    return await db.select().from(facilities).orderBy(desc(facilities.createdAt));
+  }
+
+  async getAllBookingsAdmin(filters: any): Promise<{ bookings: any[]; total: number }> {
+    const { page = 1, limit = 10 } = filters;
+    
+    const result = await db
+      .select({
+        id: bookings.id,
+        userId: bookings.userId,
+        courtId: bookings.courtId,
+        bookingDate: bookings.bookingDate,
+        startTime: bookings.startTime,
+        endTime: bookings.endTime,
+        totalAmount: bookings.totalAmount,
+        status: bookings.status,
+        createdAt: bookings.createdAt
+      })
+      .from(bookings)
+      .orderBy(desc(bookings.createdAt))
+      .limit(limit)
+      .offset((page - 1) * limit);
+
+    const [totalResult] = await db
+      .select({ count: count() })
+      .from(bookings);
+
+    return {
+      bookings: result,
+      total: totalResult.count
+    };
+  }
+
+  async getFacilitiesByOwnerId(ownerId: string): Promise<Facility[]> {
+    return await db.select().from(facilities).where(eq(facilities.ownerId, ownerId)).orderBy(desc(facilities.createdAt));
   }
 }
 
