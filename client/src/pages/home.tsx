@@ -33,7 +33,7 @@ export default function Home() {
   }, [location]);
 
   const { data: facilitiesData, isLoading } = useQuery({
-    queryKey: ['/api/facilities', { sport: selectedSport, city: selectedCity, page: 1, limit: 6 }],
+    queryKey: ['/api/facilities', { page: 1, limit: 6 }],
     enabled: true,
   });
 
@@ -330,10 +330,67 @@ export default function Home() {
                 </div>
               ))
             ) : (
-              // Fallback if no trending facilities
-              <div className="col-span-3 text-center py-12">
-                <p className="text-gray-500">No trending facilities available at the moment.</p>
-              </div>
+              // Fallback - show regular facilities instead
+              facilitiesData?.facilities?.slice(0, 3).map((facility: any) => (
+                <div key={facility.id} className="card-hover bg-white rounded-2xl shadow-sm overflow-hidden border">
+                  <div className="h-48 bg-gradient-to-br from-blue-400 to-blue-600 relative">
+                    <img
+                      src={facility.images && facility.images[0] 
+                        ? facility.images[0] 
+                        : "https://images.unsplash.com/photo-1546519638-68e109498ffc?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600"
+                      }
+                      alt={facility.name}
+                      className="w-full h-full object-cover mix-blend-overlay"
+                    />
+                    <div className="absolute top-4 left-4">
+                      <Badge className="bg-purple-500 text-white font-semibold">💎 PREMIUM</Badge>
+                    </div>
+                    <div className="absolute top-4 right-4 bg-black bg-opacity-60 rounded-lg px-2 py-1">
+                      <div className="flex items-center text-white text-sm">
+                        <Star className="h-4 w-4 text-yellow-400 fill-current mr-1" />
+                        {parseFloat(facility.rating || '0').toFixed(1)} ({facility.totalReviews || 0} reviews)
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">{facility.name}</h3>
+                    <p className="text-gray-600 mb-3 flex items-center">
+                      <MapPin className="h-4 w-4 text-gray-400 mr-1" />
+                      {facility.address}, {facility.city}
+                    </p>
+                    <div className="flex flex-wrap gap-1 mb-4">
+                      {facility.amenities && facility.amenities.slice(0, 4).map((amenity: string, index: number) => (
+                        <Badge key={index} variant="outline" className="text-xs capitalize">
+                          {amenity.replace('_', ' ')}
+                        </Badge>
+                      ))}
+                    </div>
+                    <div className="flex justify-between items-center mb-3">
+                      <div>
+                        <span className="text-2xl font-bold text-brand-indigo">
+                          ₹{facility.minPrice || 500}
+                        </span>
+                        <span className="text-gray-500">/hr</span>
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        <span className="text-green-600 font-medium">Available now</span>
+                      </div>
+                    </div>
+                    <Button 
+                      asChild 
+                      className="w-full gradient-bg hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+                    >
+                      <Link href={`/facilities/${facility.id}`}>
+                        Book Now
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+              )) || (
+                <div className="col-span-3 text-center py-12">
+                  <p className="text-gray-500">No facilities available at the moment.</p>
+                </div>
+              )
             )}
           </div>
         </div>
@@ -390,8 +447,8 @@ export default function Home() {
                   </div>
                 </div>
               ))
-            ) : facilitiesData && facilitiesData.length > 0 ? (
-              facilitiesData.map((facility: any) => (
+            ) : facilitiesData && facilitiesData.facilities && facilitiesData.facilities.length > 0 ? (
+              facilitiesData.facilities.slice(0, 6).map((facility: any) => (
                 <VenueCard key={facility.id} facility={facility} />
               ))
             ) : (
