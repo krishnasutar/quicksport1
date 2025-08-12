@@ -55,6 +55,11 @@ export class WhatsAppService {
     const authToken = process.env.TWILIO_AUTH_TOKEN;
     this.fromNumber = process.env.TWILIO_WHATSAPP_FROM || '';
 
+    console.log('Twilio credentials check:');
+    console.log('- Account SID:', accountSid ? `${accountSid.substring(0, 8)}...` : 'MISSING');
+    console.log('- Auth Token:', authToken ? 'PROVIDED' : 'MISSING');
+    console.log('- WhatsApp From:', this.fromNumber || 'MISSING');
+
     if (accountSid && authToken && this.fromNumber) {
       this.client = twilio(accountSid, authToken);
       console.log('WhatsApp service initialized successfully');
@@ -128,11 +133,19 @@ export class WhatsAppService {
       
       // Check if it's a sandbox issue
       if (error instanceof Error && error.message.includes('63007')) {
-        console.error('Twilio Error 63007: This typically means:');
-        console.error('1. WhatsApp number not properly configured in Twilio');
-        console.error('2. Using Twilio Sandbox? Make sure to join sandbox first');
-        console.error('3. Check if TWILIO_WHATSAPP_FROM format is correct');
-        console.error(`Current FROM number: ${this.fromNumber}`);
+        console.error('❌ Twilio Error 63007: WhatsApp Channel Not Found');
+        console.error('This error means your Twilio number is not set up for WhatsApp.');
+        console.error('');
+        console.error('🔧 To fix this, you need to:');
+        console.error('1. Go to Twilio Console → Messaging → Try it out → Send a WhatsApp message');
+        console.error('2. Use the Twilio Sandbox number: +1 415 523 8886');
+        console.error('3. Send "join <sandbox-word>" to that number from your WhatsApp');
+        console.error('4. Update TWILIO_WHATSAPP_FROM to: +14155238886');
+        console.error('');
+        console.error(`❌ Current FROM number: ${this.fromNumber}`);
+        console.error('✅ Should be: +14155238886 (Twilio Sandbox)');
+        console.error('');
+        console.error('Alternatively, set up a dedicated WhatsApp Business account in Twilio.');
       }
       
       return false;
