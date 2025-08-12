@@ -12,7 +12,7 @@ import VenueDetails from "@/pages/venue-details";
 import Booking from "@/pages/booking";
 import UserDashboard from "@/pages/user-dashboard";
 import CRMLogin from "@/pages/crm-login";
-import CRMDashboard from "@/pages/crm-dashboard-clean";
+import CRMDashboard from "@/pages/crm-dashboard";
 import AboutPage from "@/pages/about";
 import ContactPage from "@/pages/contact";
 import SportsPage from "@/pages/sports";

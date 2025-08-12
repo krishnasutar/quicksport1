@@ -4,35 +4,61 @@ import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { 
   Building, 
+  Building2, 
   Users, 
   Calendar, 
   DollarSign, 
-  Package, 
   BarChart3,
   Settings,
   LogOut,
-  Plus,
-  Eye,
-  Edit,
-  Trash2,
   Home,
   ChevronDown,
-  ChevronRight,
   Menu,
-  X
+  X,
+  TrendingUp,
+  Activity,
+  MapPin,
+  Star,
+  Clock,
+  Target
 } from "lucide-react";
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  AreaChart,
+  Area
+} from "recharts";
+
 import { UsersManagement } from "@/components/crm/UsersManagement";
-import { FacilitiesManagement } from "@/components/crm/FacilitiesManagement";
+import { FacilityManagement } from "@/components/crm/FacilityManagement";
+import { BookingsManagement } from "@/components/crm/BookingsManagement";
 import { CompanyManagement } from "@/components/crm/CompanyManagement";
+import { AddFacilityForm } from "@/components/crm/AddFacilityForm";
 import { OtherManagement } from "@/components/crm/OtherManagement";
 
 interface CRMUser {
   id: string;
-  firstName: string;
-  lastName: string;
+  first_name: string;
+  last_name: string;
   email: string;
   role: 'admin' | 'owner';
 }
@@ -42,9 +68,37 @@ export default function CRMDashboard() {
   const [user, setUser] = useState<CRMUser | null>(null);
   const [activeSection, setActiveSection] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [expandedMenus, setExpandedMenus] = useState<string[]>([]);
 
   useEffect(() => {
+    // Check URL params for section
+    const urlParams = new URLSearchParams(window.location.search);
+    const sectionParam = urlParams.get('section');
+    if (sectionParam) {
+      setActiveSection(sectionParam);
+    }
+
+    // Listen for URL changes to update section
+    const handlePopState = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const sectionParam = urlParams.get('section');
+      if (sectionParam) {
+        setActiveSection(sectionParam);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    // Also listen for custom events for immediate URL updates
+    const handleURLChange = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const sectionParam = urlParams.get('section');
+      if (sectionParam && sectionParam !== activeSection) {
+        setActiveSection(sectionParam);
+      }
+    };
+
+    window.addEventListener('urlchange', handleURLChange);
+    
     const crmToken = localStorage.getItem('crm_token');
     const crmUser = localStorage.getItem('crm_user');
     
@@ -54,7 +108,13 @@ export default function CRMDashboard() {
     }
     
     setUser(JSON.parse(crmUser));
-  }, [setLocation]);
+
+    // Cleanup listeners
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('urlchange', handleURLChange);
+    };
+  }, [setLocation, activeSection]);
 
   const getAuthHeaders = () => {
     const token = localStorage.getItem('crm_token');
@@ -79,33 +139,46 @@ export default function CRMDashboard() {
     refetchOnWindowFocus: false,
   });
 
-  const { data: facilities } = useQuery({
-    queryKey: [user?.role === 'admin' ? '/api/admin/facilities' : '/api/owner/facilities'],
+  // Analytics queries for admin users
+  const { data: revenueAnalytics } = useQuery({
+    queryKey: ['/api/admin/analytics/revenue'],
     queryFn: async () => {
-      const endpoint = user?.role === 'admin' ? '/api/admin/facilities' : '/api/owner/facilities';
-      const response = await fetch(endpoint, {
+      const response = await fetch('/api/admin/analytics/revenue', {
         headers: getAuthHeaders(),
       });
-      if (!response.ok) throw new Error('Failed to fetch facilities');
+      if (!response.ok) throw new Error('Failed to fetch revenue analytics');
       return response.json();
     },
-    enabled: !!user,
-    staleTime: 10 * 60 * 1000, // Consider data fresh for 10 minutes
+    enabled: !!user && user.role === 'admin',
+    staleTime: 10 * 60 * 1000, // Keep data fresh for 10 minutes
     refetchOnWindowFocus: false,
   });
 
-  const { data: bookings } = useQuery({
-    queryKey: [user?.role === 'admin' ? '/api/admin/bookings' : '/api/owner/bookings'],
+  const { data: facilityAnalytics } = useQuery({
+    queryKey: ['/api/admin/analytics/facilities'],
     queryFn: async () => {
-      const endpoint = user?.role === 'admin' ? '/api/admin/bookings' : '/api/owner/bookings';
-      const response = await fetch(endpoint, {
+      const response = await fetch('/api/admin/analytics/facilities', {
         headers: getAuthHeaders(),
       });
-      if (!response.ok) throw new Error('Failed to fetch bookings');
+      if (!response.ok) throw new Error('Failed to fetch facility analytics');
       return response.json();
     },
-    enabled: !!user,
-    staleTime: 3 * 60 * 1000, // Consider data fresh for 3 minutes
+    enabled: !!user && user.role === 'admin',
+    staleTime: 10 * 60 * 1000, // Keep data fresh for 10 minutes
+    refetchOnWindowFocus: false,
+  });
+
+  const { data: bookingAnalytics } = useQuery({
+    queryKey: ['/api/admin/analytics/bookings'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/analytics/bookings', {
+        headers: getAuthHeaders(),
+      });
+      if (!response.ok) throw new Error('Failed to fetch booking analytics');
+      return response.json();
+    },
+    enabled: !!user && user.role === 'admin',
+    staleTime: 10 * 60 * 1000, // Keep data fresh for 10 minutes
     refetchOnWindowFocus: false,
   });
 
@@ -113,14 +186,6 @@ export default function CRMDashboard() {
     localStorage.removeItem('crm_token');
     localStorage.removeItem('crm_user');
     setLocation('/crm');
-  };
-
-  const toggleExpandedMenu = (menuId: string) => {
-    setExpandedMenus(prev => 
-      prev.includes(menuId) 
-        ? prev.filter(id => id !== menuId)
-        : [...prev, menuId]
-    );
   };
 
   if (!user) {
@@ -134,15 +199,16 @@ export default function CRMDashboard() {
       id: 'dashboard',
       label: 'Dashboard',
       icon: Home,
-      action: () => setActiveSection('dashboard')
+      action: () => setActiveSection('dashboard'),
+      roles: ['admin', 'owner'] // Available to both admin and owner
     },
-    // Companies - Admin Only
-    ...(isAdmin ? [{
+    {
       id: 'companies',
       label: 'Companies',
       icon: Building,
-      action: () => setActiveSection('companies')
-    }] : []),
+      action: () => setActiveSection('companies'),
+      roles: ['admin'] // Admin only
+    },
     {
       id: 'users',
       label: 'Users',
@@ -151,47 +217,48 @@ export default function CRMDashboard() {
         { label: 'All Users', action: () => setActiveSection('all-users') },
         { label: 'Owners', action: () => setActiveSection('owners') },
         { label: 'Regular Users', action: () => setActiveSection('regular-users') }
-      ]
+      ],
+      roles: ['admin'] // Admin only
     },
     {
       id: 'facilities',
       label: 'Facilities',
-      icon: Building,
-      action: () => setActiveSection('facilities')
+      icon: Building2,
+      action: () => setActiveSection('all-facilities'),
+      roles: ['admin', 'owner'] // Available to both admin and owner
     },
     {
       id: 'bookings',
       label: 'Bookings',
       icon: Calendar,
-      action: () => setActiveSection('bookings')
+      action: () => setActiveSection('bookings'),
+      roles: ['admin', 'owner'] // Available to both admin and owner
     },
     {
       id: 'analytics',
       label: 'Analytics',
       icon: BarChart3,
-      action: () => setActiveSection('analytics')
-    },
-    {
-      id: 'inventory',
-      label: 'Inventory',
-      icon: Package,
-      dropdown: [
-        { label: 'Equipment', action: () => setActiveSection('equipment') },
-        { label: 'Maintenance', action: () => setActiveSection('maintenance') }
-      ]
+      action: () => setActiveSection('analytics'),
+      roles: ['admin'] // Admin only
     },
     {
       id: 'settings',
       label: 'Settings',
       icon: Settings,
-      action: () => setActiveSection('settings')
+      action: () => setActiveSection('settings'),
+      roles: ['admin'] // Admin only
     }
   ];
+
+  // Filter menu items based on user role
+  const filteredMenuItems = menuItems.filter(item => 
+    item.roles.includes(user.role)
+  );
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}>
+      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-200 ease-in-out lg:translate-x-0`}>
         {/* Logo */}
         <div className="flex items-center justify-between h-16 px-6 border-b">
           <div className="flex items-center">
@@ -212,53 +279,30 @@ export default function CRMDashboard() {
         </div>
 
         {/* Navigation */}
-        <nav className="mt-8 px-4 flex-1 overflow-y-auto">
-          <div className="space-y-1">
-            {menuItems.map((item) => (
+        <nav className="mt-8 px-4 h-full overflow-y-auto pb-24">
+          <div className="space-y-2">
+            {filteredMenuItems.map((item) => (
               <div key={item.id}>
                 {item.dropdown ? (
-                  <div>
-                    <Button 
-                      variant="ghost" 
-                      className={`w-full justify-between text-gray-700 hover:bg-purple-50 hover:text-purple-600 ${
-                        expandedMenus.includes(item.id) ? 'bg-purple-50 text-purple-600' : ''
-                      }`}
-                      onClick={() => toggleExpandedMenu(item.id)}
-                      data-testid={`button-${item.id}`}
-                    >
-                      <div className="flex items-center">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start text-gray-700 hover:bg-purple-50 hover:text-purple-600"
+                      >
                         <item.icon className="mr-3 h-5 w-5" />
                         {item.label}
-                      </div>
-                      {expandedMenus.includes(item.id) ? (
-                        <ChevronDown className="h-4 w-4 transition-all duration-200" />
-                      ) : (
-                        <ChevronRight className="h-4 w-4 transition-all duration-200" />
-                      )}
-                    </Button>
-                    
-                    {/* Smooth accordion dropdown */}
-                    <div className={`overflow-hidden transition-all duration-300 ease-out ${
-                      expandedMenus.includes(item.id) 
-                        ? 'max-h-40 opacity-100' 
-                        : 'max-h-0 opacity-0'
-                    }`}>
-                      <div className="ml-8 mt-1 space-y-1 pb-2">
-                        {item.dropdown.map((subItem, index) => (
-                          <Button 
-                            key={index}
-                            variant="ghost" 
-                            size="sm"
-                            className="w-full justify-start text-sm text-gray-600 hover:bg-purple-50 hover:text-purple-600 pl-2 py-1.5"
-                            onClick={subItem.action}
-                            data-testid={`button-${item.id}-${subItem.label.toLowerCase().replace(/\s+/g, '-')}`}
-                          >
-                            {subItem.label}
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
+                        <ChevronDown className="ml-auto h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-56" align="start">
+                      {item.dropdown.map((subItem, index) => (
+                        <DropdownMenuItem key={index} onClick={subItem.action}>
+                          {subItem.label}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 ) : (
                   <Button 
                     variant="ghost" 
@@ -266,7 +310,6 @@ export default function CRMDashboard() {
                       activeSection === item.id ? 'bg-purple-50 text-purple-600' : ''
                     }`}
                     onClick={item.action}
-                    data-testid={`button-${item.id}`}
                   >
                     <item.icon className="mr-3 h-5 w-5" />
                     {item.label}
@@ -281,12 +324,12 @@ export default function CRMDashboard() {
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
                 <span className="text-white text-sm font-medium">
-                  {user.firstName[0]}{user.lastName[0]}
+                  {user.first_name[0]}{user.last_name[0]}
                 </span>
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-700 truncate">
-                  {user.firstName} {user.lastName}
+                  {user.first_name} {user.last_name}
                 </p>
                 <Badge variant={isAdmin ? "default" : "secondary"} className="text-xs">
                   {isAdmin ? 'Admin' : 'Owner'}
@@ -301,7 +344,7 @@ export default function CRMDashboard() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 lg:ml-0">
+      <div className="flex-1 lg:ml-64">
         {/* Mobile header */}
         <header className="lg:hidden bg-white shadow-sm border-b">
           <div className="px-4 sm:px-6">
@@ -323,341 +366,243 @@ export default function CRMDashboard() {
         </header>
 
         {/* Content Area */}
-        <div className="p-6">
+        <div className="p-6 max-h-screen overflow-y-auto">
           {activeSection === 'dashboard' && (
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Dashboard</h2>
-        {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                ₹{dashboardStats?.totalRevenue?.toLocaleString() || 0}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                {isAdmin ? 'Total Facilities' : 'My Facilities'}
-              </CardTitle>
-              <Building className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {dashboardStats?.totalFacilities || 0}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Bookings</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {dashboardStats?.totalBookings || 0}
-              </div>
-            </CardContent>
-          </Card>
-
-          {isAdmin && (
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {dashboardStats?.totalUsers || 0}
+            <div className="space-y-6">
+              {/* Header */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    {isAdmin ? 'Platform Overview' : 'Your Business Dashboard'}
+                  </h2>
+                  <p className="text-gray-600 mt-1">
+                    {isAdmin ? 'Monitor all facilities and platform performance' : 'Track your facilities and earnings'}
+                  </p>
                 </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-
-        {/* Main Content Tabs */}
-        <Tabs defaultValue="facilities" className="space-y-6">
-          <TabsList className="grid w-full lg:w-[600px] grid-cols-5">
-            <TabsTrigger value="facilities">Facilities</TabsTrigger>
-            <TabsTrigger value="bookings">Bookings</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
-            <TabsTrigger value="inventory">Inventory</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="facilities" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <div className="flex justify-between items-center">
-                  <div>
-                    <CardTitle>Facility Management</CardTitle>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Manage your sports facilities and courts
-                    </p>
-                  </div>
-                  <Button>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Facility
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {facilities?.length ? (
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Facility
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Location
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Status
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Rating
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Actions
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {facilities.map((facility: any) => (
-                          <tr key={facility.id}>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div>
-                                <div className="text-sm font-medium text-gray-900">{facility.name}</div>
-                                <div className="text-sm text-gray-500">{facility.description?.substring(0, 50)}...</div>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-gray-900">{facility.city}, {facility.state}</div>
-                              <div className="text-sm text-gray-500">{facility.address}</div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <Badge 
-                                variant={facility.status === 'approved' ? 'default' : 
-                                        facility.status === 'pending' ? 'secondary' : 'destructive'}
-                              >
-                                {facility.status}
-                              </Badge>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              ⭐ {facility.rating}/5 ({facility.totalReviews} reviews)
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                              <div className="flex space-x-2">
-                                <Button size="sm" variant="outline">
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-                                <Button size="sm" variant="outline">
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                {isAdmin && (
-                                  <Button size="sm" variant="outline">
-                                    <Trash2 className="h-4 w-4 text-red-500" />
-                                  </Button>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    No facilities found. {isAdmin ? 'Add your first facility to get started.' : 'Facilities will appear here once added.'}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="bookings" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Bookings Management</CardTitle>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {isAdmin ? 'Manage all platform bookings' : 'Manage bookings for your facilities'}
-                </p>
-              </CardHeader>
-              <CardContent>
-                {bookings?.bookings?.length ? (
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Booking ID
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Date & Time
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Amount
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Status
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Actions
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {bookings.bookings.map((booking: any) => (
-                          <tr key={booking.id}>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm font-medium text-gray-900">
-                                #{booking.id.slice(0, 8)}
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-gray-900">{booking.bookingDate}</div>
-                              <div className="text-sm text-gray-500">{booking.startTime} - {booking.endTime}</div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              ₹{booking.totalAmount}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <Badge variant={booking.status === 'confirmed' ? 'default' : 
-                                            booking.status === 'pending' ? 'secondary' : 'destructive'}>
-                                {booking.status}
-                              </Badge>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                              <div className="flex space-x-2">
-                                <Button size="sm" variant="outline">
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-                                {isAdmin && (
-                                  <Button size="sm" variant="outline">
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    No bookings found.
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="analytics" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <BarChart3 className="h-5 w-5 mr-2" />
-                  Analytics Dashboard
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-center text-gray-500 py-8">
-                  Analytics charts and insights coming soon...
-                </p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="inventory" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Package className="h-5 w-5 mr-2" />
-                  Inventory Management
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-center text-gray-500 py-8">
-                  Equipment and inventory tracking coming soon...
-                </p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="settings" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Settings className="h-5 w-5 mr-2" />
-                  {isAdmin ? 'Platform Settings' : 'Account Settings'}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center p-4 border rounded-lg">
-                    <div>
-                      <h3 className="font-medium">Email Notifications</h3>
-                      <p className="text-sm text-gray-600">Receive booking updates via email</p>
+                <Badge variant="default" className="text-xs">Live Data</Badge>
+              </div>
+              
+              {/* Key Performance Indicators */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <Card className="relative overflow-hidden">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium text-gray-600">
+                      {isAdmin ? 'Total Revenue' : 'Your Revenue'}
+                    </CardTitle>
+                    <div className="p-2 bg-green-100 rounded-lg">
+                      <DollarSign className="h-4 w-4 text-green-600" />
                     </div>
-                    <Button variant="outline" size="sm">Configure</Button>
-                  </div>
-                  
-                  {isAdmin && (
-                    <div className="flex justify-between items-center p-4 border rounded-lg">
-                      <div>
-                        <h3 className="font-medium">Platform Settings</h3>
-                        <p className="text-sm text-gray-600">Manage platform-wide configurations</p>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-gray-900">
+                      ₹{revenueAnalytics?.ytdStats?.totalRevenue?.toLocaleString() || 0}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">This year</p>
+                  </CardContent>
+                  <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-green-500 to-green-600"></div>
+                </Card>
+
+                <Card className="relative overflow-hidden">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium text-gray-600">
+                      {isAdmin ? 'Total Facilities' : 'Your Facilities'}
+                    </CardTitle>
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                      <Building className="h-4 w-4 text-blue-600" />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-gray-900">
+                      {dashboardStats?.totalFacilities || 0}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">Active</p>
+                  </CardContent>
+                  <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-blue-600"></div>
+                </Card>
+
+                <Card className="relative overflow-hidden">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium text-gray-600">Total Bookings</CardTitle>
+                    <div className="p-2 bg-purple-100 rounded-lg">
+                      <Calendar className="h-4 w-4 text-purple-600" />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-gray-900">
+                      {revenueAnalytics?.ytdStats?.totalBookings || 0}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">This year</p>
+                  </CardContent>
+                  <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-purple-600"></div>
+                </Card>
+
+                {isAdmin && (
+                  <Card className="relative overflow-hidden">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium text-gray-600">Platform Users</CardTitle>
+                      <div className="p-2 bg-orange-100 rounded-lg">
+                        <Users className="h-4 w-4 text-orange-600" />
                       </div>
-                      <Button variant="outline" size="sm">Manage</Button>
-                    </div>
-                  )}
-                  
-                  <div className="flex justify-between items-center p-4 border rounded-lg">
-                    <div>
-                      <h3 className="font-medium">Security</h3>
-                      <p className="text-sm text-gray-600">Update password and security settings</p>
-                    </div>
-                    <Button variant="outline" size="sm">Update</Button>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-gray-900">
+                        {dashboardStats?.totalUsers || 0}
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">Registered</p>
+                    </CardContent>
+                    <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-orange-500 to-orange-600"></div>
+                  </Card>
+                )}
+              </div>
+
+              {/* Revenue Chart - Simplified */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <TrendingUp className="h-5 w-5 text-green-600" />
+                    <span>Revenue Trend</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={revenueAnalytics?.monthlyRevenue || []}>
+                        <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                        <XAxis 
+                          dataKey="month" 
+                          tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short' })}
+                          className="text-xs"
+                        />
+                        <YAxis 
+                          tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}k`}
+                          className="text-xs"
+                        />
+                        <Tooltip 
+                          formatter={(value) => [`₹${Number(value).toLocaleString()}`, 'Revenue']}
+                          labelFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                        />
+                        <Area 
+                          type="monotone" 
+                          dataKey="revenue" 
+                          stroke="#059669" 
+                          fill="url(#revenueGradient)" 
+                          strokeWidth={2}
+                        />
+                        <defs>
+                          <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#059669" stopOpacity={0.3}/>
+                            <stop offset="95%" stopColor="#059669" stopOpacity={0.0}/>
+                          </linearGradient>
+                        </defs>
+                      </AreaChart>
+                    </ResponsiveContainer>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+                </CardContent>
+              </Card>
+
+              {/* Facilities Overview */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Building className="h-5 w-5 text-purple-600" />
+                      <span>{isAdmin ? 'Top Facilities' : 'Your Facilities'}</span>
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setActiveSection('all-facilities')}
+                    >
+                      View All
+                    </Button>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {(facilityAnalytics?.facilityPerformance || []).slice(0, 5).map((facility: any, index: number) => (
+                      <div key={facility.facilityId} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center text-xs font-medium text-purple-600">
+                            {index + 1}
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900">{facility.facilityName}</p>
+                            <p className="text-sm text-gray-500">{facility.location}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-green-600">₹{facility.totalRevenue?.toLocaleString() || 0}</p>
+                          <p className="text-xs text-gray-500">{facility.totalBookings || 0} bookings</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Recent Activity */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Activity className="h-5 w-5 text-blue-600" />
+                      <span>Recent Activity</span>
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setActiveSection('bookings')}
+                    >
+                      View All Bookings
+                    </Button>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {(bookingAnalytics?.peakTimes || []).slice(0, 4).map((time: any, index: number) => (
+                      <div key={time.timeSlot} className="flex items-center justify-between p-2 border rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                            <Clock className="h-3 w-3 text-blue-600" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">Peak time: {time.timeSlot}</p>
+                            <p className="text-xs text-gray-500">{time.bookingCount} bookings</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-bold text-green-600">₹{time.totalRevenue?.toLocaleString()}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           )}
 
-          {/* Companies Management Section - Admin Only */}
-          {activeSection === 'companies' && isAdmin && (
-            <CompanyManagement />
-          )}
+          {/* Company Management Section */}
+          {activeSection === 'companies' && <CompanyManagement />}
 
           {/* Users Management Sections */}
           {(activeSection === 'all-users' || activeSection === 'owners' || activeSection === 'regular-users') && (
             <UsersManagement section={activeSection} isAdmin={isAdmin} />
           )}
 
-          {/* Facilities Management Section */}
-          {activeSection === 'facilities' && (
-            <FacilitiesManagement section="facilities" isAdmin={isAdmin} />
+          {/* Facilities Management Sections */}
+          {activeSection === 'all-facilities' && (
+            <FacilityManagement 
+              onNavigateToAddFacility={() => setActiveSection('add-facility')} 
+            />
           )}
+          {activeSection === 'add-facility' && <AddFacilityForm />}
 
-          {/* Other sections using OtherManagement component */}
-          {activeSection === 'bookings' && <OtherManagement section="bookings" dashboardStats={dashboardStats} userRole={user?.role} />}
-          {activeSection === 'analytics' && <OtherManagement section="analytics" dashboardStats={dashboardStats} userRole={user?.role} />}
-          {activeSection === 'equipment' && <OtherManagement section="equipment" dashboardStats={dashboardStats} userRole={user?.role} />}
-          {activeSection === 'maintenance' && <OtherManagement section="maintenance" dashboardStats={dashboardStats} userRole={user?.role} />}
-          {activeSection === 'settings' && <OtherManagement section="settings" dashboardStats={dashboardStats} userRole={user?.role} />}
+          {/* Bookings Management Section */}
+          {activeSection === 'bookings' && <BookingsManagement />}
+          
+          {/* Other sections */}
+          {activeSection === 'analytics' && <OtherManagement section={activeSection} />}
+          {activeSection === 'settings' && <OtherManagement section={activeSection} />}
         </div>
       </div>
 

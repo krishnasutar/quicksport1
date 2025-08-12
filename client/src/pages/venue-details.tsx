@@ -90,8 +90,8 @@ export default function VenueDetails() {
     );
   }
 
-  const images = facility.images || ['https://images.unsplash.com/photo-1546519638-68e109498ffc?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600'];
-  const courts = facility.courts || [];
+  const images = facility?.images || ['https://images.unsplash.com/photo-1546519638-68e109498ffc?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600'];
+  const courts = facility?.courts || [];
   const facilityReviews = reviews || [];
 
   return (
@@ -104,7 +104,7 @@ export default function VenueDetails() {
           <div className="relative h-96 rounded-2xl overflow-hidden mb-4">
             <img
               src={images[selectedImageIndex]}
-              alt={facility.name}
+              alt={facility?.name || 'Facility'}
               className="w-full h-full object-cover"
             />
             <div className="absolute top-4 left-4">
@@ -114,7 +114,7 @@ export default function VenueDetails() {
           
           {images.length > 1 && (
             <div className="flex space-x-2 overflow-x-auto">
-              {images.map((image, index) => (
+              {images.map((image: string, index: number) => (
                 <button
                   key={index}
                   onClick={() => setSelectedImageIndex(index)}
@@ -137,23 +137,23 @@ export default function VenueDetails() {
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
-                    {facility.name}
+                    {facility?.name}
                   </h1>
                   <div className="flex items-center space-x-4 text-gray-600">
                     <div className="flex items-center">
                       <MapPin className="h-4 w-4 text-brand-indigo mr-1" />
-                      {facility.address}, {facility.city}
+                      {facility?.address}, {facility?.city}
                     </div>
                     <div className="flex items-center">
                       <Star className="h-4 w-4 text-brand-yellow fill-current mr-1" />
-                      {parseFloat(facility.rating || "0").toFixed(1)} ({facility.totalReviews} reviews)
+                      {parseFloat(facility?.rating || "0").toFixed(1)} ({facility?.totalReviews || 0} reviews)
                     </div>
                   </div>
                 </div>
               </div>
               
               <p className="text-gray-600 text-lg leading-relaxed">
-                {facility.description || "A premium sports facility offering world-class amenities and courts for various sports."}
+                {facility?.description || "A premium sports facility offering world-class amenities and courts for various sports."}
               </p>
             </div>
 
@@ -161,27 +161,27 @@ export default function VenueDetails() {
             <div className="bg-white rounded-xl p-6 mb-6">
               <h3 className="text-xl font-bold text-gray-900 mb-4">Contact Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {facility.phoneNumber && (
+                {facility?.phoneNumber && (
                   <div className="flex items-center">
                     <Phone className="h-5 w-5 text-brand-indigo mr-3" />
-                    <span>{facility.phoneNumber}</span>
+                    <span>{facility?.phoneNumber}</span>
                   </div>
                 )}
-                {facility.email && (
+                {facility?.email && (
                   <div className="flex items-center">
                     <Mail className="h-5 w-5 text-brand-indigo mr-3" />
-                    <span>{facility.email}</span>
+                    <span>{facility?.email}</span>
                   </div>
                 )}
               </div>
             </div>
 
             {/* Amenities */}
-            {facility.amenities && facility.amenities.length > 0 && (
+            {facility?.amenities && facility.amenities.length > 0 && (
               <div className="bg-white rounded-xl p-6 mb-6">
                 <h3 className="text-xl font-bold text-gray-900 mb-4">Amenities</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {facility.amenities.map((amenity) => {
+                  {facility?.amenities?.map((amenity: string) => {
                     const IconComponent = amenityIcons[amenity.toLowerCase()] || Users;
                     return (
                       <div key={amenity} className="flex items-center space-x-2">
@@ -199,7 +199,7 @@ export default function VenueDetails() {
               <h3 className="text-xl font-bold text-gray-900 mb-4">Available Courts</h3>
               {courts.length > 0 ? (
                 <div className="space-y-4">
-                  {courts.map((court) => {
+                  {courts.map((court: any) => {
                     const sportInfo = sportIcons[court.sportType] || sportIcons.basketball;
                     return (
                       <div key={court.id} className="border border-gray-200 rounded-lg p-4">
@@ -251,7 +251,7 @@ export default function VenueDetails() {
               <h3 className="text-xl font-bold text-gray-900 mb-4">Reviews</h3>
               {facilityReviews.length > 0 ? (
                 <div className="space-y-4">
-                  {facilityReviews.slice(0, 5).map((review) => (
+                  {facilityReviews.slice(0, 5).map((review: any) => (
                     <div key={review.id} className="border-b border-gray-100 pb-4 last:border-b-0">
                       <div className="flex items-start space-x-3">
                         <div className="w-10 h-10 bg-brand-indigo rounded-full flex items-center justify-center text-white font-semibold">
@@ -288,7 +288,7 @@ export default function VenueDetails() {
                   
                   {courts.length > 0 ? (
                     <div className="space-y-3">
-                      {courts.slice(0, 3).map((court) => {
+                      {courts.slice(0, 3).map((court: any) => {
                         const sportInfo = sportIcons[court.sportType] || sportIcons.basketball;
                         return (
                           <Button
@@ -326,12 +326,12 @@ export default function VenueDetails() {
                       <span className="text-gray-600">Rating</span>
                       <div className="flex items-center">
                         <Star className="h-4 w-4 text-brand-yellow fill-current mr-1" />
-                        <span className="font-medium">{parseFloat(facility.rating || "0").toFixed(1)}</span>
+                        <span className="font-medium">{parseFloat(facility?.rating || "0").toFixed(1)}</span>
                       </div>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-gray-600">Total Reviews</span>
-                      <span className="font-medium">{facility.totalReviews}</span>
+                      <span className="font-medium">{facility?.totalReviews || 0}</span>
                     </div>
                   </div>
                 </CardContent>

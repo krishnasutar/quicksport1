@@ -950,13 +950,13 @@ export class DatabaseStorage implements IStorage {
     try {
       // First try deleting from regular users table
       const regularResult = await db.delete(users).where(eq(users.id, id));
-      if (regularResult.rowCount > 0) {
+      if (regularResult.rowCount && regularResult.rowCount > 0) {
         return true;
       }
       
       // Then try deleting from CRM users table
       const crmResult = await db.delete(crmUsers).where(eq(crmUsers.id, id));
-      return crmResult.rowCount > 0;
+      return crmResult.rowCount ? crmResult.rowCount > 0 : false;
     } catch (error) {
       console.error('Error in deleteUser:', error);
       throw error;

@@ -21,7 +21,7 @@ const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this";
 let stripe: Stripe | null = null;
 if (process.env.STRIPE_SECRET_KEY) {
   stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-    apiVersion: "2024-11-20.acacia",
+    apiVersion: "2024-04-10",
   });
 }
 
@@ -132,8 +132,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const user = await storage.createUser({
         ...userData,
-        password: userData.password, // Keep original password for visibility
-        password_hash: hashedPassword, // Store hashed password for authentication
         referralCode
       });
 
@@ -226,10 +224,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           const decoded = jwt.verify(token, JWT_SECRET) as any;
           const user = await storage.getCrmUserById(decoded.id);
-          isCrmUser = user && (user.role === 'admin' || user.role === 'owner');
+          isCrmUser = user ? (user.role === 'admin' || user.role === 'owner') : false;
           console.log(`CRM Token Detection: user=${user?.email}, role=${user?.role}, isCrmUser=${isCrmUser}`);
-        } catch (err) {
-          console.log('Token verification failed:', err.message);
+        } catch (err: any) {
+          console.log('Token verification failed:', err?.message || 'Unknown error');
         }
       }
       
@@ -782,6 +780,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           password_hash: hashedPassword // Store hashed version for auth
         };
         
+        const { crmUsers } = await import("@shared/schema");
         const [newCrmUser] = await db.insert(crmUsers).values(crmUserData).returning();
         user = newCrmUser;
       }
@@ -1492,7 +1491,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     } catch (error) {
       console.error("Test WhatsApp error:", error);
-      res.status(500).json({ message: "Internal server error", error: error.message });
+      res.status(500).json({ message: "Internal server error", error: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 

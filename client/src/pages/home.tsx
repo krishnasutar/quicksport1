@@ -328,7 +328,7 @@ export default function Home() {
                       asChild 
                       className="w-full gradient-bg hover:shadow-lg transform hover:scale-105 transition-all duration-200"
                     >
-                      <Link href={`/venue/${encodeURIComponent(facility?.id || '')}`}>
+                      <Link href={`/venue/${String(facility?.id || '').replace(/"/g, '')}`}>
                         Book Now
                       </Link>
                     </Button>
@@ -387,7 +387,7 @@ export default function Home() {
                       asChild 
                       className="w-full gradient-bg hover:shadow-lg transform hover:scale-105 transition-all duration-200"
                     >
-                      <Link href={`/venue/${encodeURIComponent(facility?.id || '')}`}>
+                      <Link href={`/venue/${String(facility?.id || '').replace(/"/g, '')}`}>
                         Book Now
                       </Link>
                     </Button>
