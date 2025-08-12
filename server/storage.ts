@@ -479,13 +479,56 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
-  async updateBookingStatus(id: string, status: string): Promise<Booking | undefined> {
-    const [booking] = await db
+  async updateBookingStatus(id: string, status: string): Promise<any | undefined> {
+    // First get the full booking details with user and facility info
+    const bookingWithDetails = await db
+      .select({
+        id: bookings.id,
+        userId: bookings.userId,
+        courtId: bookings.courtId,
+        bookingDate: bookings.bookingDate,
+        startTime: bookings.startTime,
+        endTime: bookings.endTime,
+        totalAmount: bookings.totalAmount,
+        finalAmount: bookings.finalAmount,
+        status: bookings.status,
+        paymentMethod: bookings.paymentMethod,
+        createdAt: bookings.createdAt,
+        userName: users.firstName,
+        userFullName: sql<string>`CONCAT(${users.firstName}, ' ', ${users.lastName})`,
+        userEmail: users.email,
+        userPhone: users.phoneNumber,
+        courtName: courts.name,
+        facilityName: facilities.name,
+        facilityCity: facilities.city
+      })
+      .from(bookings)
+      .innerJoin(users, eq(bookings.userId, users.id))
+      .innerJoin(courts, eq(bookings.courtId, courts.id))
+      .innerJoin(facilities, eq(courts.facilityId, facilities.id))
+      .where(eq(bookings.id, id))
+      .limit(1);
+
+    if (bookingWithDetails.length === 0) {
+      return undefined;
+    }
+
+    // Update the booking status
+    const [updatedBooking] = await db
       .update(bookings)
       .set({ status: status as any })
       .where(eq(bookings.id, id))
       .returning();
-    return booking || undefined;
+
+    if (!updatedBooking) {
+      return undefined;
+    }
+
+    // Return the booking with full details
+    return {
+      ...updatedBooking,
+      ...bookingWithDetails[0]
+    };
   }
 
   async checkUserBookingHistory(userId: string, facilityId: string): Promise<boolean> {
@@ -1375,45 +1418,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async updateBookingStatus(bookingId: string, status: string, adminId: string, adminRole: string): Promise<any> {
-    try {
-      // First verify the booking exists and check permissions
-      let permissionQuery = sql`
-        SELECT b.*, f.owner_id
-        FROM bookings b
-        JOIN courts c ON b.court_id = c.id
-        JOIN facilities f ON c.facility_id = f.id
-        WHERE b.id = ${bookingId}
-      `;
 
-      const bookingResult = await db.execute(permissionQuery);
-      if (bookingResult.rows.length === 0) {
-        return null; // Booking not found
-      }
-
-      const booking = bookingResult.rows[0];
-
-      // Check permissions: Admin can update any booking, Owner can only update their facility's bookings
-      if (adminRole === 'owner' && booking.owner_id !== adminId) {
-        return null; // Unauthorized
-      }
-
-      // Update the booking status
-      const result = await db
-        .update(bookings)
-        .set({ 
-          status: status as 'pending' | 'confirmed' | 'cancelled' | 'completed',
-          updatedAt: new Date()
-        })
-        .where(eq(bookings.id, bookingId))
-        .returning();
-
-      return result[0] || null;
-    } catch (error) {
-      console.error('Error updating booking status:', error);
-      return null;
-    }
-  }
 
   async getTrendingFacilities(): Promise<any[]> {
     try {

@@ -1,6 +1,7 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { whatsappService } from "./whatsappService";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { insertUserSchema, insertFacilitySchema, insertBookingSchema, insertReviewSchema, insertCompanySchema, courts, facilities } from "@shared/schema";
@@ -1364,9 +1365,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid status. Must be 'confirmed' or 'rejected'" });
       }
 
-      const updatedBooking = await storage.updateBookingStatus(req.params.bookingId, status, req.user.id, req.user.role);
+      const updatedBooking = await storage.updateBookingStatus(req.params.bookingId, status);
       if (!updatedBooking) {
         return res.status(404).json({ message: "Booking not found or unauthorized" });
+      }
+
+      // Send WhatsApp notification if service is available and user has phone number
+      if (updatedBooking.userPhone && whatsappService.isAvailable()) {
+        try {
+          if (status === 'confirmed') {
+            await whatsappService.sendBookingApprovedNotification(
+              updatedBooking.userPhone,
+              updatedBooking.userFullName || updatedBooking.userName,
+              updatedBooking.facilityName,
+              updatedBooking.courtName,
+              updatedBooking.bookingDate,
+              updatedBooking.startTime,
+              updatedBooking.endTime,
+              updatedBooking.finalAmount.toString()
+            );
+            console.log(`WhatsApp notification sent for approved booking ${updatedBooking.id}`);
+          } else if (status === 'rejected') {
+            await whatsappService.sendBookingRejectedNotification(
+              updatedBooking.userPhone,
+              updatedBooking.userFullName || updatedBooking.userName,
+              updatedBooking.facilityName,
+              updatedBooking.courtName,
+              updatedBooking.bookingDate,
+              updatedBooking.startTime,
+              updatedBooking.endTime,
+              req.body.reason // Optional rejection reason
+            );
+            console.log(`WhatsApp notification sent for rejected booking ${updatedBooking.id}`);
+          }
+        } catch (error) {
+          console.error('Failed to send WhatsApp notification:', error);
+          // Don't fail the booking update if WhatsApp fails
+        }
+      } else {
+        if (!updatedBooking.userPhone) {
+          console.log('No phone number found for user, skipping WhatsApp notification');
+        }
+        if (!whatsappService.isAvailable()) {
+          console.log('WhatsApp service not available, skipping notification');
+        }
       }
 
       res.json({ message: `Booking ${status} successfully`, booking: updatedBooking });
