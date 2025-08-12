@@ -534,10 +534,6 @@ export function CompanyManagement() {
                   <Badge variant="secondary">
                     {company.facilitiesCount || 0} facilities
                   </Badge>
-                  <Button size="sm" variant="outline">
-                    <Eye className="h-3 w-3 mr-1" />
-                    View Facilities
-                  </Button>
                 </div>
               </div>
             </CardContent>

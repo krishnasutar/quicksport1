@@ -394,7 +394,7 @@ export default function Sports() {
             <div className="flex justify-between items-center mb-6">
               <div>
                 <h2 className="text-2xl font-bold text-gray-900">
-                  {facilitiesLoading ? "Loading..." : `${Array.isArray(filteredFacilities) ? filteredFacilities.length : 0} Venues Found`}
+                  {facilitiesLoading ? "Loading..." : "Venues"}
                 </h2>
                 <p className="text-gray-600">
                   {selectedSport !== "all" && `Filtered by ${sports.find(s => s.id === selectedSport)?.name || selectedSport}`}
