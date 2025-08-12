@@ -17,6 +17,7 @@ import { CalendarIcon, Plus, Minus, Gift, CreditCard, Wallet, Users } from "luci
 import { format, addDays, isBefore, startOfDay } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/auth-context";
+import { useLocation } from "wouter";
 import StripeCheckout from "./StripeCheckout";
 
 // Initialize Stripe (only if key is available)
@@ -35,6 +36,7 @@ interface BookingFormProps {
 
 export default function BookingForm({ court, onSubmit, isLoading }: BookingFormProps) {
   const { user, token } = useAuth();
+  const [, setLocation] = useLocation();
   const [bookingDate, setBookingDate] = useState<Date>();
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [startTime, setStartTime] = useState("");
@@ -185,7 +187,7 @@ export default function BookingForm({ court, onSubmit, isLoading }: BookingFormP
     onSubmit(bookingData);
   };
 
-  const handleStripePaymentSuccess = (paymentIntentId: string) => {
+  const handleStripePaymentSuccess = async (paymentIntentId: string) => {
     const endTime = calculateEndTime(startTime, duration);
     
     const bookingData = {
@@ -204,9 +206,20 @@ export default function BookingForm({ court, onSubmit, isLoading }: BookingFormP
       couponCode: couponCode || null,
     };
     
+    console.log('Stripe payment successful, creating booking...', bookingData);
     setShowStripeCheckout(false);
     setClientSecret(null);
-    onSubmit(bookingData);
+    
+    // Call onSubmit and then redirect to dashboard
+    try {
+      await onSubmit(bookingData);
+      console.log('Booking created successfully, redirecting to dashboard...');
+      // Redirect to user dashboard after successful booking
+      setLocation('/dashboard');
+    } catch (error) {
+      console.error('Error creating booking after payment:', error);
+      alert('Payment was successful but there was an error creating your booking. Please contact support.');
+    }
   };
 
   const calculateEndTime = (start: string, hours: number) => {

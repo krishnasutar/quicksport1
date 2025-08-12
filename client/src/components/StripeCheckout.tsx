@@ -55,8 +55,8 @@ export default function StripeCheckout({
         });
       } else if (paymentIntent && paymentIntent.status === "succeeded") {
         toast({
-          title: "Payment Successful",
-          description: "Your booking has been confirmed!",
+          title: "Payment Successful! 🎉",
+          description: "Your court has been booked successfully. Redirecting to your dashboard...",
         });
         onPaymentSuccess(paymentIntent.id);
       }
