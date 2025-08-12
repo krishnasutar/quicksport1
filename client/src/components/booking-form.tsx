@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Elements } from "@stripe/react-stripe-js";
-import { loadStripe } from "@stripe/stripe-js";
+// ✅ REMOVED - No real Stripe imports needed for mock payments
+// import { Elements } from "@stripe/react-stripe-js";
+// import { loadStripe } from "@stripe/stripe-js";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,15 +19,15 @@ import { format, addDays, isBefore, startOfDay } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/auth-context";
 import { useLocation } from "wouter";
-import StripeCheckout from "./StripeCheckout";
+// ✅ REMOVED - Using mock payment instead
+// import StripeCheckout from "./StripeCheckout";
 
-// Initialize Stripe (only if key is available)
-const stripePromise = import.meta.env.VITE_STRIPE_PUBLIC_KEY 
-  ? loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY) 
-  : null;
+// ✅ REMOVED - No real Stripe initialization needed for mock payments
+// const stripePromise = import.meta.env.VITE_STRIPE_PUBLIC_KEY 
+//   ? loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY) 
+//   : null;
 
-console.log('Stripe public key available:', !!import.meta.env.VITE_STRIPE_PUBLIC_KEY);
-console.log('Stripe promise created:', !!stripePromise);
+console.log('Mock payment system initialized - no real Stripe calls');
 
 interface BookingFormProps {
   court: any;

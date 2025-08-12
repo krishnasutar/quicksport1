@@ -461,7 +461,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create Stripe Payment Intent
+  // ✅ DISABLED - Create Stripe Payment Intent (using mock payments instead)
+  /* 
   app.post("/api/create-payment-intent", authenticateToken, async (req: any, res: Response) => {
     console.log('Payment intent request received:', {
       userId: req.user.id,
@@ -526,6 +527,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+  */
 
   // Bookings routes
   app.post("/api/bookings", authenticateToken, async (req: any, res: Response) => {
