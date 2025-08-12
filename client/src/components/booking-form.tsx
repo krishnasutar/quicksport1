@@ -56,13 +56,13 @@ export default function BookingForm({ court, onSubmit, isLoading }: BookingFormP
     enabled: !!user,
   });
 
-  const walletBalance = parseFloat(walletData?.balance || '0');
+  const walletBalance = parseFloat((walletData as any)?.balance || '0');
   
   const { data: couponsData } = useQuery({
     queryKey: ['/api/coupons', { facilityId: court.facilityId }],
   });
 
-  const coupons = couponsData || [];
+  const coupons = (couponsData as any[]) || [];
   
   // Generate time slots
   const generateTimeSlots = () => {

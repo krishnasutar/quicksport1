@@ -42,7 +42,7 @@ export default function StripeCheckout({
       const { error, paymentIntent } = await stripe.confirmPayment({
         elements,
         confirmParams: {
-          return_url: window.location.origin + "/booking-success",
+          return_url: window.location.origin + "/?booking=success",
         },
         redirect: "if_required"
       });
@@ -54,9 +54,10 @@ export default function StripeCheckout({
           variant: "destructive",
         });
       } else if (paymentIntent && paymentIntent.status === "succeeded") {
+        console.log("Payment succeeded! PaymentIntent ID:", paymentIntent.id);
         toast({
           title: "Payment Successful! 🎉",
-          description: "Your court has been booked successfully. Redirecting to your dashboard...",
+          description: "Creating your booking and redirecting...",
         });
         onPaymentSuccess(paymentIntent.id);
       }
