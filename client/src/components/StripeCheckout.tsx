@@ -39,10 +39,14 @@ export default function StripeCheckout({
     setIsProcessing(true);
 
     try {
+      const returnUrl = `${window.location.origin}${window.location.pathname}`;
+      console.log('Current URL:', window.location.href);
+      console.log('Setting Stripe return URL to:', returnUrl);
+      
       const { error } = await stripe.confirmPayment({
         elements,
         confirmParams: {
-          return_url: `${window.location.origin}${window.location.pathname}`,
+          return_url: returnUrl,
         },
       });
 
