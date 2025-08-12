@@ -260,6 +260,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get trending facilities (most booked this week) - must be before /:id route
+  app.get("/api/facilities/trending", async (req: Request, res: Response) => {
+    try {
+      const trendingFacilities = await storage.getTrendingFacilities();
+      res.json(trendingFacilities);
+    } catch (error) {
+      console.error("Get trending facilities error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   app.get("/api/facilities/:id", async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
@@ -412,16 +423,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get trending facilities (most booked this week)
-  app.get("/api/facilities/trending", async (req: Request, res: Response) => {
-    try {
-      const trendingFacilities = await storage.getTrendingFacilities();
-      res.json(trendingFacilities);
-    } catch (error) {
-      console.error("Get trending facilities error:", error);
-      res.status(500).json({ message: "Internal server error" });
-    }
-  });
+
 
   // Create Stripe Payment Intent
   app.post("/api/create-payment-intent", authenticateToken, async (req: any, res: Response) => {

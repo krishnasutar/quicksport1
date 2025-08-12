@@ -1414,6 +1414,73 @@ export class DatabaseStorage implements IStorage {
       return null;
     }
   }
+
+  async getTrendingFacilities(): Promise<any[]> {
+    try {
+      // Get facilities with most bookings in the last 7 days
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+      const trendingQuery = await db
+        .select({
+          facilityId: facilities.id,
+          facilityName: facilities.name,
+          address: facilities.address,
+          city: facilities.city,
+          rating: facilities.rating,
+          totalReviews: facilities.totalReviews,
+          images: facilities.images,
+          amenities: facilities.amenities,
+          weeklyBookings: count(bookings.id),
+          minPrice: sql<string>`MIN(${courts.pricePerHour})`,
+          maxPrice: sql<string>`MAX(${courts.pricePerHour})`
+        })
+        .from(facilities)
+        .leftJoin(courts, eq(courts.facilityId, facilities.id))
+        .leftJoin(bookings, and(
+          eq(bookings.facilityId, facilities.id),
+          gte(bookings.createdAt, oneWeekAgo),
+          eq(bookings.status, 'confirmed')
+        ))
+        .where(and(
+          eq(facilities.status, 'approved'),
+          eq(facilities.isActive, true)
+        ))
+        .groupBy(
+          facilities.id,
+          facilities.name,
+          facilities.address,
+          facilities.city,
+          facilities.rating,
+          facilities.totalReviews,
+          facilities.images,
+          facilities.amenities
+        )
+        .orderBy(desc(count(bookings.id)))
+        .limit(6);
+
+      return trendingQuery.map(facility => ({
+        id: facility.facilityId,
+        name: facility.facilityName,
+        address: facility.address,
+        city: facility.city,
+        rating: facility.rating,
+        totalReviews: facility.totalReviews,
+        images: facility.images,
+        amenities: facility.amenities,
+        weeklyBookings: facility.weeklyBookings,
+        priceRange: {
+          min: parseFloat(facility.minPrice || '0'),
+          max: parseFloat(facility.maxPrice || '0')
+        },
+        badge: facility.weeklyBookings >= 10 ? 'TRENDING' : 
+               facility.weeklyBookings >= 5 ? 'POPULAR' : 'PREMIUM'
+      }));
+    } catch (error) {
+      console.error('Error getting trending facilities:', error);
+      return [];
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();

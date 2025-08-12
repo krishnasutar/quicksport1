@@ -42,6 +42,11 @@ export default function Home() {
     enabled: true,
   });
 
+  const { data: trendingFacilities, isLoading: isLoadingTrending } = useQuery({
+    queryKey: ['/api/facilities/trending'],
+    enabled: true,
+  });
+
   const handleSportSelect = (sport: string) => {
     setSelectedSport(sport);
   };
@@ -234,139 +239,102 @@ export default function Home() {
             </Button>
           </div>
           
-          {/* Demo Venue Cards */}
+          {/* Dynamic Trending Facilities */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="card-hover bg-white rounded-2xl shadow-sm overflow-hidden border">
-              <div className="h-48 bg-gradient-to-br from-blue-400 to-blue-600 relative">
-                <img
-                  src="https://images.unsplash.com/photo-1546519638-68e109498ffc?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600"
-                  alt="Basketball Court"
-                  className="w-full h-full object-cover mix-blend-overlay"
-                />
-                <div className="absolute top-4 left-4">
-                  <Badge className="bg-red-500 text-white font-semibold">🔥 TRENDING</Badge>
-                </div>
-                <div className="absolute top-4 right-4 bg-black bg-opacity-60 rounded-lg px-2 py-1">
-                  <div className="flex items-center text-white text-sm">
-                    <Star className="h-4 w-4 text-yellow-400 fill-current mr-1" />
-                    4.8 (124 reviews)
+            {isLoadingTrending ? (
+              // Loading skeletons
+              Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="bg-white rounded-2xl shadow-sm overflow-hidden animate-pulse">
+                  <div className="h-48 bg-gray-200"></div>
+                  <div className="p-6">
+                    <div className="h-6 bg-gray-200 rounded mb-3"></div>
+                    <div className="h-4 bg-gray-200 rounded mb-3"></div>
+                    <div className="flex space-x-2 mb-4">
+                      <div className="w-16 h-6 bg-gray-200 rounded"></div>
+                      <div className="w-16 h-6 bg-gray-200 rounded"></div>
+                      <div className="w-16 h-6 bg-gray-200 rounded"></div>
+                    </div>
+                    <div className="flex justify-between items-center mb-3">
+                      <div className="h-8 bg-gray-200 rounded w-20"></div>
+                      <div className="h-4 bg-gray-200 rounded w-24"></div>
+                    </div>
+                    <div className="h-10 bg-gray-200 rounded w-full"></div>
                   </div>
                 </div>
+              ))
+            ) : trendingFacilities && trendingFacilities.length > 0 ? (
+              trendingFacilities.slice(0, 3).map((facility: any) => (
+                <div key={facility.id} className="card-hover bg-white rounded-2xl shadow-sm overflow-hidden border">
+                  <div className="h-48 bg-gradient-to-br from-blue-400 to-blue-600 relative">
+                    <img
+                      src={facility.images && facility.images[0] 
+                        ? facility.images[0] 
+                        : "https://images.unsplash.com/photo-1546519638-68e109498ffc?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600"
+                      }
+                      alt={facility.name}
+                      className="w-full h-full object-cover mix-blend-overlay"
+                    />
+                    <div className="absolute top-4 left-4">
+                      <Badge 
+                        className={`text-white font-semibold ${
+                          facility.badge === 'TRENDING' ? 'bg-red-500' : 
+                          facility.badge === 'POPULAR' ? 'bg-orange-500' : 'bg-purple-500'
+                        }`}
+                      >
+                        {facility.badge === 'TRENDING' ? '🔥 TRENDING' : 
+                         facility.badge === 'POPULAR' ? '⚡ POPULAR' : '💎 PREMIUM'}
+                      </Badge>
+                    </div>
+                    <div className="absolute top-4 right-4 bg-black bg-opacity-60 rounded-lg px-2 py-1">
+                      <div className="flex items-center text-white text-sm">
+                        <Star className="h-4 w-4 text-yellow-400 fill-current mr-1" />
+                        {parseFloat(facility.rating || '0').toFixed(1)} ({facility.totalReviews} reviews)
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">{facility.name}</h3>
+                    <p className="text-gray-600 mb-3 flex items-center">
+                      <MapPin className="h-4 w-4 text-gray-400 mr-1" />
+                      {facility.address}, {facility.city}
+                    </p>
+                    <div className="flex flex-wrap gap-1 mb-4">
+                      {facility.amenities && facility.amenities.slice(0, 4).map((amenity: string, index: number) => (
+                        <Badge key={index} variant="outline" className="text-xs capitalize">
+                          {amenity.replace('_', ' ')}
+                        </Badge>
+                      ))}
+                    </div>
+                    <div className="flex justify-between items-center mb-3">
+                      <div>
+                        <span className="text-2xl font-bold text-brand-indigo">
+                          ₹{facility.priceRange.min === facility.priceRange.max 
+                            ? facility.priceRange.min 
+                            : `${facility.priceRange.min}-${facility.priceRange.max}`}
+                        </span>
+                        <span className="text-gray-500">/hr</span>
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        <span className="text-green-600 font-medium">{facility.weeklyBookings} bookings</span> this week
+                      </div>
+                    </div>
+                    <Button 
+                      asChild 
+                      className="w-full gradient-bg hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+                    >
+                      <Link href={`/facilities/${facility.id}`}>
+                        Book Now
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              // Fallback if no trending facilities
+              <div className="col-span-3 text-center py-12">
+                <p className="text-gray-500">No trending facilities available at the moment.</p>
               </div>
-              <div className="p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">PlayZone Sports Complex</h3>
-                <p className="text-gray-600 mb-3 flex items-center">
-                  <MapPin className="h-4 w-4 text-gray-400 mr-1" />
-                  Koramangala, Bangalore
-                </p>
-                <div className="flex flex-wrap gap-1 mb-4">
-                  <Badge variant="outline" className="text-xs">Basketball</Badge>
-                  <Badge variant="outline" className="text-xs">Badminton</Badge>
-                  <Badge variant="outline" className="text-xs">AC</Badge>
-                  <Badge variant="outline" className="text-xs">Parking</Badge>
-                </div>
-                <div className="flex justify-between items-center mb-3">
-                  <div>
-                    <span className="text-2xl font-bold text-brand-indigo">₹450</span>
-                    <span className="text-gray-500">/hr</span>
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    <span className="text-green-600 font-medium">24 bookings</span> this week
-                  </div>
-                </div>
-                <Button className="w-full gradient-bg hover:shadow-lg transform hover:scale-105 transition-all duration-200">
-                  Book Now
-                </Button>
-              </div>
-            </div>
-            
-            <div className="card-hover bg-white rounded-2xl shadow-sm overflow-hidden border">
-              <div className="h-48 bg-gradient-to-br from-green-400 to-green-600 relative">
-                <img
-                  src="https://images.unsplash.com/photo-1551698618-1dfe5d97d256?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600"
-                  alt="Football Field"
-                  className="w-full h-full object-cover mix-blend-overlay"
-                />
-                <div className="absolute top-4 left-4">
-                  <Badge className="bg-orange-500 text-white font-semibold">⚡ POPULAR</Badge>
-                </div>
-                <div className="absolute top-4 right-4 bg-black bg-opacity-60 rounded-lg px-2 py-1">
-                  <div className="flex items-center text-white text-sm">
-                    <Star className="h-4 w-4 text-yellow-400 fill-current mr-1" />
-                    4.6 (89 reviews)
-                  </div>
-                </div>
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Champions Ground</h3>
-                <p className="text-gray-600 mb-3 flex items-center">
-                  <MapPin className="h-4 w-4 text-gray-400 mr-1" />
-                  Bandra West, Mumbai
-                </p>
-                <div className="flex flex-wrap gap-1 mb-4">
-                  <Badge variant="outline" className="text-xs">Football</Badge>
-                  <Badge variant="outline" className="text-xs">Cricket</Badge>
-                  <Badge variant="outline" className="text-xs">Floodlights</Badge>
-                  <Badge variant="outline" className="text-xs">Changing Room</Badge>
-                </div>
-                <div className="flex justify-between items-center mb-3">
-                  <div>
-                    <span className="text-2xl font-bold text-brand-indigo">₹800</span>
-                    <span className="text-gray-500">/hr</span>
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    <span className="text-green-600 font-medium">18 bookings</span> this week
-                  </div>
-                </div>
-                <Button className="w-full gradient-bg hover:shadow-lg transform hover:scale-105 transition-all duration-200">
-                  Book Now
-                </Button>
-              </div>
-            </div>
-            
-            <div className="card-hover bg-white rounded-2xl shadow-sm overflow-hidden border">
-              <div className="h-48 bg-gradient-to-br from-purple-400 to-purple-600 relative">
-                <img
-                  src="https://images.unsplash.com/photo-1622279457486-62dcc4a431d6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600"
-                  alt="Badminton Court"
-                  className="w-full h-full object-cover mix-blend-overlay"
-                />
-                <div className="absolute top-4 left-4">
-                  <Badge className="bg-purple-500 text-white font-semibold">💎 PREMIUM</Badge>
-                </div>
-                <div className="absolute top-4 right-4 bg-black bg-opacity-60 rounded-lg px-2 py-1">
-                  <div className="flex items-center text-white text-sm">
-                    <Star className="h-4 w-4 text-yellow-400 fill-current mr-1" />
-                    4.9 (156 reviews)
-                  </div>
-                </div>
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Ace Racquet Club</h3>
-                <p className="text-gray-600 mb-3 flex items-center">
-                  <MapPin className="h-4 w-4 text-gray-400 mr-1" />
-                  Anna Nagar, Chennai
-                </p>
-                <div className="flex flex-wrap gap-1 mb-4">
-                  <Badge variant="outline" className="text-xs">Badminton</Badge>
-                  <Badge variant="outline" className="text-xs">Table Tennis</Badge>
-                  <Badge variant="outline" className="text-xs">Premium AC</Badge>
-                  <Badge variant="outline" className="text-xs">Pro Equipment</Badge>
-                </div>
-                <div className="flex justify-between items-center mb-3">
-                  <div>
-                    <span className="text-2xl font-bold text-brand-indigo">₹600</span>
-                    <span className="text-gray-500">/hr</span>
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    <span className="text-green-600 font-medium">31 bookings</span> this week
-                  </div>
-                </div>
-                <Button className="w-full gradient-bg hover:shadow-lg transform hover:scale-105 transition-all duration-200">
-                  Book Now
-                </Button>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </section>
