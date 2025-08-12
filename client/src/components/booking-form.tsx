@@ -188,6 +188,9 @@ export default function BookingForm({ court, onSubmit, isLoading }: BookingFormP
   };
 
   const handleStripePaymentSuccess = async (paymentIntentId: string) => {
+    console.log('=== STRIPE PAYMENT SUCCESS CALLBACK TRIGGERED ===');
+    console.log('PaymentIntent ID received:', paymentIntentId);
+    
     const endTime = calculateEndTime(startTime, duration);
     
     const bookingData = {
@@ -206,15 +209,16 @@ export default function BookingForm({ court, onSubmit, isLoading }: BookingFormP
       couponCode: couponCode || null,
     };
     
-    console.log('Stripe payment successful, creating booking...', bookingData);
+    console.log('Creating booking with data:', bookingData);
     setShowStripeCheckout(false);
     setClientSecret(null);
     
     // Call onSubmit and then redirect to home with success flag
     try {
+      console.log('Calling onSubmit...');
       await onSubmit(bookingData);
-      console.log('Booking created successfully, redirecting to home with success popup...');
-      // Redirect to home page with success parameter to show booking confirmation popup
+      console.log('Booking created successfully! Now redirecting to home with success popup...');
+      // Immediate redirect
       setLocation('/?booking=success');
     } catch (error) {
       console.error('Error creating booking after payment:', error);

@@ -55,11 +55,15 @@ export default function StripeCheckout({
         });
       } else if (paymentIntent && paymentIntent.status === "succeeded") {
         console.log("Payment succeeded! PaymentIntent ID:", paymentIntent.id);
+        console.log("Payment status:", paymentIntent.status);
+        console.log("Calling onPaymentSuccess callback...");
         toast({
           title: "Payment Successful! 🎉",
           description: "Creating your booking and redirecting...",
         });
         onPaymentSuccess(paymentIntent.id);
+      } else {
+        console.log("Payment not succeeded. Status:", paymentIntent?.status, "Error:", error);
       }
     } catch (err: any) {
       toast({
