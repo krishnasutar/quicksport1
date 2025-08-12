@@ -191,13 +191,15 @@ export default function CRMDashboard() {
       id: 'dashboard',
       label: 'Dashboard',
       icon: Home,
-      action: () => setActiveSection('dashboard')
+      action: () => setActiveSection('dashboard'),
+      roles: ['admin', 'owner'] // Available to both admin and owner
     },
     {
       id: 'companies',
       label: 'Companies',
       icon: Building,
-      action: () => setActiveSection('companies')
+      action: () => setActiveSection('companies'),
+      roles: ['admin'] // Admin only
     },
     {
       id: 'users',
@@ -207,33 +209,43 @@ export default function CRMDashboard() {
         { label: 'All Users', action: () => setActiveSection('all-users') },
         { label: 'Owners', action: () => setActiveSection('owners') },
         { label: 'Regular Users', action: () => setActiveSection('regular-users') }
-      ]
+      ],
+      roles: ['admin'] // Admin only
     },
     {
       id: 'facilities',
       label: 'Facilities',
       icon: Building2,
-      action: () => setActiveSection('all-facilities')
+      action: () => setActiveSection('all-facilities'),
+      roles: ['admin', 'owner'] // Available to both admin and owner
     },
     {
       id: 'bookings',
       label: 'Bookings',
       icon: Calendar,
-      action: () => setActiveSection('bookings')
+      action: () => setActiveSection('bookings'),
+      roles: ['admin', 'owner'] // Available to both admin and owner
     },
     {
       id: 'analytics',
       label: 'Analytics',
       icon: BarChart3,
-      action: () => setActiveSection('analytics')
+      action: () => setActiveSection('analytics'),
+      roles: ['admin'] // Admin only
     },
     {
       id: 'settings',
       label: 'Settings',
       icon: Settings,
-      action: () => setActiveSection('settings')
+      action: () => setActiveSection('settings'),
+      roles: ['admin'] // Admin only
     }
   ];
+
+  // Filter menu items based on user role
+  const filteredMenuItems = menuItems.filter(item => 
+    item.roles.includes(user.role)
+  );
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -261,7 +273,7 @@ export default function CRMDashboard() {
         {/* Navigation */}
         <nav className="mt-8 px-4 h-full overflow-y-auto pb-24">
           <div className="space-y-2">
-            {menuItems.map((item) => (
+            {filteredMenuItems.map((item) => (
               <div key={item.id}>
                 {item.dropdown ? (
                   <DropdownMenu>
@@ -669,8 +681,8 @@ export default function CRMDashboard() {
           {activeSection === 'bookings' && <BookingsManagement />}
           
           {/* Other sections */}
-          {activeSection === 'analytics' && <OtherManagement section={activeSection} isAdmin={isAdmin} />}
-          {activeSection === 'settings' && <OtherManagement section={activeSection} isAdmin={isAdmin} />}
+          {activeSection === 'analytics' && <OtherManagement section={activeSection} />}
+          {activeSection === 'settings' && <OtherManagement section={activeSection} />}
         </div>
       </div>
 
