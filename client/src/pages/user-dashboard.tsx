@@ -95,10 +95,10 @@ export default function UserDashboard() {
       setShowEditDialog(false);
       editForm.reset();
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({ 
         title: "Failed to update profile", 
-        description: "Please try again",
+        description: error.message || "Please try again",
         variant: "destructive" 
       });
     },
@@ -117,10 +117,10 @@ export default function UserDashboard() {
       setShowPasswordDialog(false);
       passwordForm.reset();
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({ 
         title: "Failed to change password", 
-        description: "Please check your current password and try again",
+        description: error.message || "Please check your current password and try again",
         variant: "destructive" 
       });
     },
@@ -136,10 +136,10 @@ export default function UserDashboard() {
       logout();
       navigate('/');
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({ 
         title: "Failed to delete account", 
-        description: "Please try again or contact support",
+        description: error.message || "Please try again or contact support",
         variant: "destructive" 
       });
     },

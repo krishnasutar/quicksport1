@@ -2,8 +2,41 @@ import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
-    const text = (await res.text()) || res.statusText;
-    throw new Error(`${res.status}: ${text}`);
+    try {
+      const errorData = await res.json();
+      // Extract just the message without status codes
+      const message = errorData.message || res.statusText;
+      throw new Error(message);
+    } catch (parseError) {
+      // If JSON parsing fails, try text
+      try {
+        const text = await res.text();
+        throw new Error(text || res.statusText);
+      } catch {
+        // Fallback to generic message based on status
+        const userFriendlyMessage = getFriendlyErrorMessage(res.status);
+        throw new Error(userFriendlyMessage);
+      }
+    }
+  }
+}
+
+function getFriendlyErrorMessage(status: number): string {
+  switch (status) {
+    case 400:
+      return "Please check your information and try again";
+    case 401:
+      return "Invalid credentials";
+    case 403:
+      return "You don't have permission to access this";
+    case 404:
+      return "The requested information could not be found";
+    case 409:
+      return "This information already exists";
+    case 500:
+      return "Something went wrong. Please try again later";
+    default:
+      return "Something went wrong. Please try again";
   }
 }
 
