@@ -64,6 +64,7 @@ export interface IStorage {
   
   // Other methods
   getSportsWithCounts(): Promise<any[]>;
+  getTrendingFacilities(): Promise<any[]>;
   
   // Admin-specific methods
   getAllFacilitiesAdmin(): Promise<Facility[]>;
