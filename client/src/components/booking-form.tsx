@@ -35,7 +35,7 @@ interface BookingFormProps {
 }
 
 export default function BookingForm({ court, onSubmit, isLoading: submittingBooking }: BookingFormProps) {
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const [, setLocation] = useLocation();
   const [bookingDate, setBookingDate] = useState<Date>();
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
@@ -595,28 +595,20 @@ export default function BookingForm({ court, onSubmit, isLoading: submittingBook
               )}
               
               {paymentMethod === 'upi' && (
-                <div className="space-y-4">
-                  <div className="text-center text-gray-600 mb-4">
+                <div className="space-y-3">
+                  <div className="text-center text-gray-600">
                     <div className="w-12 h-12 mx-auto mb-2 bg-green-100 rounded-full flex items-center justify-center">
                       <span className="text-green-600 font-bold">₹</span>
                     </div>
                     <p className="font-medium">UPI Payment</p>
+                    <p className="text-xs text-green-600 mt-1">✓ Test mode - Payment will succeed automatically</p>
                   </div>
-                  
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-sm font-medium mb-1">UPI ID</label>
-                      <input
-                        type="text"
-                        placeholder="yourname@paytm"
-                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                      />
-                    </div>
-                    
-                    <div className="bg-green-50 p-3 rounded-lg border border-green-200">
-                      <p className="text-sm text-green-700">
-                        <strong>Note:</strong> You'll receive a payment request on your UPI app to complete the transaction.
-                      </p>
+                  <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+                    <div className="text-center text-sm">
+                      <div><strong>UPI ID:</strong> testuser@paytm</div>
+                      <div className="text-xs text-green-700 mt-2">
+                        Payment request will be processed automatically
+                      </div>
                     </div>
                   </div>
                 </div>
