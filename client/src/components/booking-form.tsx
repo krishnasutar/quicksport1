@@ -34,7 +34,7 @@ interface BookingFormProps {
   isLoading: boolean;
 }
 
-export default function BookingForm({ court, onSubmit, isLoading }: BookingFormProps) {
+export default function BookingForm({ court, onSubmit, isLoading: submittingBooking }: BookingFormProps) {
   const { user, token } = useAuth();
   const [, setLocation] = useLocation();
   const [bookingDate, setBookingDate] = useState<Date>();
@@ -49,6 +49,7 @@ export default function BookingForm({ court, onSubmit, isLoading }: BookingFormP
   const [splitUsers, setSplitUsers] = useState([{ name: "", upiId: "" }]);
   const [showStripeCheckout, setShowStripeCheckout] = useState(false);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Fetch user's wallet balance
   const { data: walletData } = useQuery({
@@ -131,36 +132,151 @@ export default function BookingForm({ court, onSubmit, isLoading }: BookingFormP
   };
 
   const handlePaymentSuccess = async () => {
-    // Simulate payment processing
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    const endTime = calculateEndTime(startTime, duration);
-    const mockPaymentIntentId = `pi_mock_${Date.now()}`;
-    
-    const bookingData = {
-      courtId: court.id,
-      bookingDate: bookingDate!.toISOString(),
-      startTime,
-      endTime,
-      totalAmount: basePrice.toFixed(2),
-      discountAmount: (rewardPointsDiscount + couponDiscount).toFixed(2),
-      finalAmount: finalAmount.toFixed(2),
-      paymentMethod: paymentMethod,
-      paymentIntentId: mockPaymentIntentId,
-      notes: notes || null,
-      splitPayments: splitPayment ? splitUsers.filter(u => u.name && u.upiId) : [],
-      useRewardPoints,
-      couponCode: couponCode || null,
-    };
-    
-    setShowStripeCheckout(false);
+    setIsLoading(true);
     
     try {
-      await onSubmit(bookingData);
+      if (paymentMethod === 'stripe') {
+        // Validate card details
+        const modal = document.querySelector('[role="dialog"]');
+        const cardNumber = (modal?.querySelector('input[placeholder*="1234"]') as HTMLInputElement)?.value?.replace(/\s/g, '');
+        const expiryDate = (modal?.querySelector('input[placeholder="MM/YY"]') as HTMLInputElement)?.value;
+        const cvv = (modal?.querySelector('input[placeholder="123"]') as HTMLInputElement)?.value;
+        const cardholderName = (modal?.querySelector('input[placeholder="John Doe"]') as HTMLInputElement)?.value;
+        
+        if (!cardNumber || !expiryDate || !cvv || !cardholderName) {
+          alert('Please fill in all card details');
+          setIsLoading(false);
+          return;
+        }
+        
+        if (cardNumber.length < 13 || cardNumber.length > 19) {
+          alert('Please enter a valid card number');
+          setIsLoading(false);
+          return;
+        }
+        
+        if (!/^\d{2}\/\d{2}$/.test(expiryDate)) {
+          alert('Please enter a valid expiry date (MM/YY)');
+          setIsLoading(false);
+          return;
+        }
+        
+        if (cvv.length < 3 || cvv.length > 4) {
+          alert('Please enter a valid CVV');
+          setIsLoading(false);
+          return;
+        }
+        
+        // Create Stripe payment intent
+        const paymentResponse = await fetch('/api/create-payment-intent', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify({
+            amount: finalAmount,
+            currency: 'inr',
+            payment_method_data: {
+              type: 'card',
+              card: {
+                number: cardNumber,
+                exp_month: parseInt(expiryDate.split('/')[0]),
+                exp_year: parseInt('20' + expiryDate.split('/')[1]),
+                cvc: cvv
+              },
+              billing_details: {
+                name: cardholderName
+              }
+            }
+          })
+        });
+        
+        if (!paymentResponse.ok) {
+          throw new Error('Payment failed. Please check your card details.');
+        }
+        
+        const paymentData = await paymentResponse.json();
+        
+        // Process booking with real payment intent
+        const endTime = calculateEndTime(startTime, duration);
+        const bookingData = {
+          courtId: court.id,
+          bookingDate: bookingDate!.toISOString(),
+          startTime,
+          endTime,
+          totalAmount: basePrice.toFixed(2),
+          discountAmount: (rewardPointsDiscount + couponDiscount).toFixed(2),
+          finalAmount: finalAmount.toFixed(2),
+          paymentMethod: 'stripe',
+          paymentIntentId: paymentData.paymentIntentId,
+          notes: notes || null,
+          splitPayments: splitPayment ? splitUsers.filter(u => u.name && u.upiId) : [],
+          useRewardPoints,
+          couponCode: couponCode || null,
+        };
+        
+        await onSubmit(bookingData);
+        
+      } else if (paymentMethod === 'upi') {
+        // Validate UPI ID
+        const modal = document.querySelector('[role="dialog"]');
+        const upiId = (modal?.querySelector('input[placeholder*="yourname@"]') as HTMLInputElement)?.value;
+        
+        if (!upiId || !upiId.includes('@')) {
+          alert('Please enter a valid UPI ID');
+          setIsLoading(false);
+          return;
+        }
+        
+        // Create UPI payment request
+        const paymentResponse = await fetch('/api/create-upi-payment', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify({
+            amount: finalAmount,
+            upiId: upiId
+          })
+        });
+        
+        if (!paymentResponse.ok) {
+          throw new Error('UPI payment request failed. Please check your UPI ID.');
+        }
+        
+        const paymentData = await paymentResponse.json();
+        
+        // Process booking with UPI payment
+        const endTime = calculateEndTime(startTime, duration);
+        const bookingData = {
+          courtId: court.id,
+          bookingDate: bookingDate!.toISOString(),
+          startTime,
+          endTime,
+          totalAmount: basePrice.toFixed(2),
+          discountAmount: (rewardPointsDiscount + couponDiscount).toFixed(2),
+          finalAmount: finalAmount.toFixed(2),
+          paymentMethod: 'upi',
+          paymentIntentId: paymentData.transactionId,
+          notes: notes || null,
+          splitPayments: splitPayment ? splitUsers.filter(u => u.name && u.upiId) : [],
+          useRewardPoints,
+          couponCode: couponCode || null,
+        };
+        
+        await onSubmit(bookingData);
+      }
+      
+      setShowStripeCheckout(false);
       setLocation('/dashboard?booking=success');
-    } catch (error) {
-      console.error('Error creating booking after payment:', error);
-      alert('Payment was successful but there was an error creating your booking. Please contact support.');
+      
+    } catch (error: any) {
+      console.error('Payment error:', error);
+      alert(error.message || 'Payment failed. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -530,9 +646,9 @@ export default function BookingForm({ court, onSubmit, isLoading }: BookingFormP
       <Button
         type="submit"
         className="w-full gradient-bg hover:shadow-lg"
-        disabled={isLoading || !bookingDate || !startTime || (paymentMethod === 'wallet' && walletBalance < finalAmount)}
+        disabled={submittingBooking || !bookingDate || !startTime || (paymentMethod === 'wallet' && walletBalance < finalAmount)}
       >
-        {isLoading 
+        {submittingBooking 
           ? "Processing..." 
           : (paymentMethod === 'wallet' && walletBalance < finalAmount)
           ? `Insufficient Balance (₹${walletBalance.toFixed(2)} available)`
@@ -545,7 +661,7 @@ export default function BookingForm({ court, onSubmit, isLoading }: BookingFormP
       {/* Payment Popup Modal */}
       {showStripeCheckout && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
+          <div className="bg-white rounded-lg max-w-md w-full p-6" role="dialog">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold">
                 {paymentMethod === 'stripe' ? 'Card Payment' : 'UPI Payment'}
@@ -569,30 +685,98 @@ export default function BookingForm({ court, onSubmit, isLoading }: BookingFormP
               </div>
               
               {paymentMethod === 'stripe' && (
-                <div className="space-y-3">
-                  <div className="text-center text-gray-600">
+                <div className="space-y-4">
+                  <div className="text-center text-gray-600 mb-4">
                     <CreditCard className="h-12 w-12 mx-auto mb-2 text-blue-500" />
-                    <p>Secure Card Payment via Stripe</p>
-                    <p className="text-xs">(Currently simulated for testing)</p>
+                    <p className="font-medium">Secure Card Payment</p>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div className="bg-gray-100 p-2 rounded">Card: **** 4242</div>
-                    <div className="bg-gray-100 p-2 rounded">CVV: ***</div>
+                  
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Card Number</label>
+                      <input
+                        type="text"
+                        placeholder="1234 5678 9012 3456"
+                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        maxLength={19}
+                        onChange={(e) => {
+                          // Format card number with spaces
+                          let value = e.target.value.replace(/\s/g, '').replace(/\D/g, '');
+                          value = value.replace(/(\d{4})(?=\d)/g, '$1 ');
+                          e.target.value = value;
+                        }}
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Expiry Date</label>
+                        <input
+                          type="text"
+                          placeholder="MM/YY"
+                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          maxLength={5}
+                          onChange={(e) => {
+                            // Format expiry date
+                            let value = e.target.value.replace(/\D/g, '');
+                            if (value.length >= 2) {
+                              value = value.substring(0, 2) + '/' + value.substring(2, 4);
+                            }
+                            e.target.value = value;
+                          }}
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium mb-1">CVV</label>
+                        <input
+                          type="text"
+                          placeholder="123"
+                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          maxLength={4}
+                          onChange={(e) => {
+                            e.target.value = e.target.value.replace(/\D/g, '');
+                          }}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Cardholder Name</label>
+                      <input
+                        type="text"
+                        placeholder="John Doe"
+                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
                   </div>
                 </div>
               )}
               
               {paymentMethod === 'upi' && (
-                <div className="space-y-3">
-                  <div className="text-center text-gray-600">
+                <div className="space-y-4">
+                  <div className="text-center text-gray-600 mb-4">
                     <div className="w-12 h-12 mx-auto mb-2 bg-green-100 rounded-full flex items-center justify-center">
                       <span className="text-green-600 font-bold">₹</span>
                     </div>
-                    <p>UPI Payment</p>
-                    <p className="text-xs">(Currently simulated for testing)</p>
+                    <p className="font-medium">UPI Payment</p>
                   </div>
-                  <div className="bg-gray-100 p-3 rounded text-center">
-                    <p className="text-sm">UPI ID: user@paytm</p>
+                  
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">UPI ID</label>
+                      <input
+                        type="text"
+                        placeholder="yourname@paytm"
+                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      />
+                    </div>
+                    
+                    <div className="bg-green-50 p-3 rounded-lg border border-green-200">
+                      <p className="text-sm text-green-700">
+                        <strong>Note:</strong> You'll receive a payment request on your UPI app to complete the transaction.
+                      </p>
+                    </div>
                   </div>
                 </div>
               )}

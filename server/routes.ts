@@ -426,6 +426,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
 
+  // Create UPI Payment Request  
+  app.post("/api/create-upi-payment", authenticateToken, async (req: any, res: Response) => {
+    try {
+      const { amount, upiId } = req.body;
+      
+      if (!amount || amount <= 0) {
+        return res.status(400).json({ message: "Valid amount is required" });
+      }
+      
+      if (!upiId || !upiId.includes('@')) {
+        return res.status(400).json({ message: "Valid UPI ID is required" });
+      }
+      
+      // Generate mock transaction ID for UPI payment
+      const transactionId = `upi_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      // In a real implementation, this would integrate with a UPI payment gateway
+      // For now, we'll simulate a successful UPI payment request
+      
+      res.json({ 
+        transactionId,
+        message: "UPI payment request created successfully",
+        amount,
+        upiId
+      });
+    } catch (error: any) {
+      console.error("Create UPI payment error:", error);
+      res.status(500).json({ 
+        message: "Error creating UPI payment: " + error.message 
+      });
+    }
+  });
+
   // Create Stripe Payment Intent
   app.post("/api/create-payment-intent", authenticateToken, async (req: any, res: Response) => {
     console.log('Payment intent request received:', {
@@ -472,15 +505,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         currency: "inr",
         metadata: {
           userId: req.user.id,
-          courtId,
-          bookingDate,
-          startTime,
-          endTime
+          courtId: courtId || '',
+          bookingDate: bookingDate || '',
+          startTime: startTime || '',
+          endTime: endTime || ''
         }
       });
 
       console.log('Payment intent created successfully:', paymentIntent.id);
-      res.json({ clientSecret: paymentIntent.client_secret });
+      res.json({ 
+        paymentIntentId: paymentIntent.id,
+        clientSecret: paymentIntent.client_secret 
+      });
     } catch (error: any) {
       console.error("Create payment intent error:", error);
       res.status(500).json({ 
