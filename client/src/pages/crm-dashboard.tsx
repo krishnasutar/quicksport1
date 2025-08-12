@@ -75,6 +75,8 @@ export default function CRMDashboard() {
       return response.json();
     },
     enabled: !!user,
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    refetchOnWindowFocus: false,
   });
 
   const { data: facilities } = useQuery({
@@ -88,6 +90,8 @@ export default function CRMDashboard() {
       return response.json();
     },
     enabled: !!user,
+    staleTime: 10 * 60 * 1000, // Consider data fresh for 10 minutes
+    refetchOnWindowFocus: false,
   });
 
   const { data: bookings } = useQuery({
@@ -101,6 +105,8 @@ export default function CRMDashboard() {
       return response.json();
     },
     enabled: !!user,
+    staleTime: 3 * 60 * 1000, // Consider data fresh for 3 minutes
+    refetchOnWindowFocus: false,
   });
 
   const handleLogout = () => {
@@ -638,12 +644,12 @@ export default function CRMDashboard() {
 
           {/* Users Management Sections */}
           {(activeSection === 'all-users' || activeSection === 'owners' || activeSection === 'regular-users') && (
-            <UsersManagement />
+            <UsersManagement section={activeSection} isAdmin={isAdmin} />
           )}
 
           {/* Facilities Management Section */}
           {activeSection === 'facilities' && (
-            <FacilitiesManagement />
+            <FacilitiesManagement section="facilities" isAdmin={isAdmin} />
           )}
 
           {/* Other sections using OtherManagement component */}

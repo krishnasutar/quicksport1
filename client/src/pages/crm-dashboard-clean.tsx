@@ -135,6 +135,8 @@ export default function CRMDashboard() {
       return response.json();
     },
     enabled: !!user,
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    refetchOnWindowFocus: false,
   });
 
   // Analytics queries for admin users
@@ -148,6 +150,8 @@ export default function CRMDashboard() {
       return response.json();
     },
     enabled: !!user && user.role === 'admin',
+    staleTime: 10 * 60 * 1000, // Keep data fresh for 10 minutes
+    refetchOnWindowFocus: false,
   });
 
   const { data: facilityAnalytics } = useQuery({
@@ -160,6 +164,8 @@ export default function CRMDashboard() {
       return response.json();
     },
     enabled: !!user && user.role === 'admin',
+    staleTime: 10 * 60 * 1000, // Keep data fresh for 10 minutes
+    refetchOnWindowFocus: false,
   });
 
   const { data: bookingAnalytics } = useQuery({
@@ -172,6 +178,8 @@ export default function CRMDashboard() {
       return response.json();
     },
     enabled: !!user && user.role === 'admin',
+    staleTime: 10 * 60 * 1000, // Keep data fresh for 10 minutes
+    refetchOnWindowFocus: false,
   });
 
   const handleLogout = () => {

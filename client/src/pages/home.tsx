@@ -35,16 +35,22 @@ export default function Home() {
   const { data: facilitiesData, isLoading } = useQuery({
     queryKey: ['/api/facilities', { page: 1, limit: 6 }],
     enabled: true,
+    staleTime: 10 * 60 * 1000, // Keep data fresh for 10 minutes
+    refetchOnWindowFocus: false,
   });
 
   const { data: sportsData } = useQuery({
     queryKey: ['/api/sports'],
     enabled: true,
+    staleTime: 30 * 60 * 1000, // Keep sports data fresh for 30 minutes (rarely changes)
+    refetchOnWindowFocus: false,
   });
 
   const { data: trendingFacilities, isLoading: isLoadingTrending } = useQuery({
     queryKey: ['/api/facilities/trending'],
     enabled: true,
+    staleTime: 15 * 60 * 1000, // Keep trending data fresh for 15 minutes
+    refetchOnWindowFocus: false,
   });
 
   const handleSportSelect = (sport: string) => {
@@ -322,7 +328,7 @@ export default function Home() {
                       asChild 
                       className="w-full gradient-bg hover:shadow-lg transform hover:scale-105 transition-all duration-200"
                     >
-                      <Link href={`/facilities/${facility.id}`}>
+                      <Link href={`/venue/${encodeURIComponent(facility?.id || '')}`}>
                         Book Now
                       </Link>
                     </Button>
@@ -331,8 +337,8 @@ export default function Home() {
               ))
             ) : (
               // Fallback - show regular facilities instead
-              facilitiesData?.facilities && Array.isArray(facilitiesData.facilities) ? (
-                facilitiesData.facilities.slice(0, 3).map((facility: any) => (
+              facilitiesData && Array.isArray(facilitiesData) ? (
+                facilitiesData.slice(0, 3).map((facility: any) => (
                 <div key={facility.id} className="card-hover bg-white rounded-2xl shadow-sm overflow-hidden border">
                   <div className="h-48 bg-gradient-to-br from-blue-400 to-blue-600 relative">
                     <img
@@ -381,7 +387,7 @@ export default function Home() {
                       asChild 
                       className="w-full gradient-bg hover:shadow-lg transform hover:scale-105 transition-all duration-200"
                     >
-                      <Link href={`/facilities/${facility.id}`}>
+                      <Link href={`/venue/${encodeURIComponent(facility?.id || '')}`}>
                         Book Now
                       </Link>
                     </Button>

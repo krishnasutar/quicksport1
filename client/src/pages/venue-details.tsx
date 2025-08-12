@@ -30,15 +30,23 @@ const amenityIcons: Record<string, any> = {
 export default function VenueDetails() {
   const params = useParams();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  
+  // Debug logging to catch object ID issue
+  console.log("VenueDetails params:", params);
+  console.log("params.id type:", typeof params.id, "value:", params.id);
 
   const { data: facility, isLoading } = useQuery({
     queryKey: [`/api/facilities/${params.id}`],
     enabled: !!params.id,
+    staleTime: 10 * 60 * 1000, // Keep data fresh for 10 minutes
+    refetchOnWindowFocus: false,
   });
 
   const { data: reviews } = useQuery({
     queryKey: [`/api/reviews/${params.id}`],
     enabled: !!params.id,
+    staleTime: 15 * 60 * 1000, // Keep reviews fresh for 15 minutes
+    refetchOnWindowFocus: false,
   });
 
   if (isLoading) {

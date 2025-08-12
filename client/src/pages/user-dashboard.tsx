@@ -44,9 +44,9 @@ export default function UserDashboard() {
 
   const { data: bookingsData, isLoading: bookingsLoading, refetch: refetchBookings } = useQuery({
     queryKey: ['/api/bookings'],
-    staleTime: 0, // Always refetch to get latest bookings
-    refetchOnWindowFocus: true, // Refetch when user returns to tab
-    refetchInterval: 5000, // Refetch every 5 seconds for real-time updates
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    refetchOnWindowFocus: false, // Don't refetch on window focus
+    refetchInterval: false, // Disable automatic refetching
   });
 
   const { data: walletData } = useQuery({
