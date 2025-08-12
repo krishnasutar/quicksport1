@@ -101,10 +101,18 @@ export class WhatsAppService {
 
     try {
       const formattedTo = this.formatPhoneNumber(toNumber);
-      const formattedFrom = `whatsapp:${this.fromNumber}`;
+      
+      // For Twilio WhatsApp, the from number should already include "whatsapp:" prefix
+      // or be in format like "+14155238886" for Twilio sandbox
+      let formattedFrom = this.fromNumber;
+      if (!formattedFrom.startsWith('whatsapp:')) {
+        formattedFrom = `whatsapp:${formattedFrom}`;
+      }
+      
       const formattedToWhatsApp = `whatsapp:${formattedTo}`;
 
       console.log(`Sending WhatsApp message from ${formattedFrom} to ${formattedToWhatsApp}`);
+      console.log(`Message content: ${message.substring(0, 100)}...`);
 
       const message_result = await this.client!.messages.create({
         body: message,
@@ -116,6 +124,17 @@ export class WhatsAppService {
       return true;
     } catch (error) {
       console.error('Failed to send WhatsApp message:', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
+      
+      // Check if it's a sandbox issue
+      if (error instanceof Error && error.message.includes('63007')) {
+        console.error('Twilio Error 63007: This typically means:');
+        console.error('1. WhatsApp number not properly configured in Twilio');
+        console.error('2. Using Twilio Sandbox? Make sure to join sandbox first');
+        console.error('3. Check if TWILIO_WHATSAPP_FROM format is correct');
+        console.error(`Current FROM number: ${this.fromNumber}`);
+      }
+      
       return false;
     }
   }
