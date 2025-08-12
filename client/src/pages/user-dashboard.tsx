@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Navbar from "@/components/layout/navbar";
 import Footer from "@/components/layout/footer";
@@ -21,6 +21,21 @@ export default function UserDashboard() {
   const [showSuccessPopup, setShowSuccessPopup] = useState(() => {
     return new URLSearchParams(window.location.search).get('booking') === 'success';
   });
+
+  // Handle tab from URL parameters
+  const [activeTab, setActiveTab] = useState(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('tab') || 'bookings';
+  });
+
+  // Update tab when URL changes
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabFromUrl = urlParams.get('tab');
+    if (tabFromUrl && ['bookings', 'wallet', 'rewards', 'profile'].includes(tabFromUrl)) {
+      setActiveTab(tabFromUrl);
+    }
+  }, []);
   
   if (!user) {
     navigate('/login');
@@ -196,7 +211,7 @@ export default function UserDashboard() {
         </div>
 
         {/* Main Content */}
-        <Tabs defaultValue="bookings" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-4 lg:w-[400px]">
             <TabsTrigger value="bookings">Bookings</TabsTrigger>
             <TabsTrigger value="wallet">Wallet</TabsTrigger>

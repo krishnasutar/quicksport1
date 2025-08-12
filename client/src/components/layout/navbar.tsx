@@ -58,13 +58,13 @@ export default function Navbar() {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/wallet">
+          <Link href="/dashboard?tab=wallet">
             <CreditCard className="mr-2 h-4 w-4" />
             Wallet & Rewards
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/settings">
+          <Link href="/dashboard?tab=profile">
             <Settings className="mr-2 h-4 w-4" />
             Settings
           </Link>
