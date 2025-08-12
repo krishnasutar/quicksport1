@@ -43,25 +43,26 @@ export default function StripeCheckout({
       console.log("🔵 STRIPE DEBUG: Elements available:", !!elements);
       console.log("🔵 STRIPE DEBUG: Stripe available:", !!stripe);
       
-      const { error, paymentIntent } = await stripe.confirmPayment({
+      const result = await stripe.confirmPayment({
         elements,
+        redirect: 'if_required',
         confirmParams: {
           return_url: `${window.location.origin}/dashboard?payment=success`,
         },
       });
 
-      console.log("🔵 STRIPE DEBUG: Payment confirmation result:", { error, paymentIntent });
+      console.log("🔵 STRIPE DEBUG: Payment confirmation result:", result);
 
-      if (error) {
-        console.error("🔴 STRIPE ERROR: Payment failed:", error);
+      if (result.error) {
+        console.error("🔴 STRIPE ERROR: Payment failed:", result.error);
         toast({
           title: "Payment Failed",
-          description: error.message,
+          description: result.error.message,
           variant: "destructive",
         });
-      } else if (paymentIntent && paymentIntent.status === "succeeded") {
-        console.log("🟢 STRIPE SUCCESS: Payment succeeded! PaymentIntent ID:", paymentIntent.id);
-        console.log("🟢 STRIPE SUCCESS: Payment status:", paymentIntent.status);
+      } else if (result.paymentIntent && result.paymentIntent.status === "succeeded") {
+        console.log("🟢 STRIPE SUCCESS: Payment succeeded! PaymentIntent ID:", result.paymentIntent.id);
+        console.log("🟢 STRIPE SUCCESS: Payment status:", result.paymentIntent.status);
         console.log("🟢 STRIPE SUCCESS: Calling onPaymentSuccess callback...");
         
         toast({
@@ -70,12 +71,12 @@ export default function StripeCheckout({
         });
         
         // Call the success callback immediately
-        onPaymentSuccess(paymentIntent.id);
+        onPaymentSuccess(result.paymentIntent.id);
       } else {
-        console.log("🟡 STRIPE WARNING: Payment status:", paymentIntent?.status);
+        console.log("🟡 STRIPE WARNING: Payment status:", result.paymentIntent?.status);
         toast({
           title: "Payment Issue",
-          description: `Payment status: ${paymentIntent?.status || 'unknown'}`,
+          description: `Payment status: ${result.paymentIntent?.status || 'unknown'}`,
           variant: "destructive",
         });
       }

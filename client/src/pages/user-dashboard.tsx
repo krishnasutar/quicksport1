@@ -117,7 +117,7 @@ export default function UserDashboard() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-4">
               <Avatar className="h-20 w-20">
-                <AvatarImage src={user.profilePicture} alt={user.username} />
+                <AvatarImage src={user.profilePicture || undefined} alt={user.username} />
               <AvatarFallback className="bg-brand-indigo text-white text-xl">
                 {user.firstName?.[0]}{user.lastName?.[0]}
               </AvatarFallback>
@@ -468,7 +468,7 @@ export default function UserDashboard() {
               <CardContent>
                 <div className="flex items-start space-x-6">
                   <Avatar className="w-20 h-20">
-                    <AvatarImage src={user.profilePicture} />
+                    <AvatarImage src={user.profilePicture || undefined} />
                     <AvatarFallback className="text-lg">
                       {user.firstName?.charAt(0)}{user.lastName?.charAt(0)}
                     </AvatarFallback>
