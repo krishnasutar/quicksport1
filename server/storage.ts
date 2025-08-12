@@ -948,7 +948,16 @@ export class DatabaseStorage implements IStorage {
 
   async deleteUser(id: string): Promise<boolean> {
     try {
-      // First try deleting from regular users table
+      // First, handle related data to avoid foreign key constraint violations
+      const { bookings, reviews } = await import("@shared/schema");
+      
+      // Delete all user's reviews first
+      await db.delete(reviews).where(eq(reviews.userId, id));
+      
+      // Delete all user's bookings
+      await db.delete(bookings).where(eq(bookings.userId, id));
+      
+      // Now try deleting from regular users table
       const regularResult = await db.delete(users).where(eq(users.id, id));
       if (regularResult.rowCount && regularResult.rowCount > 0) {
         return true;
@@ -959,7 +968,7 @@ export class DatabaseStorage implements IStorage {
       return crmResult.rowCount ? crmResult.rowCount > 0 : false;
     } catch (error) {
       console.error('Error in deleteUser:', error);
-      throw error;
+      return false;
     }
   }
 
