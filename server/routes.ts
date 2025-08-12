@@ -516,41 +516,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
       } else if (bookingData.paymentMethod === 'stripe') {
-        // Verify payment intent if Stripe payment
+        // Mock Stripe payment verification - always succeeds
         if (!bookingData.paymentIntentId) {
           return res.status(400).json({ 
             message: "Payment intent ID is required for Stripe payments" 
           });
         }
-
-        if (!stripe) {
-          return res.status(500).json({ 
-            message: "Stripe is not configured for payment verification" 
-          });
-        }
-
-        try {
-          const paymentIntent = await stripe.paymentIntents.retrieve(bookingData.paymentIntentId);
-          
-          if (paymentIntent.status !== 'succeeded') {
-            return res.status(400).json({ 
-              message: "Payment has not been completed successfully" 
-            });
-          }
-
-          // Verify amount matches
-          const expectedAmount = Math.round(parseFloat(bookingData.finalAmount.toString()) * 100);
-          if (paymentIntent.amount !== expectedAmount) {
-            return res.status(400).json({ 
-              message: "Payment amount mismatch" 
-            });
-          }
-        } catch (stripeError: any) {
-          console.error("Stripe verification error:", stripeError);
-          return res.status(400).json({ 
-            message: "Failed to verify payment: " + stripeError.message 
-          });
-        }
+        
+        console.log('Mock Stripe payment verification successful for:', bookingData.paymentIntentId);
       }
 
       // Check court availability

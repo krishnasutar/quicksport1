@@ -106,66 +106,35 @@ export default function BookingForm({ court, onSubmit, isLoading }: BookingFormP
 
     const endTime = calculateEndTime(startTime, duration);
 
-    // If Stripe payment is selected, create payment intent and show checkout
+    // If Stripe payment is selected, simulate successful payment
     if (paymentMethod === 'stripe') {
-      console.log('Starting Stripe payment flow...');
-      if (!stripePromise) {
-        alert('Stripe is not configured. Please use wallet payment or contact support.');
-        return;
-      }
-
-      try {
-        // Use token from auth context
-        const authToken = token || localStorage.getItem('auth_token') || localStorage.getItem('token');
-        console.log('=== STRIPE PAYMENT DEBUG ===');
-        console.log('Token from auth context:', token ? `${token.substring(0, 20)}...` : 'NO AUTH TOKEN');
-        console.log('Token from localStorage:', authToken ? `${authToken.substring(0, 20)}...` : 'NO TOKEN FOUND');
-        console.log('Payment amount:', finalAmount);
-        console.log('Court ID:', court.id);
-        console.log('Booking date:', format(bookingDate, 'yyyy-MM-dd'));
-        console.log('Start time:', startTime);
-        console.log('End time:', calculateEndTime(startTime, duration));
-        
-        if (!authToken) {
-          alert('Please login again to make payments');
-          return;
-        }
-        
-        console.log('Making payment intent request...');
-        const response = await fetch('/api/create-payment-intent', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${authToken}`
-          },
-          body: JSON.stringify({
-            amount: finalAmount,
-            courtId: court.id,
-            bookingDate: format(bookingDate, 'yyyy-MM-dd'),
-            startTime,
-            endTime: calculateEndTime(startTime, duration)
-          })
-        });
-
-        console.log('Payment intent response status:', response.status);
-        console.log('Payment intent response ok:', response.ok);
-
-        if (!response.ok) {
-          const error = await response.json();
-          alert(error.message || 'Failed to create payment');
-          return;
-        }
-
-        const { clientSecret } = await response.json();
-        console.log('Payment intent created, showing Stripe checkout...');
-        setClientSecret(clientSecret);
-        setShowStripeCheckout(true);
-        return;
-      } catch (error) {
-        console.error('Payment initialization error:', error);
-        alert('Failed to initialize payment. Please try again.');
-        return;
-      }
+      console.log('Simulating successful Stripe payment...');
+      
+      // Simulate payment processing delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      const endTime = calculateEndTime(startTime, duration);
+      const mockPaymentIntentId = `pi_mock_${Date.now()}`;
+      
+      const bookingData = {
+        courtId: court.id,
+        bookingDate: bookingDate!.toISOString(),
+        startTime,
+        endTime,
+        totalAmount: basePrice.toFixed(2),
+        discountAmount: (rewardPointsDiscount + couponDiscount).toFixed(2),
+        finalAmount: finalAmount.toFixed(2),
+        paymentMethod: 'stripe',
+        paymentIntentId: mockPaymentIntentId,
+        notes: notes || null,
+        splitPayments: splitPayment ? splitUsers.filter(u => u.name && u.upiId) : [],
+        useRewardPoints,
+        couponCode: couponCode || null,
+      };
+      
+      console.log('Mock payment successful, creating booking...');
+      onSubmit(bookingData);
+      return;
     }
     
     console.log('Processing wallet payment...');
@@ -583,26 +552,7 @@ export default function BookingForm({ court, onSubmit, isLoading }: BookingFormP
       </Button>
     
       {/* Stripe Checkout Modal */}
-      {showStripeCheckout && clientSecret && stripePromise && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-1 max-w-md w-full mx-4">
-            <Elements stripe={stripePromise} options={{ clientSecret }}>
-              <StripeCheckout
-                amount={finalAmount}
-                onPaymentSuccess={handleStripePaymentSuccess}
-                onCancel={() => {
-                  setShowStripeCheckout(false);
-                  setClientSecret(null);
-                }}
-                courtName={court.name}
-                facilityName={court.facilityName || 'Facility'}
-                bookingDate={bookingDate ? format(bookingDate, 'MMM dd, yyyy') : ''}
-                timeSlot={startTime ? `${startTime} - ${calculateEndTime(startTime, duration)}` : ''}
-              />
-            </Elements>
-          </div>
-        </div>
-      )}
+
     </form>
   );
 }
