@@ -1,4 +1,4 @@
-import { Twilio } from 'twilio';
+import twilio from 'twilio';
 
 // WhatsApp message templates
 export const WhatsAppTemplates = {
@@ -46,7 +46,7 @@ Don't worry! 💪 Try booking another slot or contact the facility directly for 
 };
 
 export class WhatsAppService {
-  private client: Twilio | null = null;
+  private client: any | null = null;
   private fromNumber: string;
 
   constructor() {
@@ -56,7 +56,7 @@ export class WhatsAppService {
     this.fromNumber = process.env.TWILIO_WHATSAPP_FROM || '';
 
     if (accountSid && authToken && this.fromNumber) {
-      this.client = new Twilio(accountSid, authToken);
+      this.client = twilio(accountSid, authToken);
       console.log('WhatsApp service initialized successfully');
     } else {
       console.warn('WhatsApp service not initialized - missing Twilio credentials');
