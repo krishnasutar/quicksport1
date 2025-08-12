@@ -135,141 +135,33 @@ export default function BookingForm({ court, onSubmit, isLoading: submittingBook
     setIsLoading(true);
     
     try {
-      if (paymentMethod === 'stripe') {
-        // Validate card details
-        const modal = document.querySelector('[role="dialog"]');
-        const cardNumber = (modal?.querySelector('input[placeholder*="1234"]') as HTMLInputElement)?.value?.replace(/\s/g, '');
-        const expiryDate = (modal?.querySelector('input[placeholder="MM/YY"]') as HTMLInputElement)?.value;
-        const cvv = (modal?.querySelector('input[placeholder="123"]') as HTMLInputElement)?.value;
-        const cardholderName = (modal?.querySelector('input[placeholder="John Doe"]') as HTMLInputElement)?.value;
-        
-        if (!cardNumber || !expiryDate || !cvv || !cardholderName) {
-          alert('Please fill in all card details');
-          setIsLoading(false);
-          return;
-        }
-        
-        if (cardNumber.length < 13 || cardNumber.length > 19) {
-          alert('Please enter a valid card number');
-          setIsLoading(false);
-          return;
-        }
-        
-        if (!/^\d{2}\/\d{2}$/.test(expiryDate)) {
-          alert('Please enter a valid expiry date (MM/YY)');
-          setIsLoading(false);
-          return;
-        }
-        
-        if (cvv.length < 3 || cvv.length > 4) {
-          alert('Please enter a valid CVV');
-          setIsLoading(false);
-          return;
-        }
-        
-        // Create Stripe payment intent
-        const paymentResponse = await fetch('/api/create-payment-intent', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          },
-          body: JSON.stringify({
-            amount: finalAmount,
-            currency: 'inr',
-            payment_method_data: {
-              type: 'card',
-              card: {
-                number: cardNumber,
-                exp_month: parseInt(expiryDate.split('/')[0]),
-                exp_year: parseInt('20' + expiryDate.split('/')[1]),
-                cvc: cvv
-              },
-              billing_details: {
-                name: cardholderName
-              }
-            }
-          })
-        });
-        
-        if (!paymentResponse.ok) {
-          throw new Error('Payment failed. Please check your card details.');
-        }
-        
-        const paymentData = await paymentResponse.json();
-        
-        // Process booking with real payment intent
-        const endTime = calculateEndTime(startTime, duration);
-        const bookingData = {
-          courtId: court.id,
-          bookingDate: bookingDate!.toISOString(),
-          startTime,
-          endTime,
-          totalAmount: basePrice.toFixed(2),
-          discountAmount: (rewardPointsDiscount + couponDiscount).toFixed(2),
-          finalAmount: finalAmount.toFixed(2),
-          paymentMethod: 'stripe',
-          paymentIntentId: paymentData.paymentIntentId,
-          notes: notes || null,
-          splitPayments: splitPayment ? splitUsers.filter(u => u.name && u.upiId) : [],
-          useRewardPoints,
-          couponCode: couponCode || null,
-        };
-        
-        await onSubmit(bookingData);
-        
-      } else if (paymentMethod === 'upi') {
-        // Validate UPI ID
-        const modal = document.querySelector('[role="dialog"]');
-        const upiId = (modal?.querySelector('input[placeholder*="yourname@"]') as HTMLInputElement)?.value;
-        
-        if (!upiId || !upiId.includes('@')) {
-          alert('Please enter a valid UPI ID');
-          setIsLoading(false);
-          return;
-        }
-        
-        // Create UPI payment request
-        const paymentResponse = await fetch('/api/create-upi-payment', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          },
-          body: JSON.stringify({
-            amount: finalAmount,
-            upiId: upiId
-          })
-        });
-        
-        if (!paymentResponse.ok) {
-          throw new Error('UPI payment request failed. Please check your UPI ID.');
-        }
-        
-        const paymentData = await paymentResponse.json();
-        
-        // Process booking with UPI payment
-        const endTime = calculateEndTime(startTime, duration);
-        const bookingData = {
-          courtId: court.id,
-          bookingDate: bookingDate!.toISOString(),
-          startTime,
-          endTime,
-          totalAmount: basePrice.toFixed(2),
-          discountAmount: (rewardPointsDiscount + couponDiscount).toFixed(2),
-          finalAmount: finalAmount.toFixed(2),
-          paymentMethod: 'upi',
-          paymentIntentId: paymentData.transactionId,
-          notes: notes || null,
-          splitPayments: splitPayment ? splitUsers.filter(u => u.name && u.upiId) : [],
-          useRewardPoints,
-          couponCode: couponCode || null,
-        };
-        
-        await onSubmit(bookingData);
-      }
+      // Simulate payment processing delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      const endTime = calculateEndTime(startTime, duration);
+      const mockPaymentIntentId = paymentMethod === 'stripe' 
+        ? `pi_mock_${Date.now()}` 
+        : `upi_mock_${Date.now()}`;
+      
+      const bookingData = {
+        courtId: court.id,
+        bookingDate: bookingDate!.toISOString(),
+        startTime,
+        endTime,
+        totalAmount: basePrice.toFixed(2),
+        discountAmount: (rewardPointsDiscount + couponDiscount).toFixed(2),
+        finalAmount: finalAmount.toFixed(2),
+        paymentMethod: paymentMethod,
+        paymentIntentId: mockPaymentIntentId,
+        notes: notes || null,
+        splitPayments: splitPayment ? splitUsers.filter(u => u.name && u.upiId) : [],
+        useRewardPoints,
+        couponCode: couponCode || null,
+      };
       
       setShowStripeCheckout(false);
+      
+      await onSubmit(bookingData);
       setLocation('/dashboard?booking=success');
       
     } catch (error: any) {
@@ -685,69 +577,18 @@ export default function BookingForm({ court, onSubmit, isLoading: submittingBook
               </div>
               
               {paymentMethod === 'stripe' && (
-                <div className="space-y-4">
-                  <div className="text-center text-gray-600 mb-4">
+                <div className="space-y-3">
+                  <div className="text-center text-gray-600">
                     <CreditCard className="h-12 w-12 mx-auto mb-2 text-blue-500" />
                     <p className="font-medium">Secure Card Payment</p>
+                    <p className="text-xs text-green-600 mt-1">✓ Test mode - Payment will succeed automatically</p>
                   </div>
-                  
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Card Number</label>
-                      <input
-                        type="text"
-                        placeholder="1234 5678 9012 3456"
-                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        maxLength={19}
-                        onChange={(e) => {
-                          // Format card number with spaces
-                          let value = e.target.value.replace(/\s/g, '').replace(/\D/g, '');
-                          value = value.replace(/(\d{4})(?=\d)/g, '$1 ');
-                          e.target.value = value;
-                        }}
-                      />
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-sm font-medium mb-1">Expiry Date</label>
-                        <input
-                          type="text"
-                          placeholder="MM/YY"
-                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          maxLength={5}
-                          onChange={(e) => {
-                            // Format expiry date
-                            let value = e.target.value.replace(/\D/g, '');
-                            if (value.length >= 2) {
-                              value = value.substring(0, 2) + '/' + value.substring(2, 4);
-                            }
-                            e.target.value = value;
-                          }}
-                        />
-                      </div>
-                      
-                      <div>
-                        <label className="block text-sm font-medium mb-1">CVV</label>
-                        <input
-                          type="text"
-                          placeholder="123"
-                          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          maxLength={4}
-                          onChange={(e) => {
-                            e.target.value = e.target.value.replace(/\D/g, '');
-                          }}
-                        />
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Cardholder Name</label>
-                      <input
-                        type="text"
-                        placeholder="John Doe"
-                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
+                  <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div><strong>Card:</strong> **** **** **** 4242</div>
+                      <div><strong>CVV:</strong> 123</div>
+                      <div><strong>Expiry:</strong> 12/28</div>
+                      <div><strong>Name:</strong> Test User</div>
                     </div>
                   </div>
                 </div>
