@@ -40,34 +40,35 @@ export default function StripeCheckout({
 
     try {
       console.log("Starting payment confirmation...");
-      const { error, paymentIntent } = await stripe.confirmPayment({
+      
+      const result = await stripe.confirmPayment({
         elements,
         redirect: "if_required"
       });
 
-      console.log("Payment confirmation result:", { error, paymentIntent });
+      console.log("Payment confirmation result:", result);
 
-      if (error) {
-        console.error("Payment failed:", error);
+      if (result.error) {
+        console.error("Payment failed:", result.error);
         toast({
           title: "Payment Failed",
-          description: error.message,
+          description: result.error.message,
           variant: "destructive",
         });
-      } else if (paymentIntent && paymentIntent.status === "succeeded") {
-        console.log("Payment succeeded! PaymentIntent ID:", paymentIntent.id);
-        console.log("Payment status:", paymentIntent.status);
+      } else if (result.paymentIntent && result.paymentIntent.status === "succeeded") {
+        console.log("Payment succeeded! PaymentIntent ID:", result.paymentIntent.id);
+        console.log("Payment status:", result.paymentIntent.status);
         console.log("Calling onPaymentSuccess callback...");
         toast({
           title: "Payment Successful! 🎉",
           description: "Creating your booking and redirecting...",
         });
-        onPaymentSuccess(paymentIntent.id);
+        onPaymentSuccess(result.paymentIntent.id);
       } else {
-        console.log("Payment not succeeded. Status:", paymentIntent?.status, "Error:", error);
+        console.log("Payment not succeeded. Status:", result.paymentIntent?.status, "Error:", result.error);
         toast({
           title: "Payment Issue",
-          description: `Payment status: ${paymentIntent?.status || 'unknown'}`,
+          description: `Payment status: ${result.paymentIntent?.status || 'unknown'}`,
           variant: "destructive",
         });
       }
