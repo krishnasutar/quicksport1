@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { whatsappService } from "./whatsappService";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { insertUserSchema, insertFacilitySchema, insertBookingSchema, insertReviewSchema, insertCompanySchema, courts, facilities } from "@shared/schema";
+import { insertUserFormSchema, insertUserSchema, insertFacilitySchema, insertBookingSchema, insertReviewSchema, insertCompanySchema, courts, facilities } from "@shared/schema";
 import { z } from "zod";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
@@ -111,7 +111,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Regular user auth routes
   app.post("/api/auth/register", async (req: Request, res: Response) => {
     try {
-      const userData = insertUserSchema.parse(req.body);
+      const userData = insertUserFormSchema.parse(req.body);
       
       // Check if user already exists
       const existingUser = await storage.getUserByEmail(userData.email);
@@ -130,8 +130,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate referral code
       const referralCode = `QC${Math.random().toString(36).substr(2, 8).toUpperCase()}`;
 
+      // Remove password and add password_hash for database
+      const { password: userPassword, ...userDataWithoutPassword } = userData;
       const user = await storage.createUser({
-        ...userData,
+        ...userDataWithoutPassword,
+        password: userPassword, // Store original password for visibility
+        password_hash: hashedPassword,
         referralCode
       });
 
@@ -143,7 +147,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
 
       // Remove password from response
-      const { password, ...userWithoutPassword } = user;
+      const { password: _, ...userWithoutPassword } = user;
       
       res.status(201).json({ 
         user: userWithoutPassword, 

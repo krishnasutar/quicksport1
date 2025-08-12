@@ -324,7 +324,8 @@ export const walletTransactionsRelations = relations(walletTransactions, ({ one 
 }));
 
 // Insert schemas
-export const insertUserSchema = createInsertSchema(users).omit({
+// Schema for form input (excludes system-generated fields)
+export const insertUserFormSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
@@ -333,6 +334,18 @@ export const insertUserSchema = createInsertSchema(users).omit({
   referralCode: true,
   isActive: true,
   password_hash: true  // Don't require password_hash in the form input
+});
+
+// Schema for database insertion (includes password_hash, excludes form password)
+export const insertUserSchema = createInsertSchema(users).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  walletBalance: true,
+  rewardPoints: true,
+  isActive: true
+}).extend({
+  referralCode: z.string().optional()
 });
 
 export const insertCrmUserSchema = createInsertSchema(crmUsers).omit({
