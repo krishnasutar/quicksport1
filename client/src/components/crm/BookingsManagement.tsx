@@ -62,7 +62,7 @@ export function BookingsManagement() {
   const currentUser = JSON.parse(localStorage.getItem('crm_user') || '{}');
   const isAdmin = currentUser.role === 'admin';
 
-  // Fetch pending bookings for approval
+  // ✅ LAZY LOADING - Only fetch when specific tabs are active
   const { data: pendingBookingsData, isLoading: pendingBookingsLoading } = useQuery<{bookings: PendingBooking[], total: number}>({
     queryKey: ['/api/admin/bookings/pending'],
     queryFn: async () => {
@@ -76,8 +76,9 @@ export function BookingsManagement() {
       if (!response.ok) throw new Error('Failed to fetch pending bookings');
       return response.json();
     },
-    staleTime: 0,
-    refetchInterval: 5000, // Refresh every 5 seconds for real-time updates
+    enabled: activeTab === 'pending', // Only when pending tab is active
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    refetchInterval: false, // No auto-refresh
   });
 
   // Fetch all bookings (confirmed, cancelled, etc.)
@@ -95,7 +96,8 @@ export function BookingsManagement() {
       if (!response.ok) throw new Error('Failed to fetch bookings');
       return response.json();
     },
-    staleTime: 0,
+    enabled: activeTab === 'all', // Only when all bookings tab is active
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 
   const pendingBookings = pendingBookingsData?.bookings || [];

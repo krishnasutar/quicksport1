@@ -28,10 +28,11 @@ interface LatestBooking {
 export default function BookingSuccessPopup({ isOpen, onClose }: BookingSuccessPopupProps) {
   const [showAnimation, setShowAnimation] = useState(false);
 
-  // Fetch latest booking when popup opens
+  // ✅ LAZY LOADING - Manual trigger for latest booking
+  const [shouldFetchBooking, setShouldFetchBooking] = useState(false);
   const { data: latestBooking, isLoading } = useQuery<LatestBooking>({
     queryKey: ['/api/bookings/latest'],
-    enabled: isOpen, // Only fetch when popup is open
+    enabled: isOpen && shouldFetchBooking, // Only fetch when user clicks "View Details"
   });
 
   useEffect(() => {
@@ -114,7 +115,17 @@ export default function BookingSuccessPopup({ isOpen, onClose }: BookingSuccessP
           </CardHeader>
 
           <CardContent className="p-6">
-            {isLoading ? (
+            {!shouldFetchBooking ? (
+              <div className="text-center py-6">
+                <p className="text-gray-600 mb-4">Your booking has been confirmed successfully!</p>
+                <Button 
+                  onClick={() => setShouldFetchBooking(true)}
+                  className="bg-green-500 hover:bg-green-600 text-white"
+                >
+                  View Booking Details
+                </Button>
+              </div>
+            ) : isLoading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin w-6 h-6 border-2 border-green-500 border-t-transparent rounded-full" />
               </div>

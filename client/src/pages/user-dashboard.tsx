@@ -22,10 +22,10 @@ export default function UserDashboard() {
     return new URLSearchParams(window.location.search).get('booking') === 'success';
   });
 
-  // Handle tab from URL parameters
+  // ✅ LAZY LOADING - Default to empty state, only load when user clicks tabs
   const [activeTab, setActiveTab] = useState(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get('tab') || 'bookings';
+    return urlParams.get('tab') || 'profile'; // Default to profile tab (no API calls)
   });
 
   // Update tab when URL changes
