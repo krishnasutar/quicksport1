@@ -210,12 +210,12 @@ export default function BookingForm({ court, onSubmit, isLoading }: BookingFormP
     setShowStripeCheckout(false);
     setClientSecret(null);
     
-    // Call onSubmit and then redirect to dashboard
+    // Call onSubmit and then redirect to home with success flag
     try {
       await onSubmit(bookingData);
-      console.log('Booking created successfully, redirecting to dashboard...');
-      // Redirect to user dashboard after successful booking
-      setLocation('/dashboard');
+      console.log('Booking created successfully, redirecting to home with success popup...');
+      // Redirect to home page with success parameter to show booking confirmation popup
+      setLocation('/?booking=success');
     } catch (error) {
       console.error('Error creating booking after payment:', error);
       alert('Payment was successful but there was an error creating your booking. Please contact support.');

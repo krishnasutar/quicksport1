@@ -41,6 +41,7 @@ export interface IStorage {
   createBooking(insertBooking: InsertBooking): Promise<Booking>;
   getBookingById(id: string): Promise<Booking | undefined>;
   getUserBookings(filters: any): Promise<{ bookings: any[]; total: number }>;
+  getLatestUserBooking(userId: string): Promise<any>;
   getOwnerBookings(filters: any): Promise<{ bookings: any[]; total: number }>;
   updateBookingStatus(id: string, status: string): Promise<Booking | undefined>;
   checkUserBookingHistory(userId: string, facilityId: string): Promise<boolean>;
@@ -413,6 +414,32 @@ export class DatabaseStorage implements IStorage {
       bookings: transformedBookings,
       total: totalResult.count
     };
+  }
+
+  async getLatestUserBooking(userId: string): Promise<any> {
+    const latestBooking = await db
+      .select({
+        id: bookings.id,
+        courtName: courts.name,
+        facilityName: facilities.name,
+        facilityLocation: facilities.address,
+        bookingDate: bookings.bookingDate,
+        startTime: bookings.startTime,
+        endTime: bookings.endTime,
+        finalAmount: bookings.finalAmount,
+        paymentMethod: bookings.paymentMethod,
+        status: bookings.status,
+        sport: courts.sportType,
+        createdAt: bookings.createdAt
+      })
+      .from(bookings)
+      .innerJoin(courts, eq(bookings.courtId, courts.id))
+      .innerJoin(facilities, eq(courts.facilityId, facilities.id))
+      .where(eq(bookings.userId, userId))
+      .orderBy(desc(bookings.createdAt))
+      .limit(1);
+
+    return latestBooking[0] || null;
   }
 
   async getOwnerBookings(filters: any): Promise<{ bookings: any[]; total: number }> {

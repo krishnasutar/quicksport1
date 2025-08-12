@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import Navbar from "@/components/layout/navbar";
 import Footer from "@/components/layout/footer";
 import HeroSection from "@/components/hero-section";
 import SportsCategory from "@/components/sports-category";
 import VenueCard from "@/components/venue-card";
 import FeatureSection from "@/components/feature-section";
+import BookingSuccessPopup from "@/components/BookingSuccessPopup";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -14,10 +15,22 @@ import { Search, Filter, Star, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 export default function Home() {
+  const [location] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSport, setSelectedSport] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
   const [priceRange, setPriceRange] = useState("");
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+
+  // Check for booking success parameter in URL
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('booking') === 'success') {
+      setShowSuccessPopup(true);
+      // Clean URL without refresh
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [location]);
 
   const { data: facilitiesData, isLoading } = useQuery({
     queryKey: ['/api/facilities', { sport: selectedSport, city: selectedCity, page: 1, limit: 6 }],
@@ -543,6 +556,12 @@ export default function Home() {
       </section>
       
       <Footer />
+      
+      {/* Booking Success Popup */}
+      <BookingSuccessPopup 
+        isOpen={showSuccessPopup}
+        onClose={() => setShowSuccessPopup(false)}
+      />
     </div>
   );
 }

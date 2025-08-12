@@ -868,6 +868,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get latest booking for success popup
+  app.get("/api/bookings/latest", authenticateToken, async (req: any, res: Response) => {
+    try {
+      const latestBooking = await storage.getLatestUserBooking(req.user.id);
+      
+      if (!latestBooking) {
+        return res.status(404).json({ message: "No bookings found" });
+      }
+
+      res.json(latestBooking);
+    } catch (error) {
+      console.error("Get latest booking error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   app.patch("/api/bookings/:id/cancel", authenticateToken, async (req: any, res: Response) => {
     try {
       const booking = await storage.getBookingById(req.params.id);
