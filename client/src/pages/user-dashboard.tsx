@@ -38,7 +38,7 @@ export default function UserDashboard() {
     queryKey: ['/api/wallet'],
   });
 
-  const bookings = bookingsData?.bookings || [];
+  const bookings = (bookingsData as any)?.bookings || [];
   
   // Sort bookings by creation date (most recent first) and then by booking date
   const sortedBookings = [...bookings].sort((a, b) => {
@@ -166,7 +166,7 @@ export default function UserDashboard() {
                 <div>
                   <p className="text-sm text-gray-600">Wallet Balance</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    ₹{parseFloat(walletData?.balance || user.walletBalance || "0").toFixed(0)}
+                    ₹{parseFloat((walletData as any)?.balance || user.walletBalance || "0").toFixed(0)}
                   </p>
                 </div>
               </div>
@@ -325,7 +325,8 @@ export default function UserDashboard() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="wallet">
+          <TabsContent value="wallet" className="space-y-6">
+            {/* Wallet Balance Card */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center">
@@ -336,13 +337,84 @@ export default function UserDashboard() {
               <CardContent>
                 <div className="text-center py-8">
                   <div className="text-4xl font-bold text-gray-900 mb-2">
-                    ₹{parseFloat(walletData?.balance || user.walletBalance || "0").toFixed(0)}
+                    ₹{parseFloat((walletData as any)?.balance || user.walletBalance || "0").toFixed(0)}
                   </div>
                   <p className="text-gray-600 mb-6">Available Balance</p>
-                  <Button className="gradient-bg">
-                    Add Funds
-                  </Button>
+                  <div className="flex justify-center space-x-4">
+                    <Button className="gradient-bg">
+                      <CreditCard className="h-4 w-4 mr-2" />
+                      Add Funds
+                    </Button>
+                    <Button variant="outline">
+                      <Clock className="h-4 w-4 mr-2" />
+                      Transaction History
+                    </Button>
+                  </div>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Quick Add Amounts */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Quick Add Funds</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {[500, 1000, 2000, 5000].map((amount) => (
+                    <Button 
+                      key={amount}
+                      variant="outline" 
+                      className="h-16 text-lg font-semibold hover:bg-brand-indigo hover:text-white transition-colors"
+                    >
+                      ₹{amount}
+                    </Button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Recent Transactions */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Transactions</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {(walletData as any)?.recentTransactions && (walletData as any).recentTransactions.length > 0 ? (
+                  <div className="space-y-4">
+                    {(walletData as any).recentTransactions.slice(0, 5).map((transaction: any, index: number) => (
+                      <div key={index} className="flex items-center justify-between p-4 border border-gray-100 rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                            transaction.type === 'credit' ? 'bg-green-100' : 'bg-red-100'
+                          }`}>
+                            {transaction.type === 'credit' ? 
+                              <CreditCard className="h-5 w-5 text-green-600" /> : 
+                              <Clock className="h-5 w-5 text-red-600" />
+                            }
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900">{transaction.description}</p>
+                            <p className="text-sm text-gray-500">
+                              {new Date(transaction.createdAt).toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+                        <div className={`font-semibold ${
+                          transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'
+                        }`}>
+                          {transaction.type === 'credit' ? '+' : '-'}₹{Math.abs(transaction.amount)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <CreditCard className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-500">No transactions yet</p>
+                    <p className="text-sm text-gray-400">Your wallet transactions will appear here</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -372,39 +444,105 @@ export default function UserDashboard() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="profile">
+          <TabsContent value="profile" className="space-y-6">
+            {/* Profile Information */}
             <Card>
               <CardHeader>
-                <CardTitle>Profile Settings</CardTitle>
+                <CardTitle>Profile Information</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-start space-x-6">
+                  <Avatar className="w-20 h-20">
+                    <AvatarImage src={user.profilePicture} />
+                    <AvatarFallback className="text-lg">
+                      {user.firstName?.charAt(0)}{user.lastName?.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">First Name</label>
+                        <p className="text-gray-900 font-medium">{user.firstName}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">Last Name</label>
+                        <p className="text-gray-900 font-medium">{user.lastName}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">Email</label>
+                        <p className="text-gray-900">{user.email}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">Username</label>
+                        <p className="text-gray-900">@{user.username}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">Phone Number</label>
+                        <p className="text-gray-900">{user.phoneNumber || 'Not provided'}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">Student Status</label>
+                        <Badge variant={user.isStudentVerified ? "default" : "secondary"}>
+                          {user.isStudentVerified ? "✓ Verified Student" : "Not Verified"}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Account Settings */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Account Settings</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">Full Name</label>
-                    <p className="text-gray-900">{user.firstName} {user.lastName}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">Email</label>
-                    <p className="text-gray-900">{user.email}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">Username</label>
-                    <p className="text-gray-900">@{user.username}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">Phone</label>
-                    <p className="text-gray-900">{user.phoneNumber || 'Not provided'}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">Student Status</label>
-                    <div className="flex items-center space-x-2">
-                      <Badge variant={user.isStudentVerified ? "default" : "secondary"}>
-                        {user.isStudentVerified ? "Verified Student" : "Not Verified"}
-                      </Badge>
+                  <div className="flex items-center justify-between p-4 border border-gray-100 rounded-lg">
+                    <div>
+                      <h4 className="font-medium text-gray-900">Email Notifications</h4>
+                      <p className="text-sm text-gray-600">Receive booking confirmations and updates</p>
                     </div>
+                    <Badge variant="outline" className="bg-green-50 text-green-700">Enabled</Badge>
                   </div>
+                  <div className="flex items-center justify-between p-4 border border-gray-100 rounded-lg">
+                    <div>
+                      <h4 className="font-medium text-gray-900">SMS Notifications</h4>
+                      <p className="text-sm text-gray-600">Get important updates via SMS</p>
+                    </div>
+                    <Badge variant="outline" className="bg-green-50 text-green-700">Enabled</Badge>
+                  </div>
+                  <div className="flex items-center justify-between p-4 border border-gray-100 rounded-lg">
+                    <div>
+                      <h4 className="font-medium text-gray-900">Student Verification</h4>
+                      <p className="text-sm text-gray-600">Verify student status for discounts</p>
+                    </div>
+                    {user.isStudentVerified ? (
+                      <Badge className="bg-green-100 text-green-800">Verified</Badge>
+                    ) : (
+                      <Button variant="outline" size="sm">Verify Now</Button>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Actions */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Actions</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex space-x-4">
                   <Button className="gradient-bg">
                     Edit Profile
+                  </Button>
+                  <Button variant="outline">
+                    Change Password
+                  </Button>
+                  <Button variant="outline" className="text-red-600 border-red-200 hover:bg-red-50">
+                    Delete Account
                   </Button>
                 </div>
               </CardContent>
