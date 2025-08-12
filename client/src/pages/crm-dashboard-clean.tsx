@@ -50,6 +50,7 @@ import {
 
 import { UsersManagement } from "@/components/crm/UsersManagement";
 import { FacilityManagement } from "@/components/crm/FacilityManagement";
+import { BookingsManagement } from "@/components/crm/BookingsManagement";
 import { CompanyManagement } from "@/components/crm/CompanyManagement";
 import { AddFacilityForm } from "@/components/crm/AddFacilityForm";
 import { OtherManagement } from "@/components/crm/OtherManagement";
@@ -664,8 +665,10 @@ export default function CRMDashboard() {
           )}
           {activeSection === 'add-facility' && <AddFacilityForm />}
 
+          {/* Bookings Management Section */}
+          {activeSection === 'bookings' && <BookingsManagement />}
+          
           {/* Other sections */}
-          {activeSection === 'bookings' && <OtherManagement section={activeSection} isAdmin={isAdmin} />}
           {activeSection === 'analytics' && <OtherManagement section={activeSection} isAdmin={isAdmin} />}
           {activeSection === 'settings' && <OtherManagement section={activeSection} isAdmin={isAdmin} />}
         </div>
