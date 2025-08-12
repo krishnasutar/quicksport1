@@ -18,6 +18,18 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### August 12, 2025 - Enhanced Payment Success & Booking Approval Flow ✅
+- **✅ IMPROVED PAYMENT SUCCESS MESSAGING**: Enhanced BookingSuccessPopup with comprehensive booking status information
+- **Pending approval workflow**: Clear messaging that bookings go to CRM for facility owner approval after payment
+- **User expectations set**: Popup explains 24-hour approval timeline, WhatsApp notifications, and refund policy
+- **Visual status indicators**: Pending bookings show yellow "Pending Approval" badge instead of generic status
+- **Complete user journey**: Payment success → Pending approval → WhatsApp confirmation (planned) → Booking confirmed
+- **Refund assurance**: Users informed of full refund if booking is rejected by facility
+- **Role-based access control**: Owner role restricted to Dashboard, Facilities, and Bookings only (no Users, Companies, Analytics, Settings)
+- **Bookings management migrated**: Successfully moved pending bookings from Facilities tab to dedicated Bookings section
+- **Clean separation**: Facilities tab for facility management, Bookings tab for booking approvals and history
+- **Data isolation working**: Owners see only their facility's bookings, proper hierarchical access control implemented
+
 ### August 11, 2025 - Complete Stripe Payment Gateway Integration ✅ TEMPORARILY MOCKED
 - **✅ STRIPE PAYMENT TEMPORARILY SIMULATED**: Converted to mock payment flow for testing other features
 - **Complete booking workflow implemented**: Extended existing wallet system with simulated card payments  

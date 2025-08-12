@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, MapPin, Calendar, Clock, CreditCard, Wallet, X } from "lucide-react";
+import { CheckCircle, MapPin, Calendar, Clock, CreditCard, Wallet, X, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
 
@@ -108,8 +108,8 @@ export default function BookingSuccessPopup({ isOpen, onClose }: BookingSuccessP
               <div className="bg-white bg-opacity-20 rounded-full p-3 mb-3">
                 <CheckCircle className="h-8 w-8 text-white" />
               </div>
-              <h2 className="text-xl font-bold mb-1">Booking Confirmed!</h2>
-              <p className="text-green-100 text-sm">Your court has been successfully booked</p>
+              <h2 className="text-xl font-bold mb-1">Payment Successful!</h2>
+              <p className="text-green-100 text-sm">Your booking request has been submitted</p>
             </div>
           </CardHeader>
 
@@ -134,10 +134,14 @@ export default function BookingSuccessPopup({ isOpen, onClose }: BookingSuccessP
                       {latestBooking.sport}
                     </Badge>
                     <Badge 
-                      variant={latestBooking.status === 'confirmed' ? 'default' : 'secondary'}
-                      className="text-xs"
+                      variant={latestBooking.status === 'confirmed' ? 'default' : 'outline'}
+                      className={`text-xs ${
+                        latestBooking.status === 'pending' 
+                          ? 'bg-yellow-50 border-yellow-200 text-yellow-800' 
+                          : ''
+                      }`}
                     >
-                      {latestBooking.status}
+                      {latestBooking.status === 'pending' ? 'Pending Approval' : latestBooking.status}
                     </Badge>
                   </div>
                 </div>
@@ -174,6 +178,23 @@ export default function BookingSuccessPopup({ isOpen, onClose }: BookingSuccessP
                     </span>
                   </div>
                 </div>
+
+                {/* Booking Status Information */}
+                {latestBooking.status === 'pending' && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                      <div className="text-sm">
+                        <p className="font-medium text-blue-900 mb-1">What happens next?</p>
+                        <ul className="text-blue-800 space-y-1 text-xs">
+                          <li>• Facility will check availability and confirm within 24 hours</li>
+                          <li>• You'll receive WhatsApp confirmation once approved</li>
+                          <li>• Full refund if booking is rejected</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Action Buttons */}
                 <div className="flex gap-3 pt-2">
