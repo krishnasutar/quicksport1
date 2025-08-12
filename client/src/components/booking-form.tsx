@@ -96,7 +96,6 @@ export default function BookingForm({ court, onSubmit, isLoading }: BookingFormP
     }
 
     console.log('Payment method selected:', paymentMethod);
-    console.log('Stripe promise available:', !!stripePromise);
 
     // Validate wallet balance if wallet payment is selected
     if (paymentMethod === 'wallet' && walletBalance < finalAmount) {
@@ -104,43 +103,18 @@ export default function BookingForm({ court, onSubmit, isLoading }: BookingFormP
       return;
     }
 
-    const endTime = calculateEndTime(startTime, duration);
-
-    // If Stripe payment is selected, simulate successful payment
-    if (paymentMethod === 'stripe') {
-      console.log('Simulating successful Stripe payment...');
-      
-      // Simulate payment processing delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      const endTime = calculateEndTime(startTime, duration);
-      const mockPaymentIntentId = `pi_mock_${Date.now()}`;
-      
-      const bookingData = {
-        courtId: court.id,
-        bookingDate: bookingDate!.toISOString(),
-        startTime,
-        endTime,
-        totalAmount: basePrice.toFixed(2),
-        discountAmount: (rewardPointsDiscount + couponDiscount).toFixed(2),
-        finalAmount: finalAmount.toFixed(2),
-        paymentMethod: 'stripe',
-        paymentIntentId: mockPaymentIntentId,
-        notes: notes || null,
-        splitPayments: splitPayment ? splitUsers.filter(u => u.name && u.upiId) : [],
-        useRewardPoints,
-        couponCode: couponCode || null,
-      };
-      
-      console.log('Mock payment successful, creating booking...');
-      onSubmit(bookingData);
+    // For non-wallet payments, show payment popup
+    if (paymentMethod === 'stripe' || paymentMethod === 'upi') {
+      setShowStripeCheckout(true);
       return;
     }
-    
-    console.log('Processing wallet payment...');
+
+    const endTime = calculateEndTime(startTime, duration);
+
+    // For wallet payment, proceed directly
     const bookingData = {
       courtId: court.id,
-      bookingDate: bookingDate.toISOString(),
+      bookingDate: bookingDate!.toISOString(),
       startTime,
       endTime,
       totalAmount: basePrice.toFixed(2),
@@ -156,16 +130,41 @@ export default function BookingForm({ court, onSubmit, isLoading }: BookingFormP
     onSubmit(bookingData);
   };
 
-  const handleStripePaymentSuccess = async (paymentIntentId: string) => {
-    console.log('=== STRIPE PAYMENT SUCCESS CALLBACK TRIGGERED ===');
-    console.log('PaymentIntent ID received:', paymentIntentId);
-    console.log('Current booking form state:', { 
-      bookingDate: bookingDate?.toISOString(), 
-      startTime, 
-      duration, 
-      finalAmount 
-    });
+  const handlePaymentSuccess = async () => {
+    // Simulate payment processing
+    await new Promise(resolve => setTimeout(resolve, 2000));
     
+    const endTime = calculateEndTime(startTime, duration);
+    const mockPaymentIntentId = `pi_mock_${Date.now()}`;
+    
+    const bookingData = {
+      courtId: court.id,
+      bookingDate: bookingDate!.toISOString(),
+      startTime,
+      endTime,
+      totalAmount: basePrice.toFixed(2),
+      discountAmount: (rewardPointsDiscount + couponDiscount).toFixed(2),
+      finalAmount: finalAmount.toFixed(2),
+      paymentMethod: paymentMethod,
+      paymentIntentId: mockPaymentIntentId,
+      notes: notes || null,
+      splitPayments: splitPayment ? splitUsers.filter(u => u.name && u.upiId) : [],
+      useRewardPoints,
+      couponCode: couponCode || null,
+    };
+    
+    setShowStripeCheckout(false);
+    
+    try {
+      await onSubmit(bookingData);
+      setLocation('/dashboard?booking=success');
+    } catch (error) {
+      console.error('Error creating booking after payment:', error);
+      alert('Payment was successful but there was an error creating your booking. Please contact support.');
+    }
+  };
+
+  const handleStripePaymentSuccess = async (paymentIntentId: string) => {
     const endTime = calculateEndTime(startTime, duration);
     
     const bookingData = {
@@ -184,23 +183,13 @@ export default function BookingForm({ court, onSubmit, isLoading }: BookingFormP
       couponCode: couponCode || null,
     };
     
-    console.log('Creating booking with data:', JSON.stringify(bookingData, null, 2));
-    console.log('About to call onSubmit function...');
-    
     setShowStripeCheckout(false);
-    setClientSecret(null);
     
-    // Call onSubmit and then redirect to home with success flag
     try {
-      console.log('Calling onSubmit function now...');
-      const result = await onSubmit(bookingData);
-      console.log('onSubmit completed successfully! Result:', result);
-      console.log('Booking created successfully! Now redirecting to dashboard with success popup...');
-      // Immediate redirect
+      await onSubmit(bookingData);
       setLocation('/dashboard?booking=success');
     } catch (error) {
       console.error('Error creating booking after payment:', error);
-      console.error('Error details:', JSON.stringify(error, null, 2));
       alert('Payment was successful but there was an error creating your booking. Please contact support.');
     }
   };
@@ -547,11 +536,87 @@ export default function BookingForm({ court, onSubmit, isLoading }: BookingFormP
           ? "Processing..." 
           : (paymentMethod === 'wallet' && walletBalance < finalAmount)
           ? `Insufficient Balance (₹${walletBalance.toFixed(2)} available)`
-          : `Book Court for ₹${finalAmount.toFixed(0)}`
+          : paymentMethod === 'wallet'
+          ? `Pay from Wallet ₹${finalAmount.toFixed(0)}`
+          : `Pay ₹${finalAmount.toFixed(0)} via ${paymentMethod === 'stripe' ? 'Card' : 'UPI'}`
         }
       </Button>
     
-      {/* Stripe Checkout Modal */}
+      {/* Payment Popup Modal */}
+      {showStripeCheckout && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">
+                {paymentMethod === 'stripe' ? 'Card Payment' : 'UPI Payment'}
+              </h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowStripeCheckout(false)}
+              >
+                ✕
+              </Button>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-medium">Booking Summary</h4>
+                <p className="text-sm text-gray-600">Court: {court.name}</p>
+                <p className="text-sm text-gray-600">Date: {bookingDate ? format(bookingDate, "PPP") : ""}</p>
+                <p className="text-sm text-gray-600">Time: {startTime} - {calculateEndTime(startTime, duration)}</p>
+                <p className="text-lg font-bold mt-2">Total: ₹{finalAmount.toFixed(0)}</p>
+              </div>
+              
+              {paymentMethod === 'stripe' && (
+                <div className="space-y-3">
+                  <div className="text-center text-gray-600">
+                    <CreditCard className="h-12 w-12 mx-auto mb-2 text-blue-500" />
+                    <p>Secure Card Payment via Stripe</p>
+                    <p className="text-xs">(Currently simulated for testing)</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="bg-gray-100 p-2 rounded">Card: **** 4242</div>
+                    <div className="bg-gray-100 p-2 rounded">CVV: ***</div>
+                  </div>
+                </div>
+              )}
+              
+              {paymentMethod === 'upi' && (
+                <div className="space-y-3">
+                  <div className="text-center text-gray-600">
+                    <div className="w-12 h-12 mx-auto mb-2 bg-green-100 rounded-full flex items-center justify-center">
+                      <span className="text-green-600 font-bold">₹</span>
+                    </div>
+                    <p>UPI Payment</p>
+                    <p className="text-xs">(Currently simulated for testing)</p>
+                  </div>
+                  <div className="bg-gray-100 p-3 rounded text-center">
+                    <p className="text-sm">UPI ID: user@paytm</p>
+                  </div>
+                </div>
+              )}
+              
+              <div className="flex space-x-3">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setShowStripeCheckout(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className="flex-1 gradient-bg"
+                  onClick={handlePaymentSuccess}
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Processing..." : `Pay ₹${finalAmount.toFixed(0)}`}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
     </form>
   );
