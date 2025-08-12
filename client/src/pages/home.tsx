@@ -399,31 +399,6 @@ export default function Home() {
       {/* Find Courts Section */}
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Quick Search Bar - Links to Sports Page */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm mb-8">
-            <div className="text-center">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Find Courts Near You</h3>
-              <div className="max-w-2xl mx-auto">
-                <div className="relative">
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                  <Input 
-                    placeholder="Search by sport, location, or venue name..."
-                    className="pl-12 py-4 text-lg rounded-xl border-2 border-gray-200 focus:border-brand-indigo"
-                    onFocus={() => window.location.href = '/sports'}
-                  />
-                  <Button 
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 gradient-bg px-6"
-                    onClick={() => window.location.href = '/sports'}
-                  >
-                    Search
-                  </Button>
-                </div>
-                <p className="text-sm text-gray-500 mt-2">
-                  Try searching for "basketball Bangalore" or "swimming pool Mumbai"
-                </p>
-              </div>
-            </div>
-          </div>
           
           {/* Venue Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
