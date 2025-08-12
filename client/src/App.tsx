@@ -20,6 +20,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/facilities" component={Home} />
       <Route path="/sports" component={SportsPage} />
       <Route path="/about" component={AboutPage} />
       <Route path="/contact" component={ContactPage} />
