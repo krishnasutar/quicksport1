@@ -214,16 +214,6 @@ export default function Home() {
               </div>
             </Link>
             
-            <Link href="/esports" className="group">
-              <div className="bg-white rounded-2xl p-6 shadow-sm card-hover text-center transform transition-all duration-300 group-hover:scale-105">
-                <div className="w-16 h-16 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <i className="fas fa-gamepad text-white text-2xl"></i>
-                </div>
-                <h3 className="font-bold text-gray-900 mb-2">E-Sports</h3>
-                <p className="text-sm text-gray-600">25+ Gaming Centers</p>
-              </div>
-            </Link>
-            
             <Link href="/sports" className="group">
               <div className="bg-gradient-to-br from-brand-indigo to-brand-purple rounded-2xl p-6 shadow-sm card-hover text-center transform transition-all duration-300 group-hover:scale-105 text-white">
                 <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
