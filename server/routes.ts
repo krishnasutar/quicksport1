@@ -847,6 +847,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update current user's profile
+  app.put("/api/users/:id", authenticateToken, async (req: any, res: Response) => {
+    try {
+      const userId = req.params.id;
+      
+      // Users can only update their own profile
+      if (userId !== req.user.id) {
+        return res.status(403).json({ message: "Not authorized to update this profile" });
+      }
+
+      const { firstName, lastName, phoneNumber } = req.body;
+      const updateData = { firstName, lastName, phoneNumber };
+
+      const updatedUser = await storage.updateUser(userId, updateData);
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const { password: _, password_hash, ...userWithoutPassword } = updatedUser;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error("Update profile error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Change password for current user
+  app.put("/api/auth/change-password", authenticateToken, async (req: any, res: Response) => {
+    try {
+      const { currentPassword, newPassword } = req.body;
+
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: "Current password and new password are required" });
+      }
+
+      // Get current user
+      const user = await storage.getUserById(req.user.id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Verify current password
+      const isValidPassword = await bcrypt.compare(currentPassword, user.password_hash as string);
+      if (!isValidPassword) {
+        return res.status(400).json({ message: "Current password is incorrect" });
+      }
+
+      // Hash new password
+      const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+      
+      // Update password in database
+      await storage.updateUser(req.user.id, { 
+        password: newPassword,
+        password_hash: hashedNewPassword 
+      });
+
+      res.json({ message: "Password changed successfully" });
+    } catch (error) {
+      console.error("Change password error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Delete current user's account
+  app.delete("/api/users/:id", authenticateToken, async (req: any, res: Response) => {
+    try {
+      const userId = req.params.id;
+      
+      // Users can only delete their own account
+      if (userId !== req.user.id) {
+        return res.status(403).json({ message: "Not authorized to delete this account" });
+      }
+
+      const deleted = await storage.deleteUser(userId);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json({ message: "Account deleted successfully" });
+    } catch (error) {
+      console.error("Delete account error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Delete user (admin only)
   app.delete("/api/admin/users/:id", authenticateToken, async (req: any, res: Response) => {
     try {

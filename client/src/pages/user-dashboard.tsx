@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import Navbar from "@/components/layout/navbar";
 import Footer from "@/components/layout/footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,15 +7,51 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Calendar, MapPin, Clock, CreditCard, Star, Gift, Users, Trophy } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Calendar, MapPin, Clock, CreditCard, Star, Gift, Users, Trophy, Edit, Lock, Trash2 } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { Link, useLocation } from "wouter";
 import BookingSuccessPopup from "@/components/BookingSuccessPopup";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+
+// Form schemas
+const editProfileSchema = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  phoneNumber: z.string()
+    .min(10, "Phone number must be at least 10 digits")
+    .max(13, "Phone number cannot exceed 13 digits")
+    .regex(/^\d+$/, "Phone number must contain only digits")
+    .optional()
+    .or(z.literal("")),
+});
+
+const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, "Current password is required"),
+  newPassword: z.string().min(6, "Password must be at least 6 characters"),
+  confirmPassword: z.string().min(1, "Please confirm your password"),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
 
 export default function UserDashboard() {
-  const { user } = useAuth();
+  const { user, updateUser, logout } = useAuth();
   const [, navigate] = useLocation();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
+  
+  // Dialog states
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   
   // Check if we're showing success popup
   const [showSuccessPopup, setShowSuccessPopup] = useState(() => {
@@ -26,6 +62,87 @@ export default function UserDashboard() {
   const [activeTab, setActiveTab] = useState(() => {
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.get('tab') || 'profile'; // Default to profile tab (no API calls)
+  });
+
+  // Form configurations
+  const editForm = useForm<z.infer<typeof editProfileSchema>>({
+    resolver: zodResolver(editProfileSchema),
+    defaultValues: {
+      firstName: user?.firstName || "",
+      lastName: user?.lastName || "",
+      phoneNumber: user?.phoneNumber || "",
+    },
+  });
+
+  const passwordForm = useForm<z.infer<typeof changePasswordSchema>>({
+    resolver: zodResolver(changePasswordSchema),
+    defaultValues: {
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    },
+  });
+
+  // Mutations
+  const editProfileMutation = useMutation({
+    mutationFn: async (values: z.infer<typeof editProfileSchema>) => {
+      const response = await apiRequest("PUT", `/api/users/${user?.id}`, values);
+      return response.json();
+    },
+    onSuccess: (updatedUser) => {
+      updateUser(updatedUser);
+      toast({ title: "Profile updated successfully" });
+      setShowEditDialog(false);
+      editForm.reset();
+    },
+    onError: () => {
+      toast({ 
+        title: "Failed to update profile", 
+        description: "Please try again",
+        variant: "destructive" 
+      });
+    },
+  });
+
+  const changePasswordMutation = useMutation({
+    mutationFn: async (values: z.infer<typeof changePasswordSchema>) => {
+      const response = await apiRequest("PUT", "/api/auth/change-password", {
+        currentPassword: values.currentPassword,
+        newPassword: values.newPassword,
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Password changed successfully" });
+      setShowPasswordDialog(false);
+      passwordForm.reset();
+    },
+    onError: () => {
+      toast({ 
+        title: "Failed to change password", 
+        description: "Please check your current password and try again",
+        variant: "destructive" 
+      });
+    },
+  });
+
+  const deleteAccountMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("DELETE", `/api/users/${user?.id}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Account deleted successfully" });
+      logout();
+      navigate('/');
+    },
+    onError: () => {
+      toast({ 
+        title: "Failed to delete account", 
+        description: "Please try again or contact support",
+        variant: "destructive" 
+      });
+    },
   });
 
   // Update tab when URL changes
@@ -553,13 +670,36 @@ export default function UserDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="flex space-x-4">
-                  <Button className="gradient-bg">
+                  <Button 
+                    className="gradient-bg" 
+                    onClick={() => {
+                      editForm.reset({
+                        firstName: user?.firstName || "",
+                        lastName: user?.lastName || "",
+                        phoneNumber: user?.phoneNumber || "",
+                      });
+                      setShowEditDialog(true);
+                    }}
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
                     Edit Profile
                   </Button>
-                  <Button variant="outline">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      passwordForm.reset();
+                      setShowPasswordDialog(true);
+                    }}
+                  >
+                    <Lock className="h-4 w-4 mr-2" />
                     Change Password
                   </Button>
-                  <Button variant="outline" className="text-red-600 border-red-200 hover:bg-red-50">
+                  <Button 
+                    variant="outline" 
+                    className="text-red-600 border-red-200 hover:bg-red-50"
+                    onClick={() => setShowDeleteDialog(true)}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
                     Delete Account
                   </Button>
                 </div>
@@ -582,6 +722,172 @@ export default function UserDashboard() {
           }}
         />
       )}
+
+      {/* Edit Profile Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Profile</DialogTitle>
+            <DialogDescription>
+              Update your personal information. Changes will be saved to your account.
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...editForm}>
+            <form onSubmit={editForm.handleSubmit((values) => editProfileMutation.mutate(values))} className="space-y-4">
+              <FormField
+                control={editForm.control}
+                name="firstName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>First Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter first name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editForm.control}
+                name="lastName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Last Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter last name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editForm.control}
+                name="phoneNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Phone Number (Max 13 digits)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="Enter phone number" 
+                        maxLength={13}
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setShowEditDialog(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={editProfileMutation.isPending}>
+                  {editProfileMutation.isPending ? "Updating..." : "Update Profile"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Change Password Dialog */}
+      <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Change Password</DialogTitle>
+            <DialogDescription>
+              Enter your current password and choose a new one.
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...passwordForm}>
+            <form onSubmit={passwordForm.handleSubmit((values) => changePasswordMutation.mutate(values))} className="space-y-4">
+              <FormField
+                control={passwordForm.control}
+                name="currentPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Current Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" placeholder="Enter current password" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={passwordForm.control}
+                name="newPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>New Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" placeholder="Enter new password" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={passwordForm.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Confirm New Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" placeholder="Confirm new password" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setShowPasswordDialog(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={changePasswordMutation.isPending}>
+                  {changePasswordMutation.isPending ? "Changing..." : "Change Password"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Account Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete Account</DialogTitle>
+            <DialogDescription className="text-red-600">
+              This action cannot be undone. Your account and all associated data will be permanently deleted.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">
+              Are you sure you want to delete your account? This will:
+            </p>
+            <ul className="text-sm text-gray-600 list-disc list-inside space-y-1">
+              <li>Delete all your bookings and history</li>
+              <li>Remove your wallet balance and reward points</li>
+              <li>Cancel any upcoming reservations</li>
+              <li>Permanently delete your profile</li>
+            </ul>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setShowDeleteDialog(false)}>
+              Cancel
+            </Button>
+            <Button 
+              type="button" 
+              variant="destructive"
+              disabled={deleteAccountMutation.isPending}
+              onClick={() => deleteAccountMutation.mutate()}
+            >
+              {deleteAccountMutation.isPending ? "Deleting..." : "Delete Account"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
