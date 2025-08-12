@@ -396,52 +396,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Find Courts Section */}
-      <section className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-          {/* Venue Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {isLoading ? (
-              // Loading skeletons
-              Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="bg-white rounded-2xl shadow-sm overflow-hidden animate-pulse">
-                  <div className="h-48 bg-gray-200"></div>
-                  <div className="p-6">
-                    <div className="h-6 bg-gray-200 rounded mb-3"></div>
-                    <div className="h-4 bg-gray-200 rounded mb-3"></div>
-                    <div className="flex space-x-2 mb-4">
-                      <div className="w-8 h-8 bg-gray-200 rounded-lg"></div>
-                      <div className="w-8 h-8 bg-gray-200 rounded-lg"></div>
-                      <div className="w-8 h-8 bg-gray-200 rounded-lg"></div>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <div className="h-8 bg-gray-200 rounded w-20"></div>
-                      <div className="h-10 bg-gray-200 rounded w-24"></div>
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : facilitiesData && facilitiesData.facilities && facilitiesData.facilities.length > 0 ? (
-              facilitiesData.facilities.slice(0, 6).map((facility: any) => (
-                <VenueCard key={facility.id} facility={facility} />
-              ))
-            ) : (
-              <div className="col-span-full text-center py-12">
-                <div className="text-6xl text-gray-300 mb-4">🏟️</div>
-                <h3 className="text-xl font-semibold text-gray-700 mb-2">No venues found</h3>
-                <p className="text-gray-500">Try adjusting your search filters or check back later.</p>
-              </div>
-            )}
-          </div>
-          
-          <div className="mt-8 text-center md:hidden">
-            <Button variant="ghost" className="text-brand-indigo font-semibold hover:underline">
-              View All Venues
-            </Button>
-          </div>
-        </div>
-      </section>
+
       
       {/* How It Works */}
       <section className="py-16 bg-gradient-to-br from-gray-50 to-white">
