@@ -39,15 +39,16 @@ export default function StripeCheckout({
     setIsProcessing(true);
 
     try {
+      console.log("Starting payment confirmation...");
       const { error, paymentIntent } = await stripe.confirmPayment({
         elements,
-        confirmParams: {
-          return_url: window.location.origin + "/?booking=success",
-        },
         redirect: "if_required"
       });
 
+      console.log("Payment confirmation result:", { error, paymentIntent });
+
       if (error) {
+        console.error("Payment failed:", error);
         toast({
           title: "Payment Failed",
           description: error.message,
@@ -64,8 +65,14 @@ export default function StripeCheckout({
         onPaymentSuccess(paymentIntent.id);
       } else {
         console.log("Payment not succeeded. Status:", paymentIntent?.status, "Error:", error);
+        toast({
+          title: "Payment Issue",
+          description: `Payment status: ${paymentIntent?.status || 'unknown'}`,
+          variant: "destructive",
+        });
       }
     } catch (err: any) {
+      console.error("Payment error caught:", err);
       toast({
         title: "Payment Error",
         description: "Something went wrong with your payment.",
