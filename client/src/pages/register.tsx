@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/context/auth-context";
 import { registerUser } from "@/lib/auth";
-import { AlertCircle, Eye, EyeOff, User, Building, Shield } from "lucide-react";
+import { AlertCircle, Eye, EyeOff } from "lucide-react";
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -54,10 +54,7 @@ export default function Register() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const roleOptions = [
-    { value: "user", label: "Player", icon: User, description: "Book courts and join matches" },
-    { value: "owner", label: "Facility Owner", icon: Building, description: "List and manage sports facilities" },
-  ];
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-brand-indigo via-brand-purple to-brand-cyan flex items-center justify-center p-4">
@@ -79,33 +76,7 @@ export default function Register() {
               </Alert>
             )}
 
-            {/* Role Selection */}
-            <div className="space-y-3">
-              <Label>I want to</Label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {roleOptions.map((role) => (
-                  <div
-                    key={role.value}
-                    className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
-                      formData.role === role.value
-                        ? "border-brand-indigo bg-brand-indigo/5"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
-                    onClick={() => handleInputChange("role", role.value)}
-                  >
-                    <div className="flex items-start space-x-3">
-                      <role.icon className={`h-6 w-6 mt-1 ${
-                        formData.role === role.value ? "text-brand-indigo" : "text-gray-400"
-                      }`} />
-                      <div>
-                        <h3 className="font-medium">{role.label}</h3>
-                        <p className="text-sm text-gray-500">{role.description}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+
             
             {/* Personal Information */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
