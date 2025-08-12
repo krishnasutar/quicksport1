@@ -42,15 +42,18 @@ export default function UserDashboard() {
     return null;
   }
 
+  // ✅ LAZY LOADING - Only fetch when user clicks on tabs or triggers actions
   const { data: bookingsData, isLoading: bookingsLoading, refetch: refetchBookings } = useQuery({
     queryKey: ['/api/bookings'],
-    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
-    refetchOnWindowFocus: false, // Don't refetch on window focus
-    refetchInterval: false, // Disable automatic refetching
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchInterval: false,
+    enabled: activeTab === 'bookings', // Only fetch when bookings tab is active
   });
 
-  const { data: walletData } = useQuery({
+  const { data: walletData, refetch: refetchWallet } = useQuery({
     queryKey: ['/api/wallet'],
+    enabled: activeTab === 'wallet', // Only fetch when wallet tab is active
   });
 
   const bookings = (bookingsData as any)?.bookings || [];

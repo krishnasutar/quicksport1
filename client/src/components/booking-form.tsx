@@ -51,16 +51,17 @@ export default function BookingForm({ court, onSubmit, isLoading: submittingBook
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Fetch user's wallet balance
+  // ✅ LAZY LOADING - Only fetch when user selects wallet payment method
   const { data: walletData } = useQuery({
     queryKey: ['/api/wallet'],
-    enabled: !!user,
+    enabled: !!user && paymentMethod === 'wallet', // Only fetch when wallet payment is selected
   });
 
   const walletBalance = parseFloat((walletData as any)?.balance || '0');
   
   const { data: couponsData } = useQuery({
     queryKey: ['/api/coupons', { facilityId: court.facilityId }],
+    enabled: couponCode.length > 0, // Only fetch when user types a coupon code
   });
 
   const coupons = (couponsData as any[]) || [];

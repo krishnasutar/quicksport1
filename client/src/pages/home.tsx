@@ -32,24 +32,29 @@ export default function Home() {
     }
   }, [location]);
 
+  // ✅ LAZY LOADING - Add state to control data fetching
+  const [showFacilities, setShowFacilities] = useState(false);
+  const [showSports, setShowSports] = useState(false);
+  const [showTrending, setShowTrending] = useState(false);
+
   const { data: facilitiesData, isLoading } = useQuery({
     queryKey: ['/api/facilities', { page: 1, limit: 6 }],
-    enabled: true,
-    staleTime: 10 * 60 * 1000, // Keep data fresh for 10 minutes
+    enabled: showFacilities, // Only fetch when user triggers
+    staleTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
 
   const { data: sportsData } = useQuery({
     queryKey: ['/api/sports'],
-    enabled: true,
-    staleTime: 30 * 60 * 1000, // Keep sports data fresh for 30 minutes (rarely changes)
+    enabled: showSports, // Only fetch when user triggers
+    staleTime: 30 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
 
   const { data: trendingFacilities, isLoading: isLoadingTrending } = useQuery({
     queryKey: ['/api/facilities/trending'],
-    enabled: true,
-    staleTime: 15 * 60 * 1000, // Keep trending data fresh for 15 minutes
+    enabled: showTrending, // Only fetch when user triggers
+    staleTime: 15 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
 

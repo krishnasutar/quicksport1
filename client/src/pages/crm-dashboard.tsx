@@ -139,7 +139,7 @@ export default function CRMDashboard() {
     refetchOnWindowFocus: false,
   });
 
-  // Analytics queries for admin users
+  // ✅ LAZY LOADING - Analytics only when dashboard tab is active
   const { data: revenueAnalytics } = useQuery({
     queryKey: ['/api/admin/analytics/revenue'],
     queryFn: async () => {
@@ -149,8 +149,8 @@ export default function CRMDashboard() {
       if (!response.ok) throw new Error('Failed to fetch revenue analytics');
       return response.json();
     },
-    enabled: !!user && user.role === 'admin',
-    staleTime: 10 * 60 * 1000, // Keep data fresh for 10 minutes
+    enabled: !!user && user.role === 'admin' && activeSection === 'dashboard', // Only when dashboard is active
+    staleTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
 
@@ -163,8 +163,8 @@ export default function CRMDashboard() {
       if (!response.ok) throw new Error('Failed to fetch facility analytics');
       return response.json();
     },
-    enabled: !!user && user.role === 'admin',
-    staleTime: 10 * 60 * 1000, // Keep data fresh for 10 minutes
+    enabled: !!user && user.role === 'admin' && activeSection === 'dashboard', // Only when dashboard is active
+    staleTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
 
@@ -177,8 +177,8 @@ export default function CRMDashboard() {
       if (!response.ok) throw new Error('Failed to fetch booking analytics');
       return response.json();
     },
-    enabled: !!user && user.role === 'admin',
-    staleTime: 10 * 60 * 1000, // Keep data fresh for 10 minutes
+    enabled: !!user && user.role === 'admin' && activeSection === 'dashboard', // Only when dashboard is active
+    staleTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
 
