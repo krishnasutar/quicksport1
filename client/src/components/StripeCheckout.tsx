@@ -39,81 +39,28 @@ export default function StripeCheckout({
     setIsProcessing(true);
 
     try {
-      console.log("🔵 STRIPE DEBUG: Starting payment confirmation...");
-      console.log("🔵 STRIPE DEBUG: Elements available:", !!elements);
-      console.log("🔵 STRIPE DEBUG: Stripe available:", !!stripe);
-      
-      // Submit the payment elements to Stripe
-      const { error: submitError } = await elements.submit();
-      if (submitError) {
-        console.error("🔴 STRIPE ERROR: Elements submit failed:", submitError);
-        toast({
-          title: "Payment Failed",
-          description: submitError.message,
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const result = await stripe.confirmPayment({
+      const { error } = await stripe.confirmPayment({
         elements,
-        redirect: 'if_required',
+        confirmParams: {
+          return_url: `${window.location.origin}${window.location.pathname}`,
+        },
       });
 
-      console.log("🔵 STRIPE DEBUG: Payment confirmation result:", result);
-      console.log("🔵 STRIPE DEBUG: Full result object:", JSON.stringify(result, null, 2));
-
-      if (result.error) {
-        console.error("🔴 STRIPE ERROR: Payment failed:", result.error);
-        console.error("🔴 STRIPE ERROR: Error type:", result.error.type);
-        console.error("🔴 STRIPE ERROR: Error code:", result.error.code);
-        console.error("🔴 STRIPE ERROR: Error message:", result.error.message);
+      if (error) {
         toast({
           title: "Payment Failed",
-          description: result.error.message,
-          variant: "destructive",
-        });
-      } else if (result.paymentIntent) {
-        console.log("🟢 STRIPE SUCCESS: PaymentIntent found! ID:", result.paymentIntent.id);
-        console.log("🟢 STRIPE SUCCESS: Payment status:", result.paymentIntent.status);
-        console.log("🟢 STRIPE SUCCESS: Amount:", result.paymentIntent.amount);
-        console.log("🟢 STRIPE SUCCESS: Currency:", result.paymentIntent.currency);
-        
-        if (result.paymentIntent.status === "succeeded") {
-          console.log("🟢 STRIPE SUCCESS: Payment succeeded! Calling onPaymentSuccess callback...");
-          
-          toast({
-            title: "Payment Successful! 🎉",
-            description: "Creating your booking and redirecting...",
-          });
-          
-          // Call the success callback immediately
-          onPaymentSuccess(result.paymentIntent.id);
-        } else {
-          console.log("🟡 STRIPE WARNING: Payment status is not 'succeeded':", result.paymentIntent.status);
-          toast({
-            title: "Payment Processing",
-            description: `Payment status: ${result.paymentIntent.status}. Please wait...`,
-            variant: "default",
-          });
-        }
-      } else {
-        console.log("🔴 STRIPE ERROR: No paymentIntent in result");
-        toast({
-          title: "Payment Error",
-          description: "No payment information received from Stripe",
+          description: error.message,
           variant: "destructive",
         });
       }
+      // If no error, payment succeeded and Stripe will handle the redirect
     } catch (err: any) {
-      console.error("🔴 STRIPE CATCH: Payment error caught:", err);
       toast({
-        title: "Payment Error",
+        title: "Payment Error", 
         description: "Something went wrong with your payment.",
         variant: "destructive",
       });
     } finally {
-      console.log("🔵 STRIPE DEBUG: Resetting processing state");
       setIsProcessing(false);
     }
   };

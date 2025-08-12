@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, useLocation } from "wouter";
 import Navbar from "@/components/layout/navbar";
@@ -17,6 +17,18 @@ export default function Booking() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Check for Stripe redirect success
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentIntent = urlParams.get('payment_intent');
+    const redirectStatus = urlParams.get('redirect_status');
+
+    if (paymentIntent && redirectStatus === 'succeeded') {
+      console.log('Stripe payment successful, redirecting to dashboard');
+      navigate('/dashboard?booking=success');
+    }
+  }, [navigate]);
   
   const { data: courtData, isLoading } = useQuery({
     queryKey: ['/api/courts', params.courtId],
