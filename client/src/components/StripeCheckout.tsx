@@ -39,47 +39,55 @@ export default function StripeCheckout({
     setIsProcessing(true);
 
     try {
-      console.log("Starting payment confirmation...");
+      console.log("🔵 STRIPE DEBUG: Starting payment confirmation...");
+      console.log("🔵 STRIPE DEBUG: Elements available:", !!elements);
+      console.log("🔵 STRIPE DEBUG: Stripe available:", !!stripe);
       
-      const result = await stripe.confirmPayment({
+      const { error, paymentIntent } = await stripe.confirmPayment({
         elements,
-        redirect: "if_required"
+        confirmParams: {
+          return_url: `${window.location.origin}/dashboard?payment=success`,
+        },
       });
 
-      console.log("Payment confirmation result:", result);
+      console.log("🔵 STRIPE DEBUG: Payment confirmation result:", { error, paymentIntent });
 
-      if (result.error) {
-        console.error("Payment failed:", result.error);
+      if (error) {
+        console.error("🔴 STRIPE ERROR: Payment failed:", error);
         toast({
           title: "Payment Failed",
-          description: result.error.message,
+          description: error.message,
           variant: "destructive",
         });
-      } else if (result.paymentIntent && result.paymentIntent.status === "succeeded") {
-        console.log("Payment succeeded! PaymentIntent ID:", result.paymentIntent.id);
-        console.log("Payment status:", result.paymentIntent.status);
-        console.log("Calling onPaymentSuccess callback...");
+      } else if (paymentIntent && paymentIntent.status === "succeeded") {
+        console.log("🟢 STRIPE SUCCESS: Payment succeeded! PaymentIntent ID:", paymentIntent.id);
+        console.log("🟢 STRIPE SUCCESS: Payment status:", paymentIntent.status);
+        console.log("🟢 STRIPE SUCCESS: Calling onPaymentSuccess callback...");
+        
         toast({
           title: "Payment Successful! 🎉",
           description: "Creating your booking and redirecting...",
         });
-        onPaymentSuccess(result.paymentIntent.id);
+        
+        // Call the success callback immediately
+        onPaymentSuccess(paymentIntent.id);
       } else {
-        console.log("Payment not succeeded. Status:", result.paymentIntent?.status, "Error:", result.error);
+        console.log("🟡 STRIPE WARNING: Payment status:", paymentIntent?.status);
         toast({
           title: "Payment Issue",
-          description: `Payment status: ${result.paymentIntent?.status || 'unknown'}`,
+          description: `Payment status: ${paymentIntent?.status || 'unknown'}`,
           variant: "destructive",
         });
       }
     } catch (err: any) {
-      console.error("Payment error caught:", err);
+      console.error("🔴 STRIPE CATCH: Payment error caught:", err);
       toast({
         title: "Payment Error",
         description: "Something went wrong with your payment.",
         variant: "destructive",
       });
     } finally {
+      console.log("🔵 STRIPE DEBUG: Resetting processing state");
       setIsProcessing(false);
     }
   };
