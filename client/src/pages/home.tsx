@@ -262,7 +262,7 @@ export default function Home() {
                   </div>
                 </div>
               ))
-            ) : trendingFacilities && trendingFacilities.length > 0 ? (
+            ) : trendingFacilities && Array.isArray(trendingFacilities) && trendingFacilities.length > 0 ? (
               trendingFacilities.slice(0, 3).map((facility: any) => (
                 <div key={facility.id} className="card-hover bg-white rounded-2xl shadow-sm overflow-hidden border">
                   <div className="h-48 bg-gradient-to-br from-blue-400 to-blue-600 relative">
@@ -331,7 +331,8 @@ export default function Home() {
               ))
             ) : (
               // Fallback - show regular facilities instead
-              facilitiesData?.facilities?.slice(0, 3).map((facility: any) => (
+              facilitiesData?.facilities && Array.isArray(facilitiesData.facilities) ? (
+                facilitiesData.facilities.slice(0, 3).map((facility: any) => (
                 <div key={facility.id} className="card-hover bg-white rounded-2xl shadow-sm overflow-hidden border">
                   <div className="h-48 bg-gradient-to-br from-blue-400 to-blue-600 relative">
                     <img
@@ -386,7 +387,8 @@ export default function Home() {
                     </Button>
                   </div>
                 </div>
-              )) || (
+                ))
+              ) : (
                 <div className="col-span-3 text-center py-12">
                   <p className="text-gray-500">No facilities available at the moment.</p>
                 </div>
