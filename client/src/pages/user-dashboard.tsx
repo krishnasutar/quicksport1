@@ -10,11 +10,17 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Calendar, MapPin, Clock, CreditCard, Star, Gift, Users, Trophy } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { Link, useLocation } from "wouter";
+import BookingSuccessPopup from "@/components/BookingSuccessPopup";
 
 export default function UserDashboard() {
   const { user } = useAuth();
   const [, navigate] = useLocation();
   const queryClient = useQueryClient();
+  
+  // Check if we're showing success popup
+  const [showSuccessPopup, setShowSuccessPopup] = useState(() => {
+    return new URLSearchParams(window.location.search).get('booking') === 'success';
+  });
   
   if (!user) {
     navigate('/login');
@@ -408,6 +414,18 @@ export default function UserDashboard() {
       </div>
       
       <Footer />
+      
+      {/* Booking Success Popup */}
+      {showSuccessPopup && (
+        <BookingSuccessPopup
+          isOpen={showSuccessPopup}
+          onClose={() => {
+            setShowSuccessPopup(false);
+            // Clean up URL parameters
+            window.history.replaceState({}, '', '/dashboard');
+          }}
+        />
+      )}
     </div>
   );
 }

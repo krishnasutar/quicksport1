@@ -217,9 +217,9 @@ export default function BookingForm({ court, onSubmit, isLoading }: BookingFormP
     try {
       console.log('Calling onSubmit...');
       await onSubmit(bookingData);
-      console.log('Booking created successfully! Now redirecting to home with success popup...');
+      console.log('Booking created successfully! Now redirecting to dashboard with success popup...');
       // Immediate redirect
-      setLocation('/?booking=success');
+      setLocation('/dashboard?booking=success');
     } catch (error) {
       console.error('Error creating booking after payment:', error);
       alert('Payment was successful but there was an error creating your booking. Please contact support.');
